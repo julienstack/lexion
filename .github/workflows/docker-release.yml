@@ -3,9 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - '*release*'
-      - 'release/*'
-      - 'release-*'
+      - main
   # Manual trigger for testing
   workflow_dispatch:
 
