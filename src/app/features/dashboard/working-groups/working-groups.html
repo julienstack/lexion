@@ -188,7 +188,7 @@
     <div class="space-y-4">
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Name der AG *</label>
-            <input pInputText [(ngModel)]="currentGroup.name" class="w-full" placeholder="z.B. AI Research" />
+            <input pInputText [(ngModel)]="currentGroup.name" class="w-full" placeholder="z.B. Öffentlichkeitsarbeit" />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung *</label>
@@ -231,7 +231,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">Anzeige-Wert</label>
                     <input pInputText [(ngModel)]="currentGroup.contact_value" class="w-full"
-                        placeholder="#channel oder Email" />
+                        placeholder="#kanal oder E-Mail" />
                 </div>
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-300 mb-1">Link (URL)</label>
@@ -243,7 +243,8 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Tags (Komma-getrennt)</label>
-            <input pInputText [(ngModel)]="tagsInput" class="w-full" placeholder="tech, design, events..." />
+            <input pInputText [(ngModel)]="tagsInput" class="w-full"
+                placeholder="technik, design, veranstaltungen..." />
             <small class="text-gray-500">Mehrere Tags mit Komma trennen</small>
         </div>
     </div>

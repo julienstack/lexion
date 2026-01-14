@@ -9,5 +9,6 @@ import { FeedbackBadgeComponent } from '../../feedback/feedback-badge/feedback-b
   styleUrl: './landing-page.css',
 })
 export class LandingPage {
-
+  currentYear = new Date().getFullYear();
 }
+

@@ -93,6 +93,7 @@ export class MembersComponent implements OnInit {
   dialogVisible = signal(false);
   editMode = signal(false);
   saving = signal(false);
+  invitingMemberId: string | null = null;
 
   currentMember: Partial<Member> = this.getEmptyMember();
 
@@ -265,5 +266,29 @@ export class MembersComponent implements OnInit {
     }
     const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
     return '#' + '00000'.substring(0, 6 - c.length) + c;
+  }
+
+  async inviteMember(member: Member) {
+    if (!member.id || !member.email) return;
+
+    this.invitingMemberId = member.id;
+    try {
+      const result = await this.membersService.inviteMember(member.id, member.email);
+      const isReset = result.type === 'reset';
+      this.messageService.add({
+        severity: 'success',
+        summary: isReset ? 'Link gesendet' : 'Einladung gesendet',
+        detail: result.message || (isReset
+          ? `Passwort-Reset-Link an ${member.email} gesendet`
+          : `Einladung an ${member.email} versendet`),
+      });
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: (e as Error).message,
+      });
+    }
+    this.invitingMemberId = null;
   }
 }

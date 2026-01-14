@@ -1,0 +1,10 @@
+# Crawlers werden während der Entwicklungsphase blockiert
+User-agent: *
+Disallow: /
+
+# Keine Seiten indexieren
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /

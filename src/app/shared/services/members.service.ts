@@ -2,10 +2,12 @@ import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { Member } from '../models/member.model';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { environment } from '../../../environments/environment';
 
 /**
  * Service for managing members via Supabase
  * Includes realtime subscriptions for live updates
+ * Includes invitation and auth user management
  */
 @Injectable({
     providedIn: 'root',
@@ -14,6 +16,7 @@ export class MembersService implements OnDestroy {
     private supabase = inject(SupabaseService);
     private readonly TABLE_NAME = 'members';
     private realtimeChannel: RealtimeChannel | null = null;
+    private readonly FUNCTIONS_URL = `${environment.supabase.url}/functions/v1`;
 
     private _members = signal<Member[]>([]);
     private _loading = signal(false);
@@ -109,7 +112,19 @@ export class MembersService implements OnDestroy {
         return data;
     }
 
+    /**
+     * Delete a member and their associated auth user
+     */
     async deleteMember(id: string) {
+        // First, get the member to check for user_id
+        const member = this._members().find(m => m.id === id);
+
+        // Delete auth user if linked
+        if (member?.user_id) {
+            await this.deleteAuthUser(member.user_id);
+        }
+
+        // Delete member from database
         const { error } = await this.supabase
             .from(this.TABLE_NAME)
             .delete()
@@ -119,11 +134,102 @@ export class MembersService implements OnDestroy {
     }
 
     async deleteMany(ids: string[]) {
+        // Get members to delete
+        const membersToDelete = this._members().filter(m => ids.includes(m.id!));
+
+        // Delete auth users for any linked members
+        for (const member of membersToDelete) {
+            if (member.user_id) {
+                await this.deleteAuthUser(member.user_id);
+            }
+        }
+
         const { error } = await this.supabase
             .from(this.TABLE_NAME)
             .delete()
             .in('id', ids);
 
         if (error) throw new Error(error.message);
+    }
+
+    /**
+     * Invite a member by sending them an email invitation
+     * This creates an auth user and links it to the member
+     */
+    async inviteMember(memberId: string, email: string): Promise<{ userId?: string; message: string; type?: string }> {
+        // Get current session - session() returns a signal, so we call it to get the value
+        const currentSession = this.supabase.session();
+        if (!currentSession) {
+            throw new Error('Nicht angemeldet');
+        }
+
+        console.log('Inviting member with session:', currentSession.access_token?.substring(0, 20) + '...');
+
+        const response = await fetch(`${this.FUNCTIONS_URL}/invite-member`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentSession.access_token}`,
+                'apikey': environment.supabase.anonKey,
+            },
+            body: JSON.stringify({
+                email,
+                memberId,
+                redirectTo: `${window.location.origin}/auth/callback`,
+            }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Einladung konnte nicht gesendet werden');
+        }
+
+        return result;
+    }
+
+    /**
+     * Delete an auth user via Edge Function
+     */
+    private async deleteAuthUser(userId: string): Promise<void> {
+        const session = this.supabase.session();
+        if (!session) {
+            console.warn('Nicht angemeldet, überspringe Auth-User-Löschung');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${this.FUNCTIONS_URL}/delete-auth-user`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'apikey': environment.supabase.anonKey,
+                },
+                body: JSON.stringify({ userId }),
+            });
+
+            if (!response.ok) {
+                const result = await response.json();
+                console.error('Failed to delete auth user:', result.error);
+            }
+        } catch (e) {
+            console.error('Error deleting auth user:', e);
+        }
+    }
+
+    /**
+     * Check if a member has been invited (has user_id)
+     */
+    isInvited(member: Member): boolean {
+        return !!member.user_id;
+    }
+
+    /**
+     * Check if a member is connected (user_id exists and email_confirmed)
+     * For now, just checks if user_id exists
+     */
+    isConnected(member: Member): boolean {
+        return !!member.user_id;
     }
 }
