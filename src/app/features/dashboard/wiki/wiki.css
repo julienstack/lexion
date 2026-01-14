@@ -1,0 +1,39 @@
+:host ::ng-deep .custom-table .p-datatable-wrapper {
+    background: transparent;
+}
+
+:host ::ng-deep .custom-table .p-datatable-thead>tr>th {
+    background-color: rgb(31 41 55 / 0.5) !important;
+    color: rgb(209 213 219) !important;
+    border-color: rgb(55 65 81) !important;
+    font-weight: 600;
+    padding: 1rem;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody>tr {
+    background-color: rgb(17 24 39 / 0.5) !important;
+    border-color: rgb(31 41 55) !important;
+    color: rgb(229 231 235) !important;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody>tr:hover {
+    background-color: rgb(31 41 55 / 0.5) !important;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody>tr>td {
+    border-color: rgb(31 41 55) !important;
+    padding: 1rem;
+}
+
+:host ::ng-deep .custom-table .p-paginator {
+    background: rgb(17 24 39) !important;
+    border-color: rgb(31 41 55) !important;
+    color: rgb(156 163 175) !important;
+    padding: 1rem;
+}
+
+:host ::ng-deep .custom-table .p-datatable-header {
+    background: rgb(17 24 39) !important;
+    border: none !important;
+    padding: 0 !important;
+}

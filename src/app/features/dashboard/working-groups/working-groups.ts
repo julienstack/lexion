@@ -1,112 +1,266 @@
-import { Component } from '@angular/core';
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { AccordionModule } from 'primeng/accordion';
-import { TagModule } from 'primeng/tag';
-import { AvatarModule } from 'primeng/avatar';
-import { CardModule } from 'primeng/card';
+import { FormsModule } from '@angular/forms';
+import { WorkingGroupsService } from '../../../shared/services/working-groups.service';
+import { WorkingGroup } from '../../../shared/models/working-group.model';
+import { AuthService } from '../../../shared/services/auth.service';
 
-interface WorkingGroup {
-  id: number;
-  name: string;
-  description: string;
-  lead: string;
-  membersCount: number;
-  nextMeeting: string;
-  contact: {
-    type: 'Signal' | 'Discord' | 'WhatsApp' | 'Email';
-    value: string;
-    link?: string;
-    icon: string;
-  };
-  tags: string[];
-}
+// PrimeNG Imports
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { ChipModule } from 'primeng/chip';
+import { AvatarModule } from 'primeng/avatar';
+import { AvatarGroupModule } from 'primeng/avatargroup';
+import { MessageModule } from 'primeng/message';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { SelectModule } from 'primeng/select';
+import { RippleModule } from 'primeng/ripple';
+import { AccordionModule } from 'primeng/accordion';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-working-groups',
   standalone: true,
-  imports: [CommonModule, ButtonModule, AccordionModule, TagModule, AvatarModule, CardModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    DialogModule,
+    InputTextModule,
+    TextareaModule,
+    CardModule,
+    TagModule,
+    TooltipModule,
+    ChipModule,
+    AvatarModule,
+    AvatarGroupModule,
+    MessageModule,
+    ToastModule,
+    ConfirmDialogModule,
+    ProgressSpinnerModule,
+    IconFieldModule,
+    InputIconModule,
+    SelectModule,
+    RippleModule,
+    AccordionModule,
+    RouterModule
+  ],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './working-groups.html',
-  styleUrl: './working-groups.css'
+  styleUrl: './working-groups.css',
 })
-export class WorkingGroupsComponent {
-  ags: WorkingGroup[] = [
-    {
-      id: 1,
-      name: 'AG Technik & IT',
-      description: 'Wir kümmern uns um die Server-Infrastruktur, das WLAN im Vereinsheim und entwickeln interne Tools wie dieses Dashboard.',
-      lead: 'Alex T.',
-      membersCount: 8,
-      nextMeeting: 'Mo, 20:00 Uhr',
-      contact: {
-        type: 'Discord',
-        value: '#tech-talk',
-        link: 'https://discord.gg/example',
-        icon: 'pi-discord'
-      },
-      tags: ['IT', 'Infrastructure', 'Coding']
-    },
-    {
-      id: 2,
-      name: 'AG Social Media',
-      description: 'Content Creation für Instagram, TikTok und LinkedIn. Wir sorgen für Reichweite und gutes Image.',
-      lead: 'Maria S.',
-      membersCount: 12,
-      nextMeeting: 'Mi, 18:30 Uhr',
-      contact: {
-        type: 'Signal',
-        value: 'Invite Link',
-        link: 'https://signal.group/example',
-        icon: 'pi-comment'
-      },
-      tags: ['Marketing', 'Design', 'Public Relations']
-    },
-    {
-      id: 3,
-      name: 'AG Veranstaltungen',
-      description: 'Planung und Durchführung von Sommerfest, Weihnachtsfeier und monatlichen Meetups.',
-      lead: 'Jonas B.',
-      membersCount: 15,
-      nextMeeting: 'Do, 19:00 Uhr',
-      contact: {
-        type: 'WhatsApp',
-        value: 'Gruppe Events',
-        link: 'https://chat.whatsapp.com/example',
-        icon: 'pi-whatsapp'
-      },
-      tags: ['Events', 'Orga', 'Party']
-    },
-    {
-      id: 4,
-      name: 'AG Nachhaltigkeit',
-      description: 'Erarbeitung von Konzepten für einen grüneren Verein und Organisation von Müllsammel-Aktionen.',
-      lead: 'Lena M.',
-      membersCount: 6,
-      nextMeeting: '1. Di im Monat',
-      contact: {
-        type: 'Email',
-        value: 'nachhaltigkeit@verein.de',
-        link: 'mailto:nachhaltigkeit@verein.de',
-        icon: 'pi-envelope'
-      },
-      tags: ['Green', 'Umwelt', 'Impact']
-    }
+export class WorkingGroupsComponent implements OnInit {
+  public workingGroupsService = inject(WorkingGroupsService);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  public auth = inject(AuthService);
+
+  groups = this.workingGroupsService.workingGroups;
+  loading = this.workingGroupsService.loading;
+  error = this.workingGroupsService.error;
+  myMemberships = this.workingGroupsService.myMemberships;
+  agEvents = this.workingGroupsService.agEvents;
+
+  dialogVisible = signal(false);
+  editMode = signal(false);
+  saving = signal(false);
+  currentGroup: WorkingGroup = this.getEmptyGroup();
+  tagsInput = ''; // Comma-separated string for tags input
+
+  // Helper to get events for a specific AG
+  getAgEvents(groupId: string) {
+    return this.agEvents().get(groupId) ?? [];
+  }
+
+  contactTypes = [
+    { label: 'Discord', value: 'Discord', icon: 'pi pi-comments' },
+    { label: 'E-Mail', value: 'Email', icon: 'pi pi-envelope' },
+    { label: 'WhatsApp', value: 'WhatsApp', icon: 'pi pi-comment' },
+    { label: 'Signal', value: 'Signal', icon: 'pi pi-send' },
   ];
 
+  constructor() {
+    // React to Member changes to load memberships
+    effect(() => {
+      const member = this.auth.currentMember();
+      if (member && member.id) {
+        this.workingGroupsService.fetchMyMemberships(member.id);
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  ngOnInit(): void {
+    this.workingGroupsService.fetchWorkingGroups();
+  }
+
+  getEmptyGroup(): WorkingGroup {
+    return {
+      id: '',
+      name: '',
+      description: '',
+      lead: '',
+      members_count: 0,
+      next_meeting: '',
+      contact_type: 'Discord',
+      contact_value: '',
+      contact_link: '',
+      contact_icon: 'pi pi-comments',
+      tags: [],
+    };
+  }
+
+  getIconForType(contactType: string): string {
+    const iconMap: Record<string, string> = {
+      'Discord': 'pi pi-comments',
+      'Email': 'pi pi-envelope',
+      'WhatsApp': 'pi pi-comment',
+      'Signal': 'pi pi-send'
+    };
+    return iconMap[contactType] || 'pi pi-link';
+  }
+
+  openNew() {
+    this.currentGroup = this.getEmptyGroup();
+    this.tagsInput = '';
+    this.editMode.set(false);
+    this.dialogVisible.set(true);
+  }
+
+  editGroup(group: WorkingGroup) {
+    this.currentGroup = { ...group };
+    this.tagsInput = group.tags?.join(', ') || '';
+    this.editMode.set(true);
+    this.dialogVisible.set(true);
+  }
+
+  async saveGroup() {
+    if (!this.currentGroup.name || !this.currentGroup.lead) return;
+
+    // Parse tags from comma-separated input
+    this.currentGroup.tags = this.tagsInput
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+
+    this.saving.set(true);
+
+    // Set icon based on type
+    const selectedType = this.contactTypes.find(t => t.value === this.currentGroup.contact_type);
+    if (selectedType) {
+      this.currentGroup.contact_icon = selectedType.icon;
+    }
+
+    try {
+      if (this.editMode() && this.currentGroup.id) {
+        await this.workingGroupsService.updateWorkingGroup(
+          this.currentGroup.id,
+          this.currentGroup
+        );
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: 'AG aktualisiert',
+        });
+      } else {
+        const { id, ...newGroup } = this.currentGroup;
+        await this.workingGroupsService.addWorkingGroup(newGroup);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: 'AG erstellt',
+        });
+      }
+      this.dialogVisible.set(false);
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: (e as Error).message,
+      });
+    }
+    this.saving.set(false);
+  }
+
+  confirmDelete(group: WorkingGroup) {
+    if (!group.id) return;
+    this.confirmationService.confirm({
+      message: `Möchtest du die AG "${group.name}" wirklich löschen?`,
+      header: 'Löschen bestätigen',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Ja, löschen',
+      rejectLabel: 'Abbrechen',
+      accept: async () => {
+        try {
+          if (group.id) {
+            await this.workingGroupsService.deleteWorkingGroup(group.id);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Gelöscht',
+              detail: 'AG wurde gelöscht',
+            });
+          }
+        } catch (e) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail: (e as Error).message,
+          });
+        }
+      },
+    });
+  }
+
+  async toggleMembership(group: WorkingGroup) {
+    if (!group.id) return;
+
+    if (!this.auth.isLoggedIn()) {
+      this.messageService.add({ severity: 'info', summary: 'Login erforderlich', detail: 'Bitte melde dich an, um beizutreten.' });
+      return;
+    }
+
+    const member = this.auth.currentMember();
+    if (!member || !member.id) {
+      this.messageService.add({ severity: 'warn', summary: 'Profil fehlt', detail: 'Dein Benutzerkonto ist mit keinem Mitgliedsprofil verknüpft.' });
+      return;
+    }
+
+    try {
+      if (this.myMemberships().has(group.id)) {
+        await this.workingGroupsService.leaveGroup(group.id, member.id);
+        this.messageService.add({ severity: 'success', summary: 'Verlassen', detail: `Du hast die AG "${group.name}" verlassen.` });
+      } else {
+        await this.workingGroupsService.joinGroup(group.id, member.id);
+        this.messageService.add({ severity: 'success', summary: 'Beigetreten', detail: `Du bist der AG "${group.name}" beigetreten!` });
+      }
+    } catch (e: any) {
+      this.messageService.add({ severity: 'error', summary: 'Fehler', detail: e.message });
+    }
+  }
+
+  // Helpers for template
   getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   }
 
   getAvatarColor(name: string): string {
-    const colors = [
-      '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
-    ];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}, 70%, 50%)`;
   }
 }

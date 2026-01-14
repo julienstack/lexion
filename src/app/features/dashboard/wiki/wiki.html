@@ -1,0 +1,234 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="p-6">
+    <!-- Loading -->
+    @if (loading()) {
+    <div class="flex justify-center items-center py-12">
+        <p-progressSpinner strokeWidth="4" ariaLabel="Lade Wiki..." />
+    </div>
+    }
+
+    <!-- Error -->
+    @if (error()) {
+    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-4 w-full" />
+    }
+
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Wiki & Dokumentation</h1>
+            <p class="text-gray-400 mt-1">Zentrale Wissensdatenbank für alle wichtigen Informationen</p>
+        </div>
+        @if (auth.isAdmin()) {
+        <p-button label="Neuer Artikel" icon="pi pi-plus" severity="danger" [raised]="true"
+            (click)="openNew()"></p-button>
+        }
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Sidebar: Categories -->
+        <div class="lg:col-span-1">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 sticky top-6">
+                <h3 class="text-lg font-bold text-white mb-4">Kategorien</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <button (click)="filterCategory(null)" [class.bg-gray-800]="selectedCategory() === null"
+                            [class.text-white]="selectedCategory() === null"
+                            class="w-full text-left p-3 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white flex justify-between items-center">
+                            <span>Alle</span>
+                            <span class="bg-gray-700 text-xs px-2 py-0.5 rounded-full">{{docs().length}}</span>
+                        </button>
+                    </li>
+                    @for (cat of ['General', 'Finance', 'Tech', 'Legal']; track cat) {
+                    <li>
+                        <button (click)="filterCategory(cat)" [class.bg-gray-800]="selectedCategory() === cat"
+                            [class.text-white]="selectedCategory() === cat"
+                            class="w-full text-left p-3 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white flex justify-between items-center">
+                            <span>{{getCategoryLabel(cat)}}</span>
+                            <span
+                                class="bg-gray-700 text-xs px-2 py-0.5 rounded-full">{{getCountByCategory(cat)}}</span>
+                        </button>
+                    </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content: Table -->
+        <div class="lg:col-span-3">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-xl">
+                <p-table [value]="filteredDocs()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+                    currentPageReportTemplate="{first} bis {last} von {totalRecords} Artikeln"
+                    [rowsPerPageOptions]="[10, 25, 50]" styleClass="custom-table" [loading]="loading()" dataKey="id"
+                    [expandedRowKeys]="expandedRows">
+
+                    <ng-template pTemplate="caption">
+                        <div class="flex justify-between items-center p-4 bg-gray-900">
+                            <p-iconfield iconPosition="left" class="w-full md:w-80">
+                                <p-inputicon styleClass="pi pi-search" />
+                                <input pInputText type="text" (input)="onSearch($event)"
+                                    placeholder="Artikel durchsuchen..."
+                                    class="w-full !bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500" />
+                            </p-iconfield>
+                        </div>
+                    </ng-template>
+
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th class="!bg-gray-800/50 !border-gray-700 w-12"></th>
+                            <th class="!bg-gray-800/50 !text-gray-300 !border-gray-700">
+                                <span class="font-semibold">Titel</span>
+                            </th>
+                            <th class="!bg-gray-800/50 !text-gray-300 !border-gray-700">
+                                <span class="font-semibold">Kategorie</span>
+                            </th>
+                            <th class="!bg-gray-800/50 !text-gray-300 !border-gray-700">
+                                <span class="font-semibold">Autor</span>
+                            </th>
+                            <th class="!bg-gray-800/50 !text-gray-300 !border-gray-700">
+                                <span class="font-semibold">Status</span>
+                            </th>
+                            <th class="!bg-gray-800/50 !text-gray-300 !border-gray-700">
+                                <span class="font-semibold">Letztes Update</span>
+                            </th>
+                            @if(auth.isAdmin()) {
+                            <th class="!bg-gray-800/50 !text-gray-300 !border-gray-700 text-center">
+                                <span class="font-semibold">Aktionen</span>
+                            </th>
+                            }
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="body" let-doc>
+                        <tr class="!bg-gray-900/50 hover:!bg-gray-800/50 !border-gray-800 transition-colors">
+                            <td class="!border-gray-800">
+                                <button type="button" pButton pRipple (click)="toggleRow(doc)"
+                                    class="p-button-text p-button-rounded p-button-plain w-8 h-8 !text-gray-400 hover:!text-white hover:!bg-gray-800"
+                                    [icon]="(doc.id && expandedRows[doc.id]) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                                </button>
+                            </td>
+                            <td class="!border-gray-800 cursor-pointer" (click)="toggleRow(doc)">
+                                <div>
+                                    <div class="font-semibold text-white">{{doc.title}}</div>
+                                    <div class="text-xs text-gray-500 mt-1 line-clamp-1">{{doc.description}}</div>
+                                </div>
+                            </td>
+                            <td class="!border-gray-800">
+                                <p-tag [value]="getCategoryLabel(doc.category)"
+                                    [severity]="getCategorySeverity(doc.category)"></p-tag>
+                            </td>
+                            <td class="!border-gray-800 text-gray-400">{{doc.author}}</td>
+                            <td class="!border-gray-800">
+                                <div class="flex items-center gap-2">
+                                    <i class="pi text-sm" [ngClass]="{
+                        'pi-check-circle text-green-500': doc.status === 'Published',
+                        'pi-file text-yellow-500': doc.status === 'Draft',
+                        'pi-eye text-blue-500': doc.status === 'Review'
+                      }"></i>
+                                    <span class="text-sm" [ngClass]="{
+                        'text-green-500': doc.status === 'Published',
+                        'text-yellow-500': doc.status === 'Draft',
+                        'text-blue-500': doc.status === 'Review'
+                      }">{{getStatusLabel(doc.status)}}</span>
+                                </div>
+                            </td>
+                            <td class="!border-gray-800 text-gray-400 text-sm">{{doc.last_updated}}</td>
+                            @if(auth.isAdmin()) {
+                            <td class="!border-gray-800">
+                                <div class="flex justify-center gap-2">
+                                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                                        size="small" (click)="editDoc(doc)"></p-button>
+                                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                        size="small" (click)="confirmDelete(doc)"></p-button>
+                                </div>
+                            </td>
+                            }
+                        </tr>
+                        <!-- MANUAL ROW EXPANSION -->
+                        <tr *ngIf="doc.id && expandedRows[doc.id]" class="!bg-gray-900 !border-0 scale-in-y">
+                            <td [attr.colspan]="auth.isAdmin() ? 7 : 6" class="!p-0 !border-0">
+                                <div class="bg-gray-800/30 p-6 m-4 rounded-xl border border-gray-700/50 shadow-inner">
+                                    <h4 class="text-xl font-bold text-white mb-4">Inhalt</h4>
+                                    @if(doc.content) {
+                                    <div
+                                        class="prose prose-invert max-w-none text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                        {{doc.content}}
+                                    </div>
+                                    } @else {
+                                    <div class="flex items-center gap-3 text-gray-500 italic">
+                                        <i class="pi pi-info-circle"></i>
+                                        <span>Kein Inhalt verfügbar. Bearbeite den Artikel, um Inhalt
+                                            hinzuzufügen.</span>
+                                    </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td [attr.colspan]="auth.isAdmin() ? 7 : 6"
+                                class="!bg-gray-900 !border-gray-800 text-center py-8">
+                                <div class="text-gray-400">
+                                    <i class="pi pi-file text-4xl mb-3"></i>
+                                    <p>Keine Artikel gefunden</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wiki Dialog -->
+<p-dialog [header]="editMode() ? 'Artikel bearbeiten' : 'Neuer Artikel'" [(visible)]="dialogVisible" [modal]="true"
+    [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
+    [style]="{width: '700px', maxWidth: '90vw'}" [closable]="!saving()">
+    <div class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Titel *</label>
+            <input pInputText [(ngModel)]="currentDoc.title" class="w-full" placeholder="Guide Titel" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung *</label>
+            <input pInputText [(ngModel)]="currentDoc.description" class="w-full" placeholder="Kurzbeschreibung" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Kategorie</label>
+                <p-select [(ngModel)]="currentDoc.category" [options]="categoryOptions" optionLabel="label"
+                    optionValue="value" styleClass="w-full" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                <p-select [(ngModel)]="currentDoc.status" [options]="statusOptions" optionLabel="label"
+                    optionValue="value" styleClass="w-full" />
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Sichtbarkeit</label>
+            <p-select [(ngModel)]="tempVisibility" [options]="visibilityOptions" optionLabel="label" optionValue="value"
+                styleClass="w-full" />
+            <small class="text-gray-500">Wer darf diesen Artikel sehen?</small>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Autor</label>
+            <input pInputText [(ngModel)]="currentDoc.author" class="w-full" placeholder="Dein Name" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Inhalt (Markdown/Text)</label>
+            <textarea pTextarea [(ngModel)]="currentDoc.content" class="w-full" rows="10"
+                placeholder="# Inhalt..."></textarea>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Abbrechen" severity="secondary" [text]="true" (click)="dialogVisible.set(false)"
+            [disabled]="saving()" />
+        <p-button [label]="editMode() ? 'Speichern' : 'Erstellen'" icon="pi pi-check" (click)="saveDoc()"
+            [loading]="saving()" />
+    </ng-template>
+</p-dialog>

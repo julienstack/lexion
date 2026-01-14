@@ -1,22 +1,71 @@
+<p-toast />
+<p-confirmDialog />
+
 <div class="p-6">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-white mb-2">Ansprechpartner</h1>
-        <p class="text-gray-400">Hier findest du die wichtigsten Kontakte und Ansprechpartner.</p>
+    <!-- Loading State -->
+    @if (loading()) {
+    <div class="flex justify-center items-center py-12">
+        <p-progressSpinner strokeWidth="4" ariaLabel="Lade Kontakte..." />
+    </div>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+    <p-message severity="error" [text]="'Fehler beim Laden: ' + error()" styleClass="mb-4 w-full" />
+    }
+
+    @if (!loading()) {
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-white mb-2">Ansprechpartner</h1>
+            <p class="text-gray-400">Hier findest du die wichtigsten Kontakte und Ansprechpartner.</p>
+        </div>
+        @if (auth.isAdmin()) {
+        <p-button label="Neuer Kontakt" icon="pi pi-plus" severity="danger" [raised]="true"
+            (click)="openNew()"></p-button>
+        }
     </div>
 
+    <!-- Empty State -->
+    @if (contacts().length === 0) {
+    <div class="text-center py-12">
+        <i class="pi pi-users text-6xl text-gray-600 mb-4"></i>
+        <p class="text-gray-400 text-lg">Keine Ansprechpartner gefunden.</p>
+        <p class="text-gray-500 text-sm mt-2">Füge Kontakte hinzu.</p>
+    </div>
+    }
+
+    <!-- Contacts Grid -->
+    @if (contacts().length > 0) {
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        @for (contact of contacts; track contact.name) {
+        @for (contact of contacts(); track contact.id ?? contact.name) {
         <div
             class="flex flex-col md:flex-row bg-gray-800/50 rounded-xl border border-gray-700 p-6 gap-6 hover:border-[var(--primary-color)] transition-colors duration-300">
-            <!-- Avatar Placeholder -->
+            <!-- Avatar -->
             <div
-                class="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 mx-auto md:mx-0 border border-gray-600">
+                class="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 mx-auto md:mx-0 border border-gray-600 overflow-hidden">
+                @if (contact.image_url) {
+                <img [src]="contact.image_url" [alt]="contact.name" class="w-full h-full object-cover">
+                } @else {
                 <i class="pi pi-user text-3xl text-gray-400"></i>
+                }
             </div>
 
             <div class="flex-1 text-center md:text-left">
-                <h3 class="text-xl font-bold text-white">{{ contact.name }}</h3>
-                <p class="text-[var(--primary-color)] font-medium mb-2">{{ contact.role }}</p>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">{{ contact.name }}</h3>
+                        <p class="text-[var(--primary-color)] font-medium mb-2">{{ contact.role }}</p>
+                    </div>
+                    @if (auth.isAdmin()) {
+                    <div class="flex gap-1">
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
+                            (click)="editContact(contact)"></p-button>
+                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
+                            (click)="confirmDelete(contact)"></p-button>
+                    </div>
+                    }
+                </div>
                 <p class="text-gray-400 mb-4 text-sm">{{ contact.description }}</p>
 
                 <div class="space-y-2 text-sm text-gray-300">
@@ -40,4 +89,55 @@
         </div>
         }
     </div>
+    }
+    }
 </div>
+
+<!-- Contact Dialog -->
+<p-dialog [header]="editMode() ? 'Kontakt bearbeiten' : 'Neuer Kontakt'" [(visible)]="dialogVisible" [modal]="true"
+    [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
+    [style]="{width: '500px', maxWidth: '90vw'}" [closable]="!saving()">
+    <div class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
+            <input pInputText [(ngModel)]="currentContact.name" class="w-full" placeholder="Max Mustermann" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Rolle *</label>
+                <input pInputText [(ngModel)]="currentContact.role" class="w-full" placeholder="Vorsitzender" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Ort</label>
+                <input pInputText [(ngModel)]="currentContact.location" class="w-full" placeholder="Berlin" />
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung</label>
+            <textarea pTextarea [(ngModel)]="currentContact.description" class="w-full" rows="3"
+                placeholder="Zuständigkeiten und Aufgaben..."></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">E-Mail *</label>
+                <input pInputText [(ngModel)]="currentContact.email" type="email" class="w-full"
+                    placeholder="max@example.com" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Telefon</label>
+                <input pInputText [(ngModel)]="currentContact.phone" class="w-full" placeholder="+49 123 456789" />
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Bild-URL</label>
+            <input pInputText [(ngModel)]="currentContact.image_url" class="w-full" placeholder="https://..." />
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Abbrechen" severity="secondary" [text]="true" (click)="dialogVisible.set(false)"
+            [disabled]="saving()" />
+        <p-button [label]="editMode() ? 'Speichern' : 'Erstellen'" icon="pi pi-check" (click)="saveContact()"
+            [loading]="saving()" />
+    </ng-template>
+</p-dialog>

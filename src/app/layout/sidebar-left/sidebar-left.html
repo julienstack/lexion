@@ -1,17 +1,19 @@
 <div class="flex flex-col gap-4 h-full">
     <div class="text-2xl font-bold text-[var(--primary-color)] mb-6 px-2">Hustle Hub</div>
 
-    <nav class="flex flex-col gap-2 flex-1">
+    <nav class="flex flex-col gap-2 flex-1 overflow-y-auto custom-scrollbar">
         <a routerLink="/dashboard" routerLinkActive="bg-gray-800 text-white" [routerLinkActiveOptions]="{exact: true}"
             class="group flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white">
             <i class="pi pi-home group-hover:text-[var(--primary-color)]"></i>
             <span class="font-medium">Dashboard</span>
         </a>
+        @if (auth.isAdmin()) {
         <a routerLink="/dashboard/members" routerLinkActive="bg-gray-800 text-white"
             class="group flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white">
             <i class="pi pi-users group-hover:text-[var(--primary-color)]"></i>
             <span class="font-medium">Mitglieder</span>
         </a>
+        }
         <a routerLink="/dashboard/calendar" routerLinkActive="bg-gray-800 text-white"
             class="group flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white">
             <i class="pi pi-calendar group-hover:text-[var(--primary-color)]"></i>
@@ -34,15 +36,45 @@
         </a>
     </nav>
 
-    <div class="mt-auto border-t border-gray-800 pt-4">
-        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</div>
-        <div
-            class="p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 mb-3 hover:border-[var(--primary-color)] transition-colors cursor-pointer">
-            <div class="flex items-center justify-between mb-1">
-                <span class="text-sm font-medium">Neues Mitglied</span>
-                <i class="pi pi-plus text-[var(--primary-color)]"></i>
-            </div>
-            <div class="text-xs text-gray-400">Schnellaufnahme starten</div>
+    <div class="mt-auto border-t border-gray-800 pt-4 space-y-4">
+        @if (auth.isAdmin()) {
+        <div>
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Quick Actions</div>
+            <!-- Note: This button is currently just visual as functionality is in components. Maybe linking to /members? -->
+            <a routerLink="/dashboard/members"
+                class="block p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-[var(--primary-color)] transition-colors cursor-pointer">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-medium">Mitglieder verwalten</span>
+                    <i class="pi pi-cog text-[var(--primary-color)]"></i>
+                </div>
+            </a>
         </div>
+        }
+
+        <!-- User Profile -->
+        @if (auth.isLoggedIn()) {
+        <div
+            class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700/50 shadow-lg shadow-black/20">
+            <div
+                class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold border border-white/10 flex-shrink-0">
+                {{ auth.currentMember()?.name?.charAt(0) || auth.user()?.email?.charAt(0)?.toUpperCase() || 'U' }}
+            </div>
+            <div class="flex-1 min-w-0 overflow-hidden">
+                <div class="text-sm font-bold text-white truncate">{{ auth.currentMember()?.name || 'Benutzer' }}</div>
+                <div class="text-[10px] text-gray-400 truncate uppercase tracking-wider font-semibold">{{
+                    auth.userRole() }}</div>
+            </div>
+            <button (click)="auth.signOut()"
+                class="text-gray-400 hover:text-white p-1.5 hover:bg-gray-700 rounded transition" title="Abmelden">
+                <i class="pi pi-sign-out"></i>
+            </button>
+        </div>
+        } @else {
+        <a routerLink="/login"
+            class="flex items-center justify-center gap-2 w-full p-3 bg-[var(--primary-color)] hover:bg-pink-600 text-white rounded-lg transition-colors font-medium shadow-lg shadow-pink-500/20">
+            <i class="pi pi-sign-in"></i>
+            <span>Anmelden</span>
+        </a>
+        }
     </div>
 </div>
