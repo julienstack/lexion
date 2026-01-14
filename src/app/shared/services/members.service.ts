@@ -1,16 +1,19 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { Member } from '../models/member.model';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
  * Service for managing members via Supabase
+ * Includes realtime subscriptions for live updates
  */
 @Injectable({
     providedIn: 'root',
 })
-export class MembersService {
+export class MembersService implements OnDestroy {
     private supabase = inject(SupabaseService);
     private readonly TABLE_NAME = 'members';
+    private realtimeChannel: RealtimeChannel | null = null;
 
     private _members = signal<Member[]>([]);
     private _loading = signal(false);
@@ -37,6 +40,50 @@ export class MembersService {
         }
 
         this._loading.set(false);
+        this.subscribeToRealtime();
+    }
+
+    private subscribeToRealtime() {
+        if (this.realtimeChannel) return;
+
+        this.realtimeChannel = this.supabase.subscribeToTable(
+            this.TABLE_NAME,
+            (payload: any) => {
+                this.handleRealtimeUpdate(payload);
+            }
+        );
+    }
+
+    private handleRealtimeUpdate(payload: any) {
+        const eventType = payload.eventType;
+        const newRecord = payload.new as Member;
+        const oldRecord = payload.old as Member;
+
+        switch (eventType) {
+            case 'INSERT':
+                this._members.update(members => {
+                    const sorted = [...members, newRecord]
+                        .sort((a, b) => a.name.localeCompare(b.name));
+                    return sorted;
+                });
+                break;
+            case 'UPDATE':
+                this._members.update(members =>
+                    members.map(m => (m.id === newRecord.id ? newRecord : m))
+                );
+                break;
+            case 'DELETE':
+                this._members.update(members =>
+                    members.filter(m => m.id !== oldRecord.id)
+                );
+                break;
+        }
+    }
+
+    ngOnDestroy() {
+        if (this.realtimeChannel) {
+            this.supabase.unsubscribe(this.realtimeChannel);
+        }
     }
 
     async addMember(member: Omit<Member, 'id' | 'created_at' | 'updated_at'>) {
@@ -47,7 +94,6 @@ export class MembersService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._members.update((members) => [...members, data]);
         return data;
     }
 
@@ -60,9 +106,6 @@ export class MembersService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._members.update((members) =>
-            members.map((m) => (m.id === id ? data : m))
-        );
         return data;
     }
 
@@ -73,7 +116,6 @@ export class MembersService {
             .eq('id', id);
 
         if (error) throw new Error(error.message);
-        this._members.update((members) => members.filter((m) => m.id !== id));
     }
 
     async deleteMany(ids: string[]) {
@@ -83,8 +125,5 @@ export class MembersService {
             .in('id', ids);
 
         if (error) throw new Error(error.message);
-        this._members.update((members) =>
-            members.filter((m) => !ids.includes(m.id!))
-        );
     }
 }

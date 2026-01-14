@@ -1,16 +1,19 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { ContactPerson } from '../models/contact-person.model';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
  * Service for managing contact persons via Supabase
+ * Includes realtime subscriptions for live updates
  */
 @Injectable({
     providedIn: 'root',
 })
-export class ContactsService {
+export class ContactsService implements OnDestroy {
     private supabase = inject(SupabaseService);
     private readonly TABLE_NAME = 'contacts';
+    private realtimeChannel: RealtimeChannel | null = null;
 
     private _contacts = signal<ContactPerson[]>([]);
     private _loading = signal(false);
@@ -45,6 +48,50 @@ export class ContactsService {
         }
 
         this._loading.set(false);
+        this.subscribeToRealtime();
+    }
+
+    private subscribeToRealtime() {
+        if (this.realtimeChannel) return;
+
+        this.realtimeChannel = this.supabase.subscribeToTable(
+            this.TABLE_NAME,
+            (payload: any) => {
+                this.handleRealtimeUpdate(payload);
+            }
+        );
+    }
+
+    private handleRealtimeUpdate(payload: any) {
+        const eventType = payload.eventType;
+        const newRecord = payload.new as ContactPerson;
+        const oldRecord = payload.old as ContactPerson;
+
+        switch (eventType) {
+            case 'INSERT':
+                this._contacts.update(contacts => {
+                    const sorted = [...contacts, newRecord]
+                        .sort((a, b) => a.name.localeCompare(b.name));
+                    return sorted;
+                });
+                break;
+            case 'UPDATE':
+                this._contacts.update(contacts =>
+                    contacts.map(c => (c.id === newRecord.id ? newRecord : c))
+                );
+                break;
+            case 'DELETE':
+                this._contacts.update(contacts =>
+                    contacts.filter(c => c.id !== oldRecord.id)
+                );
+                break;
+        }
+    }
+
+    ngOnDestroy() {
+        if (this.realtimeChannel) {
+            this.supabase.unsubscribe(this.realtimeChannel);
+        }
     }
 
     /**
@@ -64,7 +111,6 @@ export class ContactsService {
         }
 
         console.log('Contact added:', data);
-        this._contacts.update((contacts) => [...contacts, data]);
         return data;
     }
 
@@ -83,9 +129,6 @@ export class ContactsService {
             throw new Error(error.message);
         }
 
-        this._contacts.update((contacts) =>
-            contacts.map((c) => (c.id === id ? data : c))
-        );
         return data;
     }
 
@@ -101,7 +144,5 @@ export class ContactsService {
         if (error) {
             throw new Error(error.message);
         }
-
-        this._contacts.update((contacts) => contacts.filter((c) => c.id !== id));
     }
 }

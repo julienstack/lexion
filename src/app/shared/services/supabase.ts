@@ -134,4 +134,30 @@ export class SupabaseService {
   unsubscribe(channel: ReturnType<SupabaseClient['channel']>) {
     return this.supabase.removeChannel(channel);
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FEEDBACK
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Insert a new feedback submission */
+  async insertFeedback(
+    type: string,
+    description: string,
+    userId?: string
+  ) {
+    return this.supabase.from('feedback_submissions').insert({
+      type,
+      description,
+      user_id: userId,
+      status: 'new',
+    });
+  }
+
+  /** Get all feedback submissions (will fail if RLS verification fails) */
+  async getFeedback() {
+    return this.supabase
+      .from('feedback_submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+  }
 }

@@ -42,10 +42,17 @@
             <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Quick Actions</div>
             <!-- Note: This button is currently just visual as functionality is in components. Maybe linking to /members? -->
             <a routerLink="/dashboard/members"
-                class="block p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-[var(--primary-color)] transition-colors cursor-pointer">
+                class="block p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-[var(--primary-color)] transition-colors cursor-pointer mb-2">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-sm font-medium">Mitglieder verwalten</span>
                     <i class="pi pi-cog text-[var(--primary-color)]"></i>
+                </div>
+            </a>
+            <a routerLink="/dashboard/issue-tracker"
+                class="block p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-amber-500 transition-colors cursor-pointer">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-medium">Feedback Übersicht</span>
+                    <i class="pi pi-list-check text-amber-500"></i>
                 </div>
             </a>
         </div>

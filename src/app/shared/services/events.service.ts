@@ -1,16 +1,19 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { CalendarEvent } from '../models/calendar-event.model';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
  * Service for managing calendar events via Supabase
+ * Includes realtime subscriptions for live updates
  */
 @Injectable({
     providedIn: 'root',
 })
-export class EventsService {
+export class EventsService implements OnDestroy {
     private supabase = inject(SupabaseService);
     private readonly TABLE_NAME = 'events';
+    private realtimeChannel: RealtimeChannel | null = null;
 
     private _events = signal<CalendarEvent[]>([]);
     private _loading = signal(false);
@@ -37,6 +40,51 @@ export class EventsService {
         }
 
         this._loading.set(false);
+        this.subscribeToRealtime();
+    }
+
+    private subscribeToRealtime() {
+        if (this.realtimeChannel) return;
+
+        this.realtimeChannel = this.supabase.subscribeToTable(
+            this.TABLE_NAME,
+            (payload: any) => {
+                this.handleRealtimeUpdate(payload);
+            }
+        );
+    }
+
+    private handleRealtimeUpdate(payload: any) {
+        const eventType = payload.eventType;
+        const newRecord = payload.new as CalendarEvent;
+        const oldRecord = payload.old as CalendarEvent;
+
+        switch (eventType) {
+            case 'INSERT':
+                this._events.update(events => {
+                    const sorted = [...events, newRecord].sort(
+                        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+                    );
+                    return sorted;
+                });
+                break;
+            case 'UPDATE':
+                this._events.update(events =>
+                    events.map(e => (e.id === newRecord.id ? newRecord : e))
+                );
+                break;
+            case 'DELETE':
+                this._events.update(events =>
+                    events.filter(e => e.id !== oldRecord.id)
+                );
+                break;
+        }
+    }
+
+    ngOnDestroy() {
+        if (this.realtimeChannel) {
+            this.supabase.unsubscribe(this.realtimeChannel);
+        }
     }
 
     async addEvent(
@@ -49,7 +97,7 @@ export class EventsService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._events.update((events) => [...events, data]);
+        // Realtime will handle the update
         return data;
     }
 
@@ -62,9 +110,7 @@ export class EventsService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._events.update((events) =>
-            events.map((e) => (e.id === id ? data : e))
-        );
+        // Realtime will handle the update
         return data;
     }
 
@@ -75,6 +121,6 @@ export class EventsService {
             .eq('id', id);
 
         if (error) throw new Error(error.message);
-        this._events.update((events) => events.filter((e) => e.id !== id));
+        // Realtime will handle the update
     }
 }

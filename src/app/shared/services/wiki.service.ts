@@ -1,16 +1,19 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { WikiDoc } from '../models/wiki-doc.model';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
  * Service for managing wiki documents via Supabase
+ * Includes realtime subscriptions for live updates
  */
 @Injectable({
     providedIn: 'root',
 })
-export class WikiService {
+export class WikiService implements OnDestroy {
     private supabase = inject(SupabaseService);
     private readonly TABLE_NAME = 'wiki_docs';
+    private realtimeChannel: RealtimeChannel | null = null;
 
     private _docs = signal<WikiDoc[]>([]);
     private _loading = signal(false);
@@ -37,6 +40,46 @@ export class WikiService {
         }
 
         this._loading.set(false);
+        this.subscribeToRealtime();
+    }
+
+    private subscribeToRealtime() {
+        if (this.realtimeChannel) return;
+
+        this.realtimeChannel = this.supabase.subscribeToTable(
+            this.TABLE_NAME,
+            (payload: any) => {
+                this.handleRealtimeUpdate(payload);
+            }
+        );
+    }
+
+    private handleRealtimeUpdate(payload: any) {
+        const eventType = payload.eventType;
+        const newRecord = payload.new as WikiDoc;
+        const oldRecord = payload.old as WikiDoc;
+
+        switch (eventType) {
+            case 'INSERT':
+                this._docs.update(docs => [newRecord, ...docs]);
+                break;
+            case 'UPDATE':
+                this._docs.update(docs =>
+                    docs.map(d => (d.id === newRecord.id ? newRecord : d))
+                );
+                break;
+            case 'DELETE':
+                this._docs.update(docs =>
+                    docs.filter(d => d.id !== oldRecord.id)
+                );
+                break;
+        }
+    }
+
+    ngOnDestroy() {
+        if (this.realtimeChannel) {
+            this.supabase.unsubscribe(this.realtimeChannel);
+        }
     }
 
     async addDoc(doc: Omit<WikiDoc, 'id' | 'created_at' | 'updated_at'>) {
@@ -47,7 +90,6 @@ export class WikiService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._docs.update((docs) => [data, ...docs]);
         return data;
     }
 
@@ -60,7 +102,6 @@ export class WikiService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._docs.update((docs) => docs.map((d) => (d.id === id ? data : d)));
         return data;
     }
 
@@ -71,6 +112,5 @@ export class WikiService {
             .eq('id', id);
 
         if (error) throw new Error(error.message);
-        this._docs.update((docs) => docs.filter((d) => d.id !== id));
     }
 }

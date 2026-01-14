@@ -1,17 +1,21 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { WorkingGroup } from '../models/working-group.model';
 import { CalendarEvent } from '../models/calendar-event.model';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
  * Service for managing working groups via Supabase
+ * Includes realtime subscriptions for live updates
  */
 @Injectable({
     providedIn: 'root',
 })
-export class WorkingGroupsService {
+export class WorkingGroupsService implements OnDestroy {
     private supabase = inject(SupabaseService);
     private readonly TABLE_NAME = 'working_groups';
+    private realtimeChannel: RealtimeChannel | null = null;
+    private memberRealtimeChannel: RealtimeChannel | null = null;
 
     private _workingGroups = signal<WorkingGroup[]>([]);
     private _loading = signal(false);
@@ -87,6 +91,87 @@ export class WorkingGroupsService {
 
         this._workingGroups.set(enrichedGroups);
         this._loading.set(false);
+        this.subscribeToRealtime();
+    }
+
+    private subscribeToRealtime() {
+        if (!this.realtimeChannel) {
+            this.realtimeChannel = this.supabase.subscribeToTable(
+                this.TABLE_NAME,
+                (payload: any) => {
+                    this.handleRealtimeUpdate(payload);
+                }
+            );
+        }
+
+        if (!this.memberRealtimeChannel) {
+            this.memberRealtimeChannel = this.supabase.subscribeToTable(
+                'working_group_members',
+                (payload: any) => {
+                    this.handleMemberRealtimeUpdate(payload);
+                }
+            );
+        }
+    }
+
+    private handleRealtimeUpdate(payload: any) {
+        const eventType = payload.eventType;
+        const newRecord = payload.new as WorkingGroup;
+        const oldRecord = payload.old as WorkingGroup;
+
+        switch (eventType) {
+            case 'INSERT':
+                this._workingGroups.update(groups => {
+                    const sorted = [...groups, { ...newRecord, members_count: 0 }]
+                        .sort((a, b) => a.name.localeCompare(b.name));
+                    return sorted;
+                });
+                break;
+            case 'UPDATE':
+                this._workingGroups.update(groups =>
+                    groups.map(g => (g.id === newRecord.id ? { ...newRecord, members_count: g.members_count } : g))
+                );
+                break;
+            case 'DELETE':
+                this._workingGroups.update(groups =>
+                    groups.filter(g => g.id !== oldRecord.id)
+                );
+                break;
+        }
+    }
+
+    private handleMemberRealtimeUpdate(payload: any) {
+        const eventType = payload.eventType;
+        const record = payload.new || payload.old;
+        const groupId = record?.working_group_id;
+
+        if (!groupId) return;
+
+        switch (eventType) {
+            case 'INSERT':
+                this._workingGroups.update(groups =>
+                    groups.map(g => g.id === groupId
+                        ? { ...g, members_count: (g.members_count || 0) + 1 }
+                        : g)
+                );
+                break;
+            case 'DELETE':
+                this._workingGroups.update(groups =>
+                    groups.map(g => g.id === groupId
+                        ? { ...g, members_count: Math.max(0, (g.members_count || 0) - 1) }
+                        : g)
+                );
+                break;
+        }
+    }
+
+    ngOnDestroy() {
+        if (this.realtimeChannel) {
+            this.supabase.unsubscribe(this.realtimeChannel);
+        }
+        if (this.memberRealtimeChannel) {
+            this.supabase.unsubscribe(this.memberRealtimeChannel);
+        }
     }
 
     async fetchMyMemberships(memberId: string) {
@@ -119,7 +204,6 @@ export class WorkingGroupsService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._workingGroups.update((groups) => [...groups, data]);
         return data;
     }
 
@@ -132,9 +216,6 @@ export class WorkingGroupsService {
             .single();
 
         if (error) throw new Error(error.message);
-        this._workingGroups.update((groups) =>
-            groups.map((g) => (g.id === id ? data : g))
-        );
         return data;
     }
 
@@ -145,9 +226,6 @@ export class WorkingGroupsService {
             .eq('id', id);
 
         if (error) throw new Error(error.message);
-        this._workingGroups.update((groups) =>
-            groups.filter((g) => g.id !== id)
-        );
     }
 
     async joinGroup(groupId: string, memberId: string) {
@@ -162,11 +240,6 @@ export class WorkingGroupsService {
             newSet.add(groupId);
             return newSet;
         });
-
-        // Optimistically update count
-        this._workingGroups.update(groups =>
-            groups.map(g => g.id === groupId ? { ...g, members_count: (g.members_count || 0) + 1 } : g)
-        );
     }
 
     async leaveGroup(groupId: string, memberId: string) {
@@ -183,10 +256,5 @@ export class WorkingGroupsService {
             newSet.delete(groupId);
             return newSet;
         });
-
-        // Optimistically update count
-        this._workingGroups.update(groups =>
-            groups.map(g => g.id === groupId ? { ...g, members_count: Math.max(0, (g.members_count || 0) - 1) } : g)
-        );
     }
 }
