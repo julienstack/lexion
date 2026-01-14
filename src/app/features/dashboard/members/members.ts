@@ -1,103 +1,269 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+// PrimeNG Imports
 import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { AvatarModule } from 'primeng/avatar';
+import { MessageModule } from 'primeng/message';
+import { ToastModule } from 'primeng/toast';
+import { FileUploadModule } from 'primeng/fileupload';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { AvatarModule } from 'primeng/avatar';
-import { MenuModule } from 'primeng/menu';
 import { TooltipModule } from 'primeng/tooltip';
+import { CheckboxModule } from 'primeng/checkbox';
 
-interface Member {
-  id: number;
-  name: string;
-  role: string;
-  department: string;
-  status: 'Active' | 'Inactive' | 'Pending';
-  email: string;
-  joinDate: string;
-  avatar?: string;
-}
+import { MembersService } from '../../../shared/services/members.service';
+import { Member } from '../../../shared/models/member.model';
+import { AuthService } from '../../../shared/services/auth.service';
 
 @Component({
   selector: 'app-members',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
-    InputTextModule,
     TagModule,
+    DialogModule,
+    InputTextModule,
+    SelectModule,
+    AvatarModule,
+    MessageModule,
+    ToastModule,
+    FileUploadModule,
+    ConfirmDialogModule,
+    ProgressSpinnerModule,
     IconFieldModule,
     InputIconModule,
-    AvatarModule,
-    MenuModule,
-    TooltipModule
+    TooltipModule,
+    CheckboxModule
   ],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './members.html',
-  styleUrl: './members.css'
+  styleUrl: './members.css',
 })
-export class MembersComponent {
-  @ViewChild('dt') dt: Table | undefined;
+export class MembersComponent implements OnInit {
+  @ViewChild('dt') dt!: Table;
 
-  members: Member[] = [
-    { id: 1, name: 'Max Mustermann', role: 'Vorstand', department: 'Management', status: 'Active', email: 'max.mustermann@example.com', joinDate: '15.01.2023' },
-    { id: 2, name: 'Erika Musterfrau', role: 'Mitglied', department: 'Marketing', status: 'Active', email: 'erika.musterfrau@example.com', joinDate: '03.03.2023' },
-    { id: 3, name: 'John Doe', role: 'Kassierer', department: 'Finanzen', status: 'Inactive', email: 'john.doe@example.com', joinDate: '22.05.2022' },
-    { id: 4, name: 'Jane Roe', role: 'Schriftführer', department: 'Verwaltung', status: 'Pending', email: 'jane.roe@example.com', joinDate: '11.08.2024' },
-    { id: 5, name: 'Hans Müller', role: 'Mitglied', department: 'Technik', status: 'Active', email: 'hans.mueller@example.com', joinDate: '30.11.2023' },
-    { id: 6, name: 'Sarah Schmidt', role: 'Vorstand', department: 'Management', status: 'Active', email: 'sarah.schmidt@example.com', joinDate: '05.02.2023' },
-    { id: 7, name: 'Tom Weber', role: 'Mitglied', department: 'Marketing', status: 'Active', email: 'tom.weber@example.com', joinDate: '18.06.2024' },
-    { id: 8, name: 'Lisa König', role: 'Mitglied', department: 'Finanzen', status: 'Inactive', email: 'lisa.koenig@example.com', joinDate: '29.09.2022' },
-    { id: 9, name: 'Michael Bauer', role: 'Teamleiter', department: 'Technik', status: 'Active', email: 'michael.bauer@example.com', joinDate: '12.12.2021' },
-    { id: 10, name: 'Julia Wolf', role: 'Mitglied', department: 'Verwaltung', status: 'Active', email: 'julia.wolf@example.com', joinDate: '01.04.2024' },
-    { id: 11, name: 'Peter Koch', role: 'Mitglied', department: 'Technik', status: 'Pending', email: 'peter.koch@example.com', joinDate: '15.08.2024' },
-    { id: 12, name: 'Sandra Meyer', role: 'Mitglied', department: 'Marketing', status: 'Active', email: 'sandra.meyer@example.com', joinDate: '20.02.2023' }
-  ];
+  private membersService = inject(MembersService);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  public auth = inject(AuthService);
+
+  members = this.membersService.members;
+  loading = this.membersService.loading;
+  error = this.membersService.error;
 
   selectedMembers: Member[] = [];
 
-  getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  // Toggle Row using Table API directly
+  toggleRow(member: Member) {
+    this.dt.toggleRow(member);
   }
 
-  getAvatarColor(name: string): string {
-    const colors = [
-      '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
-    ];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
+  isRowExpanded(member: Member): boolean {
+    return this.dt?.isRowExpanded(member) ?? false;
   }
 
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'Active': return 'Aktiv';
-      case 'Inactive': return 'Inaktiv';
-      case 'Pending': return 'Ausstehend';
-      default: return status;
+  // Computed filter for search
+  currentSearchTerm = signal('');
+
+  filteredMembers = computed(() => {
+    const term = this.currentSearchTerm().toLowerCase();
+    let mList = this.members();
+    if (term) {
+      mList = mList.filter(m =>
+        m.name.toLowerCase().includes(term) ||
+        m.role?.toLowerCase().includes(term) ||
+        m.email.toLowerCase().includes(term)
+      );
     }
+    return mList;
+  });
+
+  dialogVisible = signal(false);
+  editMode = signal(false);
+  saving = signal(false);
+
+  currentMember: Partial<Member> = this.getEmptyMember();
+
+  statusOptions = [
+    { label: 'Aktiv', value: 'Active' },
+    { label: 'Inaktiv', value: 'Inactive' },
+    { label: 'Ausstehend', value: 'Pending' },
+  ];
+
+  ngOnInit(): void {
+    this.membersService.fetchMembers();
   }
 
-  getStatusSeverity(status: string): 'success' | 'danger' | 'warn' | 'info' | undefined {
-    switch (status) {
-      case 'Active': return 'success';
-      case 'Inactive': return 'danger';
-      case 'Pending': return 'warn';
-      default: return 'info';
+  getEmptyMember(): Partial<Member> {
+    return {
+      name: '',
+      role: 'Mitglied',
+      department: '',
+      status: 'Active',
+      email: '',
+      join_date: new Date().toLocaleDateString('de-DE'),
+      avatar_url: '',
+      app_role: 'member',
+      user_id: '',
+      street: '',
+      zip_code: '',
+      city: '',
+      phone: '',
+      birthday: ''
+    };
+  }
+
+  openNew() {
+    this.currentMember = this.getEmptyMember();
+    this.editMode.set(false);
+    this.dialogVisible.set(true);
+  }
+
+  editMember(member: Member) {
+    this.currentMember = { ...member };
+    this.editMode.set(true);
+    this.dialogVisible.set(true);
+  }
+
+  async saveMember() {
+    if (!this.currentMember.name || !this.currentMember.email) return;
+
+    this.saving.set(true);
+    try {
+      if (this.editMode() && this.currentMember.id) {
+        await this.membersService.updateMember(
+          this.currentMember.id,
+          this.currentMember
+        );
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: 'Mitglied aktualisiert',
+        });
+      } else {
+        await this.membersService.addMember(this.currentMember as Member);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: 'Mitglied hinzugefügt',
+        });
+      }
+      this.dialogVisible.set(false);
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: (e as Error).message,
+      });
     }
+    this.saving.set(false);
+  }
+
+  confirmDelete(member: Member) {
+    this.confirmationService.confirm({
+      message: `Möchtest du "${member.name}" wirklich löschen?`,
+      header: 'Löschen bestätigen',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Ja, löschen',
+      rejectLabel: 'Abbrechen',
+      accept: async () => {
+        try {
+          await this.membersService.deleteMember(member.id!);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Gelöscht',
+            detail: 'Mitglied entfernt',
+          });
+        } catch (e) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail: (e as Error).message,
+          });
+        }
+      },
+    });
+  }
+
+  deleteSelected() {
+    if (!this.selectedMembers || !this.selectedMembers.length) return;
+    this.confirmationService.confirm({
+      message: `Möchtest du ${this.selectedMembers.length} Mitglieder wirklich löschen?`,
+      header: 'Löschen bestätigen',
+      icon: 'pi pi-exclamation-triangle',
+      accept: async () => {
+        try {
+          for (const m of this.selectedMembers) {
+            if (m.id) await this.membersService.deleteMember(m.id);
+          }
+          this.selectedMembers = [];
+          this.messageService.add({ severity: 'success', summary: 'Gelöscht', detail: 'Mitglieder entfernt' });
+        } catch (e) {
+          this.messageService.add({ severity: 'error', summary: 'Fehler', detail: (e as Error).message });
+        }
+      }
+    });
   }
 
   onGlobalFilter(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (this.dt) {
-      this.dt.filterGlobal(input.value, 'contains');
+    this.currentSearchTerm.set(input.value);
+  }
+
+  getStatusLabel(status: string) {
+    const labels: Record<string, string> = {
+      'Active': 'Aktiv',
+      'Inactive': 'Inaktiv',
+      'Pending': 'Ausstehend'
+    };
+    return labels[status] || status;
+  }
+
+  getStatusSeverity(status: string) {
+    switch (status) {
+      case 'Active':
+        return 'success';
+      case 'Inactive':
+        return 'danger';
+      case 'Pending':
+        return 'warn';
+      default:
+        return 'info';
     }
+  }
+
+  getRoleSeverity(role: string) {
+    switch (role) {
+      case 'admin': return 'danger';
+      case 'committee': return 'contrast';
+      case 'member': return 'info';
+      default: return 'secondary';
+    }
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  }
+
+  getAvatarColor(name: string): string {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
   }
 }

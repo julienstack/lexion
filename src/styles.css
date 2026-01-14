@@ -1,7 +1,15 @@
+@layer tailwind-base, primeng, tailwind-utilities;
+
 @import "primeicons/primeicons.css";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+@layer tailwind-base {
+    @tailwind base;
+}
+
+@layer tailwind-utilities {
+    @tailwind components;
+    @tailwind utilities;
+}
 
 :root {
     --primary-color: #e11d48;
@@ -14,3 +22,51 @@ body {
     color: #f3f4f6;
     /* Gray-100 */
 }
+
+/* Global PrimeNG Overrides for Dark/Glassy Look */
+.p-dialog .p-dialog-content {
+    background-color: transparent !important;
+}
+
+.p-dialog .p-dialog-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.p-dialog {
+    background-color: #1f2937 !important;
+    /* Gray-800 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-radius: 0.75rem;
+    /* rounded-xl */
+}
+
+/* Ensure inputs are visible on dark background */
+.p-inputtext,
+.p-textarea,
+.p-select,
+.p-multiselect,
+.p-chips-token {
+    background-color: #374151 !important;
+    /* Gray-700 */
+    border-color: #4b5563 !important;
+    /* Gray-600 */
+    color: white !important;
+}
+
+.p-inputtext:focus,
+.p-textarea:focus,
+.p-select:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.2) !important;
+}
+
+/* Dialog Footer */
+.p-dialog-footer {
+    background-color: transparent !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Button overrides if needed, but Aura should be fine */

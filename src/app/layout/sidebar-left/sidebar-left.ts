@@ -1,12 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-sidebar-left',
-  imports: [RouterLink, RouterLinkActive],
+  standalone: true,
+  imports: [RouterLink, RouterLinkActive, CommonModule],
   templateUrl: './sidebar-left.html',
   styleUrl: './sidebar-left.css',
 })
 export class SidebarLeft {
-
+  public auth = inject(AuthService);
 }

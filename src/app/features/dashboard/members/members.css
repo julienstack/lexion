@@ -36,8 +36,8 @@
     background: transparent;
 }
 
-/* Style TDs to create the card look */
-:host ::ng-deep .custom-table .p-datatable-tbody>tr>td {
+/* Normal Rows (not expansion) */
+:host ::ng-deep .custom-table .p-datatable-tbody>tr:not(.p-datatable-row-expansion)>td {
     background-color: rgba(31, 41, 55, 0.4);
     /* bg-gray-800/40 */
     border-top: 1px solid rgba(75, 85, 99, 0.3);
@@ -46,35 +46,45 @@
     padding: 1rem;
     color: white;
     font-size: 1rem;
-    /* Consistent font size */
     vertical-align: middle;
 }
 
-:host ::ng-deep .custom-table .p-datatable-tbody>tr>td:first-child {
+:host ::ng-deep .custom-table .p-datatable-tbody>tr:not(.p-datatable-row-expansion)>td:first-child {
     border-left: 1px solid rgba(75, 85, 99, 0.3);
     border-top-left-radius: 0.75rem;
     border-bottom-left-radius: 0.75rem;
 }
 
-:host ::ng-deep .custom-table .p-datatable-tbody>tr>td:last-child {
+:host ::ng-deep .custom-table .p-datatable-tbody>tr:not(.p-datatable-row-expansion)>td:last-child {
     border-right: 1px solid rgba(75, 85, 99, 0.3);
     border-top-right-radius: 0.75rem;
     border-bottom-right-radius: 0.75rem;
 }
 
+/* Row Expansion Specifics */
+:host ::ng-deep .custom-table .p-datatable-tbody>tr.p-datatable-row-expansion {
+    background: transparent;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody>tr.p-datatable-row-expansion>td {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
 /* Hover Effects */
-:host ::ng-deep .custom-table .p-datatable-tbody>tr:hover>td {
+:host ::ng-deep .custom-table .p-datatable-tbody>tr:not(.p-datatable-row-expansion):hover>td {
     background-color: rgba(31, 41, 55, 0.6);
     border-color: var(--primary-color);
     border-top-color: var(--primary-color);
     border-bottom-color: var(--primary-color);
 }
 
-:host ::ng-deep .custom-table .p-datatable-tbody>tr:hover>td:first-child {
+:host ::ng-deep .custom-table .p-datatable-tbody>tr:not(.p-datatable-row-expansion):hover>td:first-child {
     border-left-color: var(--primary-color);
 }
 
-:host ::ng-deep .custom-table .p-datatable-tbody>tr:hover>td:last-child {
+:host ::ng-deep .custom-table .p-datatable-tbody>tr:not(.p-datatable-row-expansion):hover>td:last-child {
     border-right-color: var(--primary-color);
 }
 
@@ -91,6 +101,10 @@
 :host ::ng-deep .p-checkbox .p-checkbox-box.p-highlight {
     background: var(--primary-color);
     border-color: var(--primary-color);
+}
+
+:host ::ng-deep .p-checkbox .p-checkbox-box .p-checkbox-icon {
+    color: #ffffff !important;
 }
 
 /* Avatar Styling - Fix size issues */

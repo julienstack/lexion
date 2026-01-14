@@ -1,31 +1,137 @@
-import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Injectable, signal } from '@angular/core';
+import {
+  AuthChangeEvent,
+  createClient,
+  Session,
+  SupabaseClient,
+  User,
+} from '@supabase/supabase-js';
+import { environment } from '../../../environments/environment';
 
+/**
+ * Service for interacting with Supabase
+ * Provides authentication, database, storage, and realtime functionality
+ */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SupabaseService {
   private supabase: SupabaseClient;
-
-  // TODO: Replace with environment variables
-  private supabaseUrl = 'YOUR_SUPABASE_URL';
-  private supabaseKey = 'YOUR_SUPABASE_KEY';
+  private _session = signal<Session | null>(null);
+  private _user = signal<User | null>(null);
 
   constructor() {
-    this.supabase = createClient(this.supabaseUrl, this.supabaseKey);
+    this.supabase = createClient(
+      environment.supabase.url,
+      environment.supabase.anonKey
+    );
+
+    this.supabase.auth.getSession().then(({ data }) => {
+      this._session.set(data.session);
+      this._user.set(data.session?.user ?? null);
+    });
+
+    this.supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        this._session.set(session);
+        this._user.set(session?.user ?? null);
+      }
+    );
   }
 
-  get client() {
+  /** Get the Supabase client instance */
+  get client(): SupabaseClient {
     return this.supabase;
   }
 
-  // Basic Auth Helpers
-  async signIn() {
-    // Placeholder for auth implementation
-    return this.supabase.auth.signInWithOAuth({ provider: 'github' });
+  /** Current session signal (readonly) */
+  get session() {
+    return this._session.asReadonly();
   }
 
-  async signOut() {
+  /** Current user signal (readonly) */
+  get user() {
+    return this._user.asReadonly();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUTHENTICATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Sign in with OAuth provider (GitHub, Google, etc.) */
+  signInWithOAuth(provider: 'github' | 'google' | 'discord') {
+    return this.supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  }
+
+  /** Sign in with email and password */
+  signInWithPassword(email: string, password: string) {
+    return this.supabase.auth.signInWithPassword({ email, password });
+  }
+
+  /** Sign up with email and password */
+  signUp(email: string, password: string) {
+    return this.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  }
+
+  /** Sign out current user */
+  signOut() {
     return this.supabase.auth.signOut();
+  }
+
+  /** Reset password for email */
+  resetPassword(email: string) {
+    return this.supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DATABASE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Query a table */
+  from(table: string) {
+    return this.supabase.from(table);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STORAGE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Access a storage bucket */
+  storage(bucket: string) {
+    return this.supabase.storage.from(bucket);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // REALTIME
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Subscribe to realtime changes on a table */
+  subscribeToTable(table: string, callback: (payload: unknown) => void) {
+    return this.supabase
+      .channel(`${table}-changes`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table },
+        callback
+      )
+      .subscribe();
+  }
+
+  /** Unsubscribe from a channel */
+  unsubscribe(channel: ReturnType<SupabaseClient['channel']>) {
+    return this.supabase.removeChannel(channel);
   }
 }
