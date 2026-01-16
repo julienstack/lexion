@@ -1,215 +1,203 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="p-6">
+<div class="p-2 md:p-6">
     <!-- Loading -->
     @if (loading()) {
-    <div class="flex justify-center items-center py-12">
+    <div class="flex justify-center items-center py-8">
         <p-progressSpinner strokeWidth="4" ariaLabel="Lade AGs..." />
     </div>
     }
 
     <!-- Error -->
     @if (error()) {
-    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-4 w-full" />
+    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-3 w-full" />
     }
 
-    <div class="flex justify-between items-center mb-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-3xl font-bold text-white">Arbeitsgemeinschaften (AGs)</h1>
-            <p class="text-gray-400 mt-2">Hier findest du alle aktiven Gruppen, denen du beitreten kannst</p>
+            <h1 class="text-xl md:text-3xl font-bold text-white">Arbeitsgemeinschaften (AGs)</h1>
+            <p class="text-gray-400 text-sm hidden md:block mt-1">Hier findest du alle aktiven Gruppen</p>
         </div>
         @if (auth.isAdmin()) {
-        <p-button label="Neue AG gründen" icon="pi pi-plus" severity="danger" [raised]="true"
+        <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
             (click)="openNew()"></p-button>
         }
     </div>
 
-    <p-accordion [multiple]="true" styleClass="ag-list">
+    <!-- AG List -->
+    <div class="space-y-2">
         @for (group of groups(); track group.id) {
-        <p-accordion-panel [value]="group.id!">
-            <p-accordion-header>
-                <div class="flex items-center gap-4 w-full">
-                    <p-avatar [label]="getInitials(group.name)" shape="circle" size="large"
-                        [style]="{'background-color': getAvatarColor(group.name), 'color': '#ffffff'}"></p-avatar>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold text-white mb-1">{{group.name}}</h3>
-                        <div class="flex gap-4 items-center flex-wrap text-sm text-gray-400">
-                            <span class="flex items-center gap-2">
-                                <i [ngClass]="getIconForType(group.contact_type)"></i>
+        <div class="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
+            <!-- Header (Always Visible) -->
+            <div class="p-3 cursor-pointer" (click)="toggleExpand(group.id!)">
+                <div class="flex items-center gap-3">
+                    <!-- Avatar -->
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                        [style.background-color]="getAvatarColor(group.name)">
+                        {{getInitials(group.name)}}
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm md:text-base font-bold text-white truncate">{{group.name}}</h3>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 mt-0.5">
+                            <span class="flex items-center gap-1">
+                                <i [ngClass]="getIconForType(group.contact_type)" class="text-[10px]"></i>
                                 {{group.contact_type}}
                             </span>
-                            <span class="flex items-center gap-2">
-                                <i class="pi pi-users"></i>
-                                {{group.members_count}} Mitglieder
+                            <span class="flex items-center gap-1">
+                                <i class="pi pi-users text-[10px]"></i>
+                                {{group.members_count}} Mitgl.
                             </span>
-                            <span class="flex items-center gap-2">
-                                <i class="pi pi-calendar"></i>
-                                @if (getAgEvents(group.id!).length > 0) {
-                                {{getAgEvents(group.id!)[0].date}} • {{getAgEvents(group.id!)[0].start_time}}
-                                } @else {
-                                <span class="text-gray-500 italic">Kein Termin</span>
-                                }
+                            @if (getAgEvents(group.id!).length > 0) {
+                            <span class="hidden sm:flex items-center gap-1">
+                                <i class="pi pi-calendar text-[10px]"></i>
+                                {{getAgEvents(group.id!)[0].date}}
                             </span>
+                            } @else {
+                            <span class="hidden sm:flex items-center gap-1 text-gray-500">
+                                <i class="pi pi-calendar text-[10px]"></i>
+                                Kein Termin
+                            </span>
+                            }
                         </div>
                     </div>
 
-                    <!-- Admin Actions in Header -->
-                    @if (auth.isAdmin()) {
-                    <div class="flex gap-1" (click)="$event.stopPropagation()">
-                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
-                            (click)="editGroup(group)"></p-button>
-                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                            (click)="confirmDelete(group)"></p-button>
+                    <!-- Actions + Expand -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        @if (auth.isAdmin()) {
+                        <button (click)="editGroup(group); $event.stopPropagation()"
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                            <i class="pi pi-pencil text-xs"></i>
+                        </button>
+                        <button (click)="confirmDelete(group); $event.stopPropagation()"
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-gray-700 transition-colors">
+                            <i class="pi pi-trash text-xs"></i>
+                        </button>
+                        }
+                        <i class="pi text-gray-400 text-xs ml-1"
+                            [class]="expandedGroups[group.id!] ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expanded Content -->
+            @if (expandedGroups[group.id!]) {
+            <div class="border-t border-gray-700/50 p-3 bg-gray-800/20 space-y-3">
+                <!-- Description -->
+                <div>
+                    <div class="text-[10px] uppercase text-gray-500 font-semibold mb-1">Beschreibung</div>
+                    <p class="text-sm text-gray-300">{{group.description || 'Keine Beschreibung'}}</p>
+                </div>
+
+                <!-- Tags -->
+                @if (group.tags && group.tags.length > 0) {
+                <div>
+                    <div class="text-[10px] uppercase text-gray-500 font-semibold mb-1">Schwerpunkte</div>
+                    <div class="flex flex-wrap gap-1">
+                        @for (tag of group.tags; track tag) {
+                        <span class="px-2 py-0.5 bg-gray-700 text-gray-300 rounded-full text-[10px]">{{tag}}</span>
+                        }
+                    </div>
+                </div>
+                }
+
+                <!-- Lead & Next Meeting -->
+                <div class="flex flex-wrap gap-4 text-sm">
+                    <div>
+                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Leitung</div>
+                        <div class="text-white">{{group.lead || '-'}}</div>
+                    </div>
+                    @if (group.next_meeting) {
+                    <div>
+                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Nächstes Treffen</div>
+                        <div class="text-white">{{group.next_meeting}}</div>
                     </div>
                     }
                 </div>
-            </p-accordion-header>
 
-            <p-accordion-content>
-                <div class="pt-4 pb-2">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left Column -->
-                        <div class="lg:col-span-2 space-y-6">
-                            <!-- Description -->
-                            <div class="bg-gray-800/40 rounded-xl p-5 border border-gray-700/30">
-                                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                                    Beschreibung</h4>
-                                <p class="text-gray-300 leading-relaxed">{{group.description}}</p>
-                            </div>
-
-                            <!-- Tags & Info Row -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="bg-gray-800/40 rounded-xl p-5 border border-gray-700/30">
-                                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                                        Schwerpunkte</h4>
-                                    <div class="flex gap-2 flex-wrap">
-                                        @for (tag of group.tags; track tag) {
-                                        <p-tag [value]="tag" [rounded]="true" severity="secondary"></p-tag>
-                                        }
-                                    </div>
-                                </div>
-
-                                <div class="bg-gray-800/40 rounded-xl p-5 space-y-4 border border-gray-700/30">
-                                    <div class="flex items-center gap-3">
-                                        <i class="pi pi-user text-gray-500"></i>
-                                        <div>
-                                            <div class="text-xs text-gray-500">Leitung</div>
-                                            <div class="text-white font-medium">{{group.lead}}</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Upcoming Events -->
-                                    <div class="border-t border-gray-700/50 pt-4">
-                                        <h4
-                                            class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            <i class="pi pi-calendar"></i> Anstehende Termine
-                                        </h4>
-                                        @if (getAgEvents(group.id!).length > 0) {
-                                        @for (evt of getAgEvents(group.id!).slice(0, 3); track evt.id) {
-                                        <div
-                                            class="flex items-center gap-3 py-2 border-b border-gray-700/30 last:border-0">
-                                            <div
-                                                class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-400">
-                                                <i class="pi pi-calendar"></i>
-                                            </div>
-                                            <div class="flex-1">
-                                                <div class="text-white text-sm font-medium">{{evt.title}}</div>
-                                                <div class="text-gray-400 text-xs">{{evt.date}} • {{evt.start_time}}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        }
-                                        @if (getAgEvents(group.id!).length > 3) {
-                                        <div class="text-xs text-gray-500 mt-2">+ {{getAgEvents(group.id!).length - 3}}
-                                            weitere Termine</div>
-                                        }
-                                        } @else {
-                                        <div class="text-gray-500 text-sm italic">Keine Termine geplant</div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
+                <!-- Upcoming Events -->
+                @if (getAgEvents(group.id!).length > 0) {
+                <div>
+                    <div class="text-[10px] uppercase text-gray-500 font-semibold mb-1">Termine</div>
+                    <div class="space-y-1">
+                        @for (evt of getAgEvents(group.id!).slice(0, 2); track evt.id) {
+                        <div class="flex items-center gap-2 text-xs bg-gray-900/50 rounded px-2 py-1.5">
+                            <i class="pi pi-calendar text-pink-400 text-[10px]"></i>
+                            <span class="text-white">{{evt.title}}</span>
+                            <span class="text-gray-500">{{evt.date}} • {{evt.start_time}}</span>
                         </div>
-
-                        <!-- Right Column: Join -->
-                        <div class="lg:col-span-1">
-                            <div
-                                class="bg-gray-800/60 rounded-xl p-6 text-center h-full flex flex-col border border-gray-700/30">
-                                <div
-                                    class="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center bg-pink-500/20">
-                                    <i class="text-2xl text-pink-400"
-                                        [ngClass]="getIconForType(group.contact_type)"></i>
-                                </div>
-
-                                @if (auth.isLoggedIn()) {
-                                <h4 class="text-lg font-bold text-white mb-1">Gruppe beitreten</h4>
-                                <p class="text-sm text-gray-400 mb-6">Über {{group.contact_type}} kommunizieren</p>
-
-                                <div class="flex-1"></div>
-
-                                @if (group.contact_link) {
-                                <a [href]="group.contact_link" target="_blank" class="block mb-3">
-                                    <p-button [label]="group.contact_type + ' beitreten'"
-                                        [icon]="getIconForType(group.contact_type)" styleClass="w-full"
-                                        severity="danger" [raised]="true"></p-button>
-                                </a>
-                                }
-
-                                <p-button [label]="myMemberships().has(group.id!) ? 'AG verlassen' : 'Mitglied werden'"
-                                    [icon]="myMemberships().has(group.id!) ? 'pi pi-sign-out' : 'pi pi-user-plus'"
-                                    [severity]="myMemberships().has(group.id!) ? 'secondary' : 'contrast'"
-                                    [outlined]="myMemberships().has(group.id!)" styleClass="w-full"
-                                    (click)="toggleMembership(group)">
-                                </p-button>
-                                } @else {
-                                <h4 class="text-lg font-bold text-white mb-1">Anmeldung erforderlich</h4>
-                                <p class="text-sm text-gray-400 mb-6">Melde dich an, um beizutreten</p>
-                                <div class="flex-1"></div>
-                                <a routerLink="/login" class="block">
-                                    <p-button label="Zum Login" icon="pi pi-sign-in" styleClass="w-full"
-                                        severity="secondary"></p-button>
-                                </a>
-                                }
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
-            </p-accordion-content>
-        </p-accordion-panel>
+                }
+
+                <!-- Join Actions -->
+                <div class="pt-2 border-t border-gray-700/50">
+                    @if (auth.isLoggedIn()) {
+                    <div class="flex flex-wrap gap-2">
+                        @if (group.contact_link) {
+                        <a [href]="group.contact_link" target="_blank" class="flex-1 min-w-[120px]">
+                            <p-button [label]="group.contact_type" [icon]="getIconForType(group.contact_type)"
+                                styleClass="w-full" severity="danger" size="small"></p-button>
+                        </a>
+                        }
+                        <p-button [label]="myMemberships().has(group.id!) ? 'Verlassen' : 'Beitreten'"
+                            [icon]="myMemberships().has(group.id!) ? 'pi pi-sign-out' : 'pi pi-user-plus'"
+                            [severity]="myMemberships().has(group.id!) ? 'secondary' : 'contrast'"
+                            [outlined]="myMemberships().has(group.id!)" size="small"
+                            (click)="toggleMembership(group); $event.stopPropagation()">
+                        </p-button>
+                    </div>
+                    } @else {
+                    <a routerLink="/login">
+                        <p-button label="Anmelden zum Beitreten" icon="pi pi-sign-in" size="small" severity="secondary"
+                            styleClass="w-full"></p-button>
+                    </a>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        } @empty {
+        <div class="text-center py-8 text-gray-500">
+            <i class="pi pi-users text-3xl mb-2"></i>
+            <p class="text-sm">Keine AGs gefunden</p>
+        </div>
         }
-    </p-accordion>
+    </div>
 </div>
 
 <!-- AG Dialog -->
-<p-dialog [header]="editMode() ? 'AG bearbeiten' : 'Neue AG gründen'" [(visible)]="dialogVisible" [modal]="true"
+<p-dialog [header]="editMode() ? 'AG bearbeiten' : 'Neue AG'" [(visible)]="dialogVisible" [modal]="true"
     [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
-    [style]="{width: '600px', maxWidth: '90vw'}" [closable]="!saving()">
-    <div class="space-y-4">
+    [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
+    <div class="space-y-3">
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Name der AG *</label>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
             <input pInputText [(ngModel)]="currentGroup.name" class="w-full" placeholder="z.B. Öffentlichkeitsarbeit" />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung *</label>
-            <textarea pTextarea [(ngModel)]="currentGroup.description" class="w-full" rows="3"
-                placeholder="Zielsetzung der AG..."></textarea>
+            <textarea pTextarea [(ngModel)]="currentGroup.description" class="w-full" rows="2"
+                placeholder="Zielsetzung..."></textarea>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Leitung (Lead) *</label>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Leitung *</label>
                 <input pInputText [(ngModel)]="currentGroup.lead" class="w-full" placeholder="Name" />
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Nächstes Treffen</label>
-                <input pInputText [(ngModel)]="currentGroup.next_meeting" class="w-full"
-                    placeholder="z.B. Montags 19:00" />
+                <input pInputText [(ngModel)]="currentGroup.next_meeting" class="w-full" placeholder="Montags 19:00" />
             </div>
         </div>
 
-        <div class="border-t border-gray-700 pt-4">
-            <h4 class="text-white font-medium mb-3">Kontakt & Plattform</h4>
-            <div class="grid grid-cols-2 gap-4">
+        <div class="border-t border-gray-700 pt-3">
+            <h4 class="text-white font-medium mb-2 text-sm">Kontakt</h4>
+            <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">Typ</label>
                     <p-select [(ngModel)]="currentGroup.contact_type" [options]="contactTypes" optionLabel="label"
@@ -230,11 +218,10 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">Anzeige-Wert</label>
-                    <input pInputText [(ngModel)]="currentGroup.contact_value" class="w-full"
-                        placeholder="#kanal oder E-Mail" />
+                    <input pInputText [(ngModel)]="currentGroup.contact_value" class="w-full" placeholder="#kanal" />
                 </div>
                 <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Link (URL)</label>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Link</label>
                     <input pInputText [(ngModel)]="currentGroup.contact_link" class="w-full"
                         placeholder="https://discord.gg/..." />
                 </div>
@@ -243,16 +230,14 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Tags (Komma-getrennt)</label>
-            <input pInputText [(ngModel)]="tagsInput" class="w-full"
-                placeholder="technik, design, veranstaltungen..." />
-            <small class="text-gray-500">Mehrere Tags mit Komma trennen</small>
+            <input pInputText [(ngModel)]="tagsInput" class="w-full" placeholder="technik, design..." />
         </div>
     </div>
 
     <ng-template pTemplate="footer">
         <p-button label="Abbrechen" severity="secondary" [text]="true" (click)="dialogVisible.set(false)"
             [disabled]="saving()" />
-        <p-button [label]="editMode() ? 'Speichern' : 'Gründen'" icon="pi pi-check" (click)="saveGroup()"
+        <p-button [label]="editMode() ? 'Speichern' : 'Erstellen'" icon="pi pi-check" (click)="saveGroup()"
             [loading]="saving()" />
     </ng-template>
 </p-dialog>

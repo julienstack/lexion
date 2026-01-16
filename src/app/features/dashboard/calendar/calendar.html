@@ -1,106 +1,105 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="p-6">
+<div class="p-2 md:p-6">
     <!-- Loading -->
     @if (loading()) {
-    <div class="flex justify-center items-center py-12">
+    <div class="flex justify-center items-center py-8">
         <p-progressSpinner strokeWidth="4" ariaLabel="Lade Termine..." />
     </div>
     }
 
     <!-- Error -->
     @if (error()) {
-    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-4 w-full" />
+    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-3 w-full" />
     }
 
     @if (!loading()) {
-    <div class="flex justify-between items-center mb-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-3xl font-bold text-white mb-2">Termine</h1>
-            <p class="text-gray-400">Deine anstehenden Termine und Events.</p>
+            <h1 class="text-xl md:text-3xl font-bold text-white">Termine</h1>
+            <p class="text-gray-400 text-sm hidden md:block">Deine anstehenden Termine und Events.</p>
         </div>
         @if (auth.isAdmin()) {
-        <p-button label="Neuer Termin" icon="pi pi-plus" severity="danger" [raised]="true"
+        <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
             (click)="openNew()"></p-button>
         }
     </div>
 
     <!-- Empty State -->
     @if (events().length === 0) {
-    <div class="text-center py-12">
-        <i class="pi pi-calendar text-6xl text-gray-600 mb-4"></i>
-        <p class="text-gray-400 text-lg">Keine Termine gefunden.</p>
-        <p class="text-gray-500 text-sm mt-2">Wenn du Zugriff hast, sind keine Termine verfügbar.</p>
+    <div class="text-center py-8">
+        <i class="pi pi-calendar text-4xl text-gray-600 mb-3"></i>
+        <p class="text-gray-400">Keine Termine gefunden.</p>
     </div>
     }
 
-    <div class="space-y-4">
+    <!-- Events List -->
+    <div class="space-y-2 md:space-y-3">
         @for (event of sortedEvents; track event.id) {
-        <div
-            class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50 hover:border-[var(--primary-color)] transition-all group">
-            <div class="flex flex-col md:flex-row md:items-center gap-4">
-
-                <!-- Date Box -->
+        <div class="bg-gray-800/40 rounded-lg p-3 border border-gray-700/50 hover:border-pink-500/50 transition-colors">
+            <div class="flex gap-3">
+                <!-- Compact Date Box -->
                 <div
-                    class="flex-shrink-0 flex md:flex-col items-center justify-center w-full md:w-20 md:h-20 bg-gray-900/50 rounded-lg border border-gray-700 p-2 gap-2 md:gap-0">
-                    <span class="text-sm font-medium text-gray-400 uppercase">{{ parseDate(event.date) | date:'MMM'
-                        }}</span>
-                    <span class="text-2xl font-bold text-white">{{ parseDate(event.date) | date:'dd' }}</span>
-                    <span class="text-xs text-gray-500 md:hidden">- {{ parseDate(event.date) | date:'EEEE' }}</span>
+                    class="flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-gray-900/60 rounded-lg border border-gray-700">
+                    <span class="text-[10px] md:text-xs font-medium text-gray-400 uppercase leading-tight">{{
+                        parseDate(event.date) | date:'MMM' }}</span>
+                    <span class="text-base md:text-xl font-bold text-white leading-tight">{{ parseDate(event.date) |
+                        date:'dd' }}</span>
                 </div>
 
                 <!-- Content -->
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-start justify-between gap-4 mb-2">
-                        <div>
-                            <h3
-                                class="text-lg font-bold text-white group-hover:text-[var(--primary-color)] transition-colors">
-                                {{ event.title }}
-                            </h3>
-                            <div class="flex items-center gap-2 text-sm text-gray-400 mt-1">
-                                <i class="pi pi-clock text-[var(--primary-color)]"></i>
-                                <span>{{ event.start_time }}</span>
-                                @if(event.end_time) {
-                                <span>- {{ event.end_time }}</span>
-                                }
-                                <span class="mx-1">•</span>
-                                <i class="pi pi-map-marker text-[var(--primary-color)]"></i>
-                                <span>{{ event.location }}</span>
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-sm md:text-base font-bold text-white truncate">{{ event.title }}</h3>
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 mt-1">
+                                <span class="flex items-center gap-1">
+                                    <i class="pi pi-clock text-pink-500 text-[10px]"></i>
+                                    {{ event.start_time }}@if(event.end_time) {-{{ event.end_time }}}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="pi pi-map-marker text-pink-500 text-[10px]"></i>
+                                    <span class="truncate max-w-[100px] md:max-w-none">{{ event.location }}</span>
+                                </span>
                             </div>
                         </div>
 
-                        <!-- Chips/Badges -->
-                        <div class="flex items-center gap-2">
+                        <!-- Type Badge + Actions -->
+                        <div class="flex items-center gap-1 flex-shrink-0">
                             @if (event.type === 'general') {
                             <span
-                                class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-semibold border border-blue-500/30">
-                                Allgemein
+                                class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[10px] font-medium">
+                                Allg.
                             </span>
                             } @else if (event.type === 'personal') {
                             <span
-                                class="px-2 py-1 rounded bg-purple-500/20 text-purple-400 text-xs font-semibold border border-purple-500/30">
-                                Persönlich
+                                class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[10px] font-medium">
+                                Priv.
                             </span>
                             } @else if (event.type === 'ag') {
                             <span
-                                class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
-                                {{ event.ag_name || 'AG' }}
+                                class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-medium">
+                                AG
                             </span>
                             }
 
-                            <!-- Action Buttons -->
                             @if (auth.isAdmin()) {
-                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
-                                (click)="editEvent(event)"></p-button>
-                            <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
-                                (click)="confirmDelete(event)"></p-button>
+                            <button (click)="editEvent(event)"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                                <i class="pi pi-pencil text-xs"></i>
+                            </button>
+                            <button (click)="confirmDelete(event)"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-gray-700 transition-colors">
+                                <i class="pi pi-trash text-xs"></i>
+                            </button>
                             }
                         </div>
                     </div>
 
                     @if (event.description) {
-                    <p class="text-sm text-gray-400 line-clamp-2">{{ event.description }}</p>
+                    <p class="text-xs text-gray-500 mt-1.5 line-clamp-1 md:line-clamp-2">{{ event.description }}</p>
                     }
                 </div>
             </div>
@@ -113,13 +112,13 @@
 <!-- Event Dialog -->
 <p-dialog [header]="editMode() ? 'Termin bearbeiten' : 'Neuer Termin'" [(visible)]="dialogVisible" [modal]="true"
     [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
-    [style]="{width: '600px', maxWidth: '90vw'}" [closable]="!saving()">
-    <div class="space-y-4">
+    [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
+    <div class="space-y-3">
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Titel *</label>
             <input pInputText [(ngModel)]="currentEvent.title" class="w-full" placeholder="Vorstandssitzung" />
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Datum *</label>
                 <p-datepicker [(ngModel)]="eventDate" dateFormat="dd.mm.yy" styleClass="w-full" />
@@ -135,10 +134,9 @@
             <label class="block text-sm font-medium text-gray-300 mb-1">Sichtbarkeit</label>
             <p-select [(ngModel)]="tempVisibility" [options]="visibilityOptions" optionLabel="label" optionValue="value"
                 styleClass="w-full" />
-            <small class="text-gray-500">Wer darf diesen Termin sehen?</small>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Startzeit *</label>
                 <input pInputText [(ngModel)]="currentEvent.start_time" class="w-full" placeholder="19:00" />
@@ -153,18 +151,17 @@
             <input pInputText [(ngModel)]="currentEvent.location" class="w-full" placeholder="Vereinsheim" />
         </div>
         @if (currentEvent.type === 'ag') {
-        <div class="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-            <label class="block text-sm font-medium text-gray-300 mb-1">Arbeitsgruppe verknüpfen</label>
+        <div class="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Arbeitsgruppe</label>
             <p-select [(ngModel)]="currentEvent.working_group_id" [options]="workingGroups()" optionLabel="name"
                 optionValue="id" placeholder="AG auswählen..." styleClass="w-full">
             </p-select>
-            <small class="text-gray-500">Nur Mitglieder dieser AG sehen den Termin</small>
         </div>
         }
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung</label>
-            <textarea pTextarea [(ngModel)]="currentEvent.description" class="w-full" rows="3"
-                placeholder="Details zum Termin..."></textarea>
+            <textarea pTextarea [(ngModel)]="currentEvent.description" class="w-full" rows="2"
+                placeholder="Details..."></textarea>
         </div>
     </div>
 

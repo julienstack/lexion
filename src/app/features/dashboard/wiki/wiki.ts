@@ -1,20 +1,16 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
-import { RippleModule } from 'primeng/ripple';
+import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { WikiService } from '../../../shared/services/wiki.service';
 import { WikiDoc } from '../../../shared/models/wiki-doc.model';
@@ -26,20 +22,16 @@ import { AuthService } from '../../../shared/services/auth.service';
   imports: [
     CommonModule,
     FormsModule,
-    TableModule,
     TagModule,
     ButtonModule,
     InputTextModule,
     TextareaModule,
     SelectModule,
-    IconFieldModule,
-    InputIconModule,
     DialogModule,
     ProgressSpinnerModule,
-    MessageModule,
     ConfirmDialogModule,
     ToastModule,
-    RippleModule
+    TooltipModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './wiki.html',
@@ -49,7 +41,7 @@ export class WikiComponent implements OnInit {
   private wikiService = inject(WikiService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
-  public auth = inject(AuthService); // Public for template access
+  public auth = inject(AuthService);
 
   docs = this.wikiService.docs;
   loading = this.wikiService.loading;
@@ -60,23 +52,18 @@ export class WikiComponent implements OnInit {
   saving = signal(false);
   selectedCategory = signal<string | null>(null);
   currentSearchTerm = signal('');
+  selectedArticle = signal<WikiDoc | null>(null);
 
-  // explicit state for expanded rows
-  expandedRows: Record<string, boolean> = {};
-
-  toggleRow(doc: WikiDoc) {
-    if (!doc.id) return;
-    const expanded = { ...this.expandedRows };
-    if (expanded[doc.id]) {
-      delete expanded[doc.id];
-    } else {
-      expanded[doc.id] = true;
-    }
-    this.expandedRows = expanded;
-  }
+  /** Expanded state for each category */
+  expandedCategories: Record<string, boolean> = {
+    General: true,
+    Finance: false,
+    Tech: false,
+    Legal: false
+  };
 
   currentDoc: Partial<WikiDoc> = this.getEmptyDoc();
-  tempVisibility = 'public'; // Helper for visibility selection
+  tempVisibility = 'public';
 
   categoryOptions = [
     { label: 'Allgemein', value: 'General' },
@@ -100,13 +87,9 @@ export class WikiComponent implements OnInit {
 
   filteredDocs = computed(() => {
     let docs = this.docs();
-
-    // 1. Filter by Category
     if (this.selectedCategory()) {
       docs = docs.filter((d) => d.category === this.selectedCategory());
     }
-
-    // 2. Filter by Search
     const term = this.currentSearchTerm().toLowerCase();
     if (term) {
       docs = docs.filter(
@@ -116,12 +99,45 @@ export class WikiComponent implements OnInit {
           d.author.toLowerCase().includes(term)
       );
     }
-
     return docs;
   });
 
   ngOnInit(): void {
     this.wikiService.fetchDocs();
+  }
+
+  /** Toggle category expansion and filter */
+  toggleCategory(category: string) {
+    this.expandedCategories[category] = !this.expandedCategories[category];
+    if (this.expandedCategories[category]) {
+      this.selectedCategory.set(category);
+    }
+  }
+
+  /** Filter by category (clicking on "All" or category header) */
+  filterCategory(category: string | null) {
+    this.selectedCategory.set(category);
+    this.selectedArticle.set(null);
+  }
+
+  /** Get articles for a specific category */
+  getDocsByCategory(category: string): WikiDoc[] {
+    const term = this.currentSearchTerm().toLowerCase();
+    let docs = this.docs().filter(d => d.category === category);
+    if (term) {
+      docs = docs.filter(
+        d =>
+          d.title.toLowerCase().includes(term) ||
+          d.description.toLowerCase().includes(term)
+      );
+    }
+    return docs;
+  }
+
+  /** Select an article to view */
+  selectArticle(doc: WikiDoc) {
+    this.selectedArticle.set(doc);
+    this.selectedCategory.set(doc.category);
   }
 
   getEmptyDoc(): Partial<WikiDoc> {
@@ -155,7 +171,9 @@ export class WikiComponent implements OnInit {
     if (!this.currentDoc.title || !this.currentDoc.description) return;
 
     this.currentDoc.last_updated = new Date().toISOString().split('T')[0];
-    this.currentDoc.allowed_roles = this.getRolesFromVisibility(this.tempVisibility);
+    this.currentDoc.allowed_roles = this.getRolesFromVisibility(
+      this.tempVisibility
+    );
 
     this.saving.set(true);
     try {
@@ -166,6 +184,10 @@ export class WikiComponent implements OnInit {
           summary: 'Erfolg',
           detail: 'Artikel aktualisiert',
         });
+        // Update selected article if it was edited
+        if (this.selectedArticle()?.id === this.currentDoc.id) {
+          this.selectedArticle.set(this.currentDoc as WikiDoc);
+        }
       } else {
         await this.wikiService.addDoc(this.currentDoc as WikiDoc);
         this.messageService.add({
@@ -200,6 +222,10 @@ export class WikiComponent implements OnInit {
             summary: 'Gelöscht',
             detail: 'Artikel wurde gelöscht',
           });
+          // Clear selection if deleted article was selected
+          if (this.selectedArticle()?.id === doc.id) {
+            this.selectedArticle.set(null);
+          }
         } catch (e) {
           this.messageService.add({
             severity: 'error',
@@ -209,10 +235,6 @@ export class WikiComponent implements OnInit {
         }
       },
     });
-  }
-
-  filterCategory(category: string | null) {
-    this.selectedCategory.set(category);
   }
 
   onSearch(event: Event) {
@@ -258,23 +280,28 @@ export class WikiComponent implements OnInit {
     return labels[status] || status;
   }
 
-  // --- Helpers for Visibility Mapping ---
   getVisibilityFromRoles(roles: string[] = []): string {
     if (!roles || roles.length === 0) return 'public';
     if (roles.includes('public')) return 'public';
-    if (roles.includes('member') && !roles.includes('public')) return 'member'; // "member" implies no public
-    if (roles.includes('committee') && !roles.includes('member')) return 'committee';
+    if (roles.includes('member') && !roles.includes('public')) return 'member';
+    if (roles.includes('committee') && !roles.includes('member'))
+      return 'committee';
     if (roles.includes('admin') && !roles.includes('committee')) return 'admin';
-    return 'public'; // Default
+    return 'public';
   }
 
   getRolesFromVisibility(vis: string): string[] {
     switch (vis) {
-      case 'public': return ['public', 'member', 'committee', 'admin'];
-      case 'member': return ['member', 'committee', 'admin'];
-      case 'committee': return ['committee', 'admin'];
-      case 'admin': return ['admin'];
-      default: return ['public', 'member', 'committee', 'admin'];
+      case 'public':
+        return ['public', 'member', 'committee', 'admin'];
+      case 'member':
+        return ['member', 'committee', 'admin'];
+      case 'committee':
+        return ['committee', 'admin'];
+      case 'admin':
+        return ['admin'];
+      default:
+        return ['public', 'member', 'committee', 'admin'];
     }
   }
 }

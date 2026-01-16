@@ -1,80 +1,165 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="p-6">
+<div class="p-2 md:p-6">
     <!-- Loading -->
     @if (loading()) {
-    <div class="flex justify-center items-center py-12">
+    <div class="flex justify-center items-center py-8">
         <p-progressSpinner strokeWidth="4" ariaLabel="Lade Mitglieder..." />
     </div>
     }
 
     <!-- Error -->
     @if (error()) {
-    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-4 w-full" />
+    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-3 w-full" />
     }
 
     @if (!loading()) {
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-3xl font-bold text-white">Mitglieder</h1>
-            <p class="text-gray-400 mt-1">Übersicht und Verwaltung aller Vereinsmitglieder.</p>
+            <h1 class="text-xl md:text-3xl font-bold text-white">Mitglieder</h1>
+            <p class="text-gray-400 text-sm hidden md:block mt-1">Übersicht aller Vereinsmitglieder</p>
         </div>
-        <div class="flex gap-3">
-
-            @if (auth.isAdmin()) {
-            <p-button label="Neues Mitglied" icon="pi pi-plus" severity="danger" [raised]="true"
-                (click)="openNew()"></p-button>
-            }
-        </div>
+        @if (auth.isAdmin()) {
+        <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
+            (click)="openNew()"></p-button>
+        }
     </div>
 
-    <div class="card">
-        <p-table #dt [value]="filteredMembers()" [rows]="10" [paginator]="true"
-            [globalFilterFields]="['name', 'email', 'role', 'status', 'department']"
-            [tableStyle]="{ 'min-width': '75rem' }" [(selection)]="selectedMembers" [rowHover]="true" dataKey="id"
-            currentPageReportTemplate="{first} bis {last} von {totalRecords} Einträgen" [showCurrentPageReport]="true"
-            styleClass="custom-table">
+    <!-- Search Bar -->
+    <div class="flex items-center gap-2 mb-3">
+        <div class="relative flex-1">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Suchen..."
+                class="w-full pl-9 py-2 text-sm !bg-gray-800 !border-gray-700 rounded-lg" />
+        </div>
+        @if (auth.isAdmin() && selectedMembers && selectedMembers.length > 0) {
+        <p-button icon="pi pi-trash" severity="danger" size="small" [outlined]="true"
+            (click)="deleteSelected()"></p-button>
+        }
+    </div>
 
-            <ng-template pTemplate="caption">
-                <div class="flex items-center justify-between py-2">
-                    <div class="flex items-center gap-2">
-                        @if (auth.isAdmin()) {
-                        <p-button label="Löschen" icon="pi pi-trash" severity="danger" [outlined]="true" size="small"
-                            [disabled]="!selectedMembers || !selectedMembers.length"
-                            (click)="deleteSelected()"></p-button>
+    <!-- Mobile: Card List View -->
+    <div class="lg:hidden space-y-2">
+        @for (member of filteredMembers(); track member.id) {
+        <div class="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
+            <!-- Header Row -->
+            <div class="p-3 flex items-center gap-3" (click)="toggleRow(member)">
+
+                <!-- Avatar -->
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                    [style.background-color]="getAvatarColor(member.name)">
+                    {{getInitials(member.name)}}
+                </div>
+
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-sm font-bold text-white truncate">{{ member.name }}</span>
+                        @if(member.user_id) {
+                        <i class="pi pi-link text-green-500 text-[10px]"></i>
+                        }
+                        @if(member.app_role === 'admin') {
+                        <i class="pi pi-verified text-pink-500 text-[10px]"></i>
                         }
                     </div>
-                    <div class="relative">
-                        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Suchen..."
-                            class="pl-10 w-64" />
+                    <div class="text-xs text-gray-500 truncate">{{ member.email }}</div>
+                </div>
+
+                <!-- Status + Expand -->
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <p-tag [value]="getStatusLabel(member.status)" [severity]="getStatusSeverity(member.status)"
+                        styleClass="!text-[10px] !px-1.5 !py-0.5"></p-tag>
+                    <i class="pi text-gray-400 text-xs"
+                        [class]="isRowExpanded(member) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </div>
+            </div>
+
+            <!-- Expanded Content -->
+            @if (isRowExpanded(member)) {
+            <div class="border-t border-gray-700/50 p-3 bg-gray-800/20 text-sm">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Funktion</div>
+                        <div class="text-white">{{member.role || '-'}}</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Beitritt</div>
+                        <div class="text-white">{{member.join_date || '-'}}</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Telefon</div>
+                        <div class="text-white">{{member.phone || '-'}}</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Geburtstag</div>
+                        <div class="text-white">{{member.birthday || '-'}}</div>
                     </div>
                 </div>
-            </ng-template>
+                @if (member.street || member.city) {
+                <div class="mb-3">
+                    <div class="text-[10px] uppercase text-gray-500 font-semibold">Adresse</div>
+                    <div class="text-white">{{member.street || ''}}</div>
+                    <div class="text-gray-400">{{member.zip_code}} {{member.city}}</div>
+                </div>
+                }
+
+                @if (auth.isAdmin()) {
+                <div class="flex gap-2 pt-2 border-t border-gray-700/50">
+                    @if (member.email) {
+                    <p-button [icon]="member.user_id ? 'pi pi-key' : 'pi pi-envelope'"
+                        [label]="member.user_id ? 'Reset' : 'Einladen'" [severity]="member.user_id ? 'warn' : 'success'"
+                        size="small" (click)="inviteMember(member); $event.stopPropagation()"
+                        [loading]="invitingMemberId === member.id"></p-button>
+                    }
+                    <p-button icon="pi pi-pencil" label="Bearbeiten" severity="info" size="small"
+                        (click)="editMember(member); $event.stopPropagation()"></p-button>
+                    <p-button icon="pi pi-trash" severity="danger" size="small"
+                        (click)="confirmDelete(member); $event.stopPropagation()"></p-button>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        } @empty {
+        <div class="text-center py-8 text-gray-500">
+            <i class="pi pi-users text-3xl mb-2"></i>
+            <p class="text-sm">Keine Mitglieder gefunden</p>
+        </div>
+        }
+
+        <!-- Mobile Pagination Info -->
+        @if (filteredMembers().length > 0) {
+        <div class="text-center text-xs text-gray-500 py-2">
+            {{filteredMembers().length}} Mitglieder
+        </div>
+        }
+    </div>
+
+    <!-- Desktop: Table View -->
+    <div class="hidden lg:block">
+        <p-table #dt [value]="filteredMembers()" [rows]="10" [paginator]="true"
+            [globalFilterFields]="['name', 'email', 'role', 'status']" [(selection)]="selectedMembers" [rowHover]="true"
+            dataKey="id" currentPageReportTemplate="{first} bis {last} von {totalRecords}"
+            [showCurrentPageReport]="true" styleClass="custom-table">
 
             <ng-template pTemplate="header">
                 <tr>
                     @if (auth.isAdmin()) {
-                    <th style="width: 4rem">
+                    <th style="width: 2.5rem">
                         <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
                     </th>
                     }
-                    <th style="width: 3rem"></th>
-                    <th pSortableColumn="name" style="min-width:15rem">
-                        Name <p-sortIcon field="name"></p-sortIcon>
+                    <th style="width: 2.5rem"></th>
+                    <th pSortableColumn="name" class="!min-w-[180px]">Name <p-sortIcon field="name"></p-sortIcon></th>
+                    <th pSortableColumn="role" style="width: 100px">Funktion <p-sortIcon field="role"></p-sortIcon></th>
+                    <th pSortableColumn="status" style="width: 80px">Status <p-sortIcon field="status"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="role">
-                        Funktion <p-sortIcon field="role"></p-sortIcon>
-                    </th>
-                    <th pSortableColumn="status">
-                        Status <p-sortIcon field="status"></p-sortIcon>
-                    </th>
-                    <th pSortableColumn="join_date">
-                        Beitritt <p-sortIcon field="join_date"></p-sortIcon>
-                    </th>
+                    <th pSortableColumn="join_date" style="width: 90px">Beitritt <p-sortIcon
+                            field="join_date"></p-sortIcon></th>
                     @if (auth.isAdmin()) {
-                    <th style="width: 8rem">Aktionen</th>
+                    <th style="width: 90px" class="text-right">Aktionen</th>
                     }
                 </tr>
             </ng-template>
@@ -88,56 +173,43 @@
                     }
                     <td>
                         <button type="button" (click)="toggleRow(member)"
-                            class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors focus:outline-none">
-                            <i [class]="isRowExpanded(member) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+                            class="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                            <i class="text-xs"
+                                [class]="isRowExpanded(member) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
                         </button>
                     </td>
                     <td>
-                        <div class="flex items-center gap-3">
-                            <p-avatar [label]="getInitials(member.name)" shape="circle" size="large"
+                        <div class="flex items-center gap-2">
+                            <p-avatar [label]="getInitials(member.name)" shape="circle"
                                 [style]="{'background-color': getAvatarColor(member.name), 'color': '#ffffff'}" />
-                            <div class="flex flex-col">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-white">{{ member.name }}</span>
-
+                            <div class="flex flex-col min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-medium text-white text-sm truncate">{{ member.name }}</span>
                                     @if(member.user_id) {
-                                    <i class="pi pi-link text-green-500 text-sm" pTooltip="Login verbunden"
-                                        tooltipPosition="top"></i>
-                                    } @else {
-                                    <i class="pi pi-link-slash text-gray-600 text-sm" pTooltip="Kein Login"
-                                        tooltipPosition="top"></i>
+                                    <i class="pi pi-link text-green-500 text-xs" pTooltip="Login verbunden"></i>
                                     }
-
                                     @if(member.app_role === 'admin') {
-                                    <i class="pi pi-verified text-pink-500 text-sm" pTooltip="Administrator"
-                                        tooltipPosition="top"></i>
+                                    <i class="pi pi-verified text-pink-500 text-xs" pTooltip="Administrator"></i>
                                     }
                                 </div>
-                                <span class="text-sm text-gray-400">{{ member.email }}</span>
+                                <span class="text-xs text-gray-400 truncate">{{ member.email }}</span>
                             </div>
                         </div>
                     </td>
-                    <td>
-                        <span class="text-gray-300">{{ member.role }}</span>
-                    </td>
+                    <td class="text-gray-300 text-sm">{{ member.role }}</td>
                     <td>
                         <p-tag [value]="getStatusLabel(member.status)" [severity]="getStatusSeverity(member.status)"
-                            [rounded]="true">
-                        </p-tag>
+                            [rounded]="true"></p-tag>
                     </td>
-                    <td>
-                        <span class="text-gray-400">{{ member.join_date }}</span>
-                    </td>
+                    <td class="text-gray-400 text-sm">{{ member.join_date }}</td>
                     @if (auth.isAdmin()) {
-
                     <td>
-                        <div class="flex justify-end gap-2">
+                        <div class="flex justify-end gap-0.5">
                             @if (member.email) {
                             <p-button [icon]="member.user_id ? 'pi pi-key' : 'pi pi-envelope'" [text]="true"
                                 [rounded]="true" [severity]="member.user_id ? 'warn' : 'success'"
                                 [pTooltip]="member.user_id ? 'Passwort zurücksetzen' : 'Einladung senden'"
-                                tooltipPosition="top" (click)="inviteMember(member)"
-                                [loading]="invitingMemberId === member.id"></p-button>
+                                (click)="inviteMember(member)" [loading]="invitingMemberId === member.id"></p-button>
                             }
                             <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="info"
                                 (click)="editMember(member)"></p-button>
@@ -148,40 +220,22 @@
                     }
                 </tr>
                 @if (isRowExpanded(member)) {
-                <tr class="expanded-row-content" style="display: table-row !important;">
-                    <td [attr.colspan]="auth.isAdmin() ? 7 : 5" class="!p-0 !border-0 bg-transparent">
-                        <div
-                            class="p-4 bg-gray-800/30 rounded-lg ml-12 border border-gray-700/50 mt-2 mb-2 shadow-inner">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <tr>
+                    <td [attr.colspan]="auth.isAdmin() ? 7 : 5" class="!p-0 !border-0">
+                        <div class="p-4 bg-gray-800/30 rounded-lg mx-2 my-2 border border-gray-700/50">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
-                                    <h4
-                                        class="text-gray-400 text-xs uppercase font-bold mb-3 tracking-wider flex items-center gap-2">
-                                        <i class="pi pi-home"></i> Anschrift
-                                    </h4>
-                                    <div class="text-white space-y-1">
-                                        <div class="text-lg font-medium">{{member.street || 'Keine Straße hinterlegt'}}
-                                        </div>
-                                        <div class="text-gray-300">{{member.zip_code}} {{member.city}}</div>
-                                        @if(!member.zip_code && !member.city) {
-                                        <div class="text-gray-500 italic text-sm">Keine Adresse</div>
-                                        }
-                                    </div>
+                                    <div class="text-xs text-gray-500 uppercase font-semibold mb-1">Adresse</div>
+                                    <div class="text-white">{{member.street || '-'}}</div>
+                                    <div class="text-gray-400 text-sm">{{member.zip_code}} {{member.city}}</div>
                                 </div>
-                                <div class="space-y-4">
-                                    <div>
-                                        <h4
-                                            class="text-gray-400 text-xs uppercase font-bold mb-2 tracking-wider flex items-center gap-2">
-                                            <i class="pi pi-phone"></i> Kontakt
-                                        </h4>
-                                        <div class="text-white">{{member.phone || '-'}}</div>
-                                    </div>
-                                    <div>
-                                        <h4
-                                            class="text-gray-400 text-xs uppercase font-bold mb-2 tracking-wider flex items-center gap-2">
-                                            <i class="pi pi-gift"></i> Geburtstag
-                                        </h4>
-                                        <div class="text-white">{{member.birthday || '-'}}</div>
-                                    </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase font-semibold mb-1">Telefon</div>
+                                    <div class="text-white">{{member.phone || '-'}}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase font-semibold mb-1">Geburtstag</div>
+                                    <div class="text-white">{{member.birthday || '-'}}</div>
                                 </div>
                             </div>
                         </div>
@@ -190,14 +244,10 @@
                 }
             </ng-template>
 
-
-
-
-
             <ng-template pTemplate="emptymessage">
                 <tr>
                     <td [attr.colspan]="auth.isAdmin() ? 7 : 5" class="text-center p-8 text-gray-400">
-                        <i class="pi pi-folder-open text-4xl mb-4 block"></i>
+                        <i class="pi pi-users text-4xl mb-3 block"></i>
                         Keine Mitglieder gefunden.
                     </td>
                 </tr>
@@ -210,8 +260,8 @@
 <!-- Member Dialog -->
 <p-dialog [header]="editMode() ? 'Mitglied bearbeiten' : 'Neues Mitglied'" [(visible)]="dialogVisible" [modal]="true"
     [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
-    [style]="{width: '600px', maxWidth: '90vw'}" [closable]="!saving()">
-    <div class="space-y-4">
+    [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
+    <div class="space-y-3">
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
             <input pInputText [(ngModel)]="currentMember.name" class="w-full" placeholder="Max Mustermann" />
@@ -221,75 +271,49 @@
             <input pInputText [(ngModel)]="currentMember.email" type="email" class="w-full"
                 placeholder="max@example.com" />
         </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Funktion (optional)</label>
-            <input pInputText [(ngModel)]="currentMember.role" class="w-full" placeholder="z.B. Schriftführer" />
-        </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Funktion</label>
+                <input pInputText [(ngModel)]="currentMember.role" class="w-full" placeholder="Schriftführer" />
+            </div>
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
                 <p-select [(ngModel)]="currentMember.status" [options]="statusOptions" optionLabel="label"
                     optionValue="value" styleClass="w-full" />
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Beitrittsdatum</label>
-                <input pInputText [(ngModel)]="currentMember.join_date" class="w-full" placeholder="01.01.2024" />
+        </div>
+
+        <!-- Address Section -->
+        <div class="border-t border-gray-700 pt-3">
+            <h4 class="text-white font-medium text-sm mb-2">Adresse & Kontakt</h4>
+            <div class="space-y-3">
+                <input pInputText [(ngModel)]="currentMember.street" class="w-full" placeholder="Straße & Nr." />
+                <div class="grid grid-cols-3 gap-2">
+                    <input pInputText [(ngModel)]="currentMember.zip_code" class="w-full" placeholder="PLZ" />
+                    <input pInputText [(ngModel)]="currentMember.city" class="w-full col-span-2" placeholder="Ort" />
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input pInputText [(ngModel)]="currentMember.phone" class="w-full" placeholder="Telefon" />
+                    <input pInputText [(ngModel)]="currentMember.birthday" class="w-full" placeholder="Geburtstag" />
+                </div>
+                <input pInputText [(ngModel)]="currentMember.join_date" class="w-full" placeholder="Beitrittsdatum" />
             </div>
         </div>
 
-        <!-- Profile & Address -->
-        <h4 class="text-white font-semibold text-sm mt-4 border-b border-gray-700 pb-2 mb-4">Anschrift & Kontakt</h4>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Straße & Nr.</label>
-            <input pInputText [(ngModel)]="currentMember.street" class="w-full" placeholder="Musterstr. 12" />
-        </div>
-
-        <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-1">
-                <label class="block text-sm font-medium text-gray-300 mb-1">PLZ</label>
-                <input pInputText [(ngModel)]="currentMember.zip_code" class="w-full" placeholder="12345" />
-            </div>
-            <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-300 mb-1">Ort</label>
-                <input pInputText [(ngModel)]="currentMember.city" class="w-full" placeholder="Berlin" />
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Telefon</label>
-                <input pInputText [(ngModel)]="currentMember.phone" class="w-full" placeholder="0170 12345678" />
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Geburtstag</label>
-                <input pInputText [(ngModel)]="currentMember.birthday" class="w-full" placeholder="01.01.1990" />
-            </div>
-        </div>
-
-        <!-- Admin Section for User Linking -->
+        <!-- Admin Section -->
         @if (auth.isAdmin()) {
-        <div class="bg-gray-800/50 p-4 rounded-lg border border-gray-700 mt-4">
-            <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+        <div class="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
+            <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
                 <i class="pi pi-lock"></i> Administration
             </h4>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Verknüpfte Benutzer-ID</label>
-                    <input pInputText [(ngModel)]="currentMember.user_id" class="w-full font-mono text-xs"
-                        placeholder="00000000-0000-..." />
-                    <small class="text-gray-500">Interne Benutzer-ID zum Verknüpfen des Logins.</small>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2 mt-2">
-                        <p-checkbox [binary]="true" inputId="adminCheck" [ngModel]="currentMember.app_role === 'admin'"
-                            (ngModelChange)="$event ? currentMember.app_role = 'admin' : currentMember.app_role = 'member'">
-                        </p-checkbox>
-                        <label for="adminCheck"
-                            class="text-sm font-medium text-gray-300 cursor-pointer">Administrator-Rechte geben</label>
-                    </div>
-                    <small class="block text-gray-500 mt-1 ml-7">Erlaubt vollen Zugriff auf Mitgliederverwaltung und
-                        Einstellungen.</small>
+            <div class="space-y-2">
+                <input pInputText [(ngModel)]="currentMember.user_id" class="w-full font-mono text-xs"
+                    placeholder="Benutzer-ID (UUID)" />
+                <div class="flex items-center gap-2">
+                    <p-checkbox [binary]="true" inputId="adminCheck" [ngModel]="currentMember.app_role === 'admin'"
+                        (ngModelChange)="$event ? currentMember.app_role = 'admin' : currentMember.app_role = 'member'">
+                    </p-checkbox>
+                    <label for="adminCheck" class="text-sm text-gray-300 cursor-pointer">Administrator</label>
                 </div>
             </div>
         </div>

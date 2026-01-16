@@ -78,6 +78,12 @@ export class WorkingGroupsComponent implements OnInit {
   saving = signal(false);
   currentGroup: WorkingGroup = this.getEmptyGroup();
   tagsInput = ''; // Comma-separated string for tags input
+  expandedGroups: Record<string, boolean> = {}; // Custom expand state
+
+  // Toggle expand/collapse for a group
+  toggleExpand(groupId: string) {
+    this.expandedGroups[groupId] = !this.expandedGroups[groupId];
+  }
 
   // Helper to get events for a specific AG
   getAgEvents(groupId: string) {

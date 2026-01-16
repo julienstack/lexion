@@ -1,3 +1,4 @@
+@if (isLoggedIn()) {
 <div class="bg-slate-900/95 text-white shadow-2xl backdrop-blur-md rounded-full px-4 py-2 cursor-pointer transition-all duration-300 hover:bg-slate-800 hover:scale-105 border border-slate-700/50 flex items-center gap-2 group"
     (click)="toggleDialog()" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
 
@@ -20,6 +21,7 @@
 
     <i class="pi pi-comment text-slate-400 text-sm ml-1"></i>
 </div>
+}
 
 <p-dialog header="Feedback & Wünsche" [visible]="visible()" (visibleChange)="visible.set($event)" [modal]="true"
     [style]="{ width: '90vw', maxWidth: '520px' }" [draggable]="false" [resizable]="false" [dismissableMask]="true"

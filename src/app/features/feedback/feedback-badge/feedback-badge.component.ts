@@ -1,27 +1,28 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { TextareaModule } from 'primeng/textarea';
 import { SupabaseService } from '../../../shared/services/supabase';
+import { AuthService } from '../../../shared/services/auth.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 @Component({
-    selector: 'app-feedback-badge',
-    standalone: true,
-    imports: [
-        CommonModule,
-        FormsModule,
-        DialogModule,
-        ButtonModule,
-        TextareaModule,
-        ToastModule
-    ],
-    providers: [MessageService],
-    templateUrl: './feedback-badge.component.html',
-    styles: [`
+  selector: 'app-feedback-badge',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    DialogModule,
+    ButtonModule,
+    TextareaModule,
+    ToastModule
+  ],
+  providers: [MessageService],
+  templateUrl: './feedback-badge.component.html',
+  styles: [`
     :host {
       position: fixed;
       bottom: 20px;
@@ -65,60 +66,64 @@ import { ToastModule } from 'primeng/toast';
   `]
 })
 export class FeedbackBadgeComponent {
-    private supabase = inject(SupabaseService);
-    private messageService = inject(MessageService);
+  private supabase = inject(SupabaseService);
+  private auth = inject(AuthService);
+  private messageService = inject(MessageService);
 
-    visible = signal(false);
-    loading = signal(false);
+  /** Only show feedback badge to logged-in users */
+  isLoggedIn = computed(() => !!this.supabase.user());
 
-    // Form Data
-    type = signal('suggestion');
-    description = signal('');
+  visible = signal(false);
+  loading = signal(false);
 
-    typeOptions = [
-        { label: 'Vorschlag', value: 'suggestion' },
-        { label: 'Fehlermeldung', value: 'bug' }
-    ];
+  // Form Data
+  type = signal('suggestion');
+  description = signal('');
 
-    isHovered = signal(false);
+  typeOptions = [
+    { label: 'Vorschlag', value: 'suggestion' },
+    { label: 'Fehlermeldung', value: 'bug' }
+  ];
 
-    toggleDialog() {
-        this.visible.update(v => !v);
+  isHovered = signal(false);
+
+  toggleDialog() {
+    this.visible.update(v => !v);
+  }
+
+  async submitFeedback() {
+    if (!this.description().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Pflichtfeld', detail: 'Bitte gib eine Beschreibung ein.' });
+      return;
     }
 
-    async submitFeedback() {
-        if (!this.description().trim()) {
-            this.messageService.add({ severity: 'warn', summary: 'Pflichtfeld', detail: 'Bitte gib eine Beschreibung ein.' });
-            return;
-        }
+    this.loading.set(true);
+    const userId = this.supabase.user()?.id;
 
-        this.loading.set(true);
-        const userId = this.supabase.user()?.id;
+    const { error } = await this.supabase.insertFeedback(
+      this.type(),
+      this.description(),
+      userId
+    );
 
-        const { error } = await this.supabase.insertFeedback(
-            this.type(),
-            this.description(),
-            userId
-        );
+    this.loading.set(false);
 
-        this.loading.set(false);
-
-        if (error) {
-            console.error('Feedback error:', error);
-            this.messageService.add({ key: 'feedback-toast', severity: 'error', summary: 'Fehler', detail: 'Feedback konnte nicht gesendet werden.' });
-        } else {
-            this.messageService.add({ key: 'feedback-toast', severity: 'success', summary: 'Gesendet', detail: 'Vielen Dank für dein Feedback!' });
-            this.visible.set(false);
-            this.description.set('');
-            this.type.set('suggestion');
-        }
+    if (error) {
+      console.error('Feedback error:', error);
+      this.messageService.add({ key: 'feedback-toast', severity: 'error', summary: 'Fehler', detail: 'Feedback konnte nicht gesendet werden.' });
+    } else {
+      this.messageService.add({ key: 'feedback-toast', severity: 'success', summary: 'Gesendet', detail: 'Vielen Dank für dein Feedback!' });
+      this.visible.set(false);
+      this.description.set('');
+      this.type.set('suggestion');
     }
+  }
 
-    onMouseEnter() {
-        this.isHovered.set(true);
-    }
+  onMouseEnter() {
+    this.isHovered.set(true);
+  }
 
-    onMouseLeave() {
-        this.isHovered.set(false);
-    }
+  onMouseLeave() {
+    this.isHovered.set(false);
+  }
 }

@@ -1,89 +1,101 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="p-6">
+<div class="p-2 md:p-6">
     <!-- Loading State -->
     @if (loading()) {
-    <div class="flex justify-center items-center py-12">
+    <div class="flex justify-center items-center py-8">
         <p-progressSpinner strokeWidth="4" ariaLabel="Lade Kontakte..." />
     </div>
     }
 
     <!-- Error State -->
     @if (error()) {
-    <p-message severity="error" [text]="'Fehler beim Laden: ' + error()" styleClass="mb-4 w-full" />
+    <p-message severity="error" [text]="'Fehler: ' + error()" styleClass="mb-3 w-full" />
     }
 
     @if (!loading()) {
-    <div class="flex justify-between items-center mb-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-3xl font-bold text-white mb-2">Ansprechpartner</h1>
-            <p class="text-gray-400">Hier findest du die wichtigsten Kontakte und Ansprechpartner.</p>
+            <h1 class="text-xl md:text-3xl font-bold text-white">Ansprechpartner</h1>
+            <p class="text-gray-400 text-sm hidden md:block mt-1">Hier findest du die wichtigsten Kontakte</p>
         </div>
         @if (auth.isAdmin()) {
-        <p-button label="Neuer Kontakt" icon="pi pi-plus" severity="danger" [raised]="true"
+        <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
             (click)="openNew()"></p-button>
         }
     </div>
 
     <!-- Empty State -->
     @if (contacts().length === 0) {
-    <div class="text-center py-12">
-        <i class="pi pi-users text-6xl text-gray-600 mb-4"></i>
-        <p class="text-gray-400 text-lg">Keine Ansprechpartner gefunden.</p>
-        <p class="text-gray-500 text-sm mt-2">Füge Kontakte hinzu.</p>
+    <div class="text-center py-8">
+        <i class="pi pi-users text-4xl text-gray-600 mb-3"></i>
+        <p class="text-gray-400">Keine Ansprechpartner gefunden.</p>
     </div>
     }
 
-    <!-- Contacts Grid -->
+    <!-- Contacts List -->
     @if (contacts().length > 0) {
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    <div class="space-y-2">
         @for (contact of contacts(); track contact.id ?? contact.name) {
-        <div
-            class="flex flex-col md:flex-row bg-gray-800/50 rounded-xl border border-gray-700 p-6 gap-6 hover:border-[var(--primary-color)] transition-colors duration-300">
-            <!-- Avatar -->
-            <div
-                class="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 mx-auto md:mx-0 border border-gray-600 overflow-hidden">
-                @if (contact.image_url) {
-                <img [src]="contact.image_url" [alt]="contact.name" class="w-full h-full object-cover">
-                } @else {
-                <i class="pi pi-user text-3xl text-gray-400"></i>
-                }
-            </div>
-
-            <div class="flex-1 text-center md:text-left">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="text-xl font-bold text-white">{{ contact.name }}</h3>
-                        <p class="text-[var(--primary-color)] font-medium mb-2">{{ contact.role }}</p>
-                    </div>
-                    @if (auth.isAdmin()) {
-                    <div class="flex gap-1">
-                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
-                            (click)="editContact(contact)"></p-button>
-                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
-                            (click)="confirmDelete(contact)"></p-button>
-                    </div>
+        <div class="bg-gray-800/40 rounded-lg border border-gray-700/50 p-3 hover:border-pink-500/50 transition-colors">
+            <div class="flex gap-3">
+                <!-- Avatar (smaller on mobile) -->
+                <div
+                    class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 border border-gray-600 overflow-hidden">
+                    @if (contact.image_url) {
+                    <img [src]="contact.image_url" [alt]="contact.name" class="w-full h-full object-cover">
+                    } @else {
+                    <i class="pi pi-user text-lg md:text-2xl text-gray-400"></i>
                     }
                 </div>
-                <p class="text-gray-400 mb-4 text-sm">{{ contact.description }}</p>
 
-                <div class="space-y-2 text-sm text-gray-300">
-                    <div class="flex items-center justify-center md:justify-start gap-2">
-                        <i class="pi pi-map-marker text-[var(--primary-color)]"></i>
-                        <span>{{ contact.location }}</span>
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <h3 class="text-sm md:text-base font-bold text-white truncate">{{ contact.name }}</h3>
+                            <p class="text-pink-400 text-xs md:text-sm font-medium truncate">{{ contact.role }}</p>
+                        </div>
+                        @if (auth.isAdmin()) {
+                        <div class="flex gap-1 flex-shrink-0">
+                            <button (click)="editContact(contact)"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                                <i class="pi pi-pencil text-xs"></i>
+                            </button>
+                            <button (click)="confirmDelete(contact)"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-gray-700 transition-colors">
+                                <i class="pi pi-trash text-xs"></i>
+                            </button>
+                        </div>
+                        }
                     </div>
-                    <div class="flex items-center justify-center md:justify-start gap-2">
-                        <i class="pi pi-envelope text-[var(--primary-color)]"></i>
-                        <a [href]="'mailto:' + contact.email" class="hover:text-white transition-colors">{{
-                            contact.email }}</a>
-                    </div>
-                    @if (contact.phone) {
-                    <div class="flex items-center justify-center md:justify-start gap-2">
-                        <i class="pi pi-phone text-[var(--primary-color)]"></i>
-                        <span>{{ contact.phone }}</span>
-                    </div>
+
+                    <!-- Description (truncated on mobile) -->
+                    @if (contact.description) {
+                    <p class="text-xs text-gray-500 mt-1 line-clamp-1 md:line-clamp-2">{{ contact.description }}</p>
                     }
+
+                    <!-- Contact Details (compact) -->
+                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
+                        @if (contact.location) {
+                        <span class="flex items-center gap-1">
+                            <i class="pi pi-map-marker text-pink-500 text-[10px]"></i>
+                            {{ contact.location }}
+                        </span>
+                        }
+                        <a [href]="'mailto:' + contact.email" class="flex items-center gap-1 hover:text-white">
+                            <i class="pi pi-envelope text-pink-500 text-[10px]"></i>
+                            <span class="truncate max-w-[120px] md:max-w-none">{{ contact.email }}</span>
+                        </a>
+                        @if (contact.phone) {
+                        <a [href]="'tel:' + contact.phone" class="flex items-center gap-1 hover:text-white">
+                            <i class="pi pi-phone text-pink-500 text-[10px]"></i>
+                            {{ contact.phone }}
+                        </a>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -96,13 +108,13 @@
 <!-- Contact Dialog -->
 <p-dialog [header]="editMode() ? 'Kontakt bearbeiten' : 'Neuer Kontakt'" [(visible)]="dialogVisible" [modal]="true"
     [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
-    [style]="{width: '500px', maxWidth: '90vw'}" [closable]="!saving()">
-    <div class="space-y-4">
+    [style]="{width: '500px', maxWidth: '95vw'}" [closable]="!saving()">
+    <div class="space-y-3">
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
             <input pInputText [(ngModel)]="currentContact.name" class="w-full" placeholder="Max Mustermann" />
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Rolle *</label>
                 <input pInputText [(ngModel)]="currentContact.role" class="w-full" placeholder="Vorsitzender" />
@@ -114,10 +126,10 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung</label>
-            <textarea pTextarea [(ngModel)]="currentContact.description" class="w-full" rows="3"
-                placeholder="Zuständigkeiten und Aufgaben..."></textarea>
+            <textarea pTextarea [(ngModel)]="currentContact.description" class="w-full" rows="2"
+                placeholder="Zuständigkeiten..."></textarea>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">E-Mail *</label>
                 <input pInputText [(ngModel)]="currentContact.email" type="email" class="w-full"
@@ -125,7 +137,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Telefon</label>
-                <input pInputText [(ngModel)]="currentContact.phone" class="w-full" placeholder="+49 123 456789" />
+                <input pInputText [(ngModel)]="currentContact.phone" class="w-full" placeholder="+49 123..." />
             </div>
         </div>
         <div>

@@ -64,13 +64,24 @@ export class MembersComponent implements OnInit {
   error = this.membersService.error;
 
   selectedMembers: Member[] = [];
+  mobileExpandedRows: Record<string, boolean> = {}; // Mobile-specific expand state
 
-  // Toggle Row using Table API directly
+  // Toggle Row using Table API (desktop) or manual state (mobile)
   toggleRow(member: Member) {
-    this.dt.toggleRow(member);
+    if (this.dt) {
+      this.dt.toggleRow(member);
+    }
+    // Also toggle mobile state
+    if (member.id) {
+      this.mobileExpandedRows[member.id] = !this.mobileExpandedRows[member.id];
+    }
   }
 
   isRowExpanded(member: Member): boolean {
+    // Check mobile state first, then fall back to table
+    if (member.id && this.mobileExpandedRows[member.id]) {
+      return true;
+    }
     return this.dt?.isRowExpanded(member) ?? false;
   }
 

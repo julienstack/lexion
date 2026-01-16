@@ -12,8 +12,8 @@ const STORAGE_KEY = 'dev_access_granted';
 export const devPasswordGuard: CanActivateFn = () => {
     const router = inject(Router);
 
-    // In Produktion deaktivieren (später)
-    // if (environment.production) return true;
+    // In Development temporär deaktiviert für einfacheres Testen
+    if (!environment.production) return true;
 
     const accessGranted = sessionStorage.getItem(STORAGE_KEY);
 
