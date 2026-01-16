@@ -194,5 +194,13 @@ export class SidebarRight implements OnInit {
       this.cancelAdd();
     }
   }
+
+  async deleteTask(task: Task) {
+    // Optimistically remove from UI
+    this.tasks.update(tasks => tasks.filter(t => t.id !== task.id));
+
+    // Delete from database
+    await this.supabase.from('user_tasks').delete().eq('id', task.id);
+  }
 }
 

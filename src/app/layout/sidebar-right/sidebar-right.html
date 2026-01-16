@@ -54,10 +54,11 @@
 
         <div class="space-y-1.5 overflow-y-auto">
             @for (task of tasks(); track task.id) {
-            <div (click)="toggleTask(task)"
+            <div
                 class="bg-gray-800/40 rounded-lg p-2 hover:bg-gray-800/60 transition-colors cursor-pointer border border-transparent hover:border-gray-700 flex items-center gap-2 group">
 
-                <div class="w-4 h-4 rounded border border-gray-600 flex items-center justify-center flex-shrink-0 transition-colors"
+                <div (click)="toggleTask(task)"
+                    class="w-4 h-4 rounded border border-gray-600 flex items-center justify-center flex-shrink-0 transition-colors"
                     [class.bg-green-500]="task.done" [class.border-green-500]="task.done"
                     [class.group-hover:border-gray-500]="!task.done">
                     @if(task.done) {
@@ -65,10 +66,17 @@
                     }
                 </div>
 
-                <span class="text-xs text-gray-300 group-hover:text-white transition-colors truncate"
+                <span (click)="toggleTask(task)"
+                    class="flex-1 text-xs text-gray-300 group-hover:text-white transition-colors truncate"
                     [class.line-through]="task.done" [class.text-gray-500]="task.done">
                     {{ task.title }}
                 </span>
+
+                <!-- Delete button (visible on hover) -->
+                <button (click)="deleteTask(task); $event.stopPropagation()"
+                    class="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
+                    <i class="pi pi-trash text-[10px]"></i>
+                </button>
             </div>
             }
 
