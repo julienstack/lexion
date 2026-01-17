@@ -24,9 +24,10 @@ export const organizationGuard: CanActivateFn = async (route) => {
         return false;
     }
 
-    // Check if user is authenticated
-    const user = supabase.user();
-    if (!user) {
+    // Check if user is authenticated (wait for session)
+    const { data: { session } } = await supabase.client.auth.getSession();
+
+    if (!session) {
         // Redirect to login, then back to intended destination
         router.navigate(['/login']);
         return false;

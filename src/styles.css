@@ -647,3 +647,32 @@ body {
         white-space: normal;
     }
 }
+
+/* Animation Delays */
+.animation-delay-100 {
+    animation-delay: 100ms !important;
+}
+
+.animation-delay-200 {
+    animation-delay: 200ms !important;
+}
+
+.animation-delay-300 {
+    animation-delay: 300ms !important;
+}
+
+.animation-delay-500 {
+    animation-delay: 500ms !important;
+}
+
+.animation-delay-1000 {
+    animation-delay: 1000ms !important;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2000ms !important;
+}
+
+.animation-delay-4000 {
+    animation-delay: 4000ms !important;
+}

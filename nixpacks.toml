@@ -1,0 +1,21 @@
+# Nixpacks configuration for Coolify
+# Forces Node.js provider and ignores Supabase Edge Functions
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = [
+    "node scripts/set-env.js",
+    "npm run build -- --configuration=production"
+]
+
+[start]
+cmd = "npx serve dist/dashboard/browser -l 3000"
+
+# Alternatively, use the static provider for nginx-like hosting:
+# [staticAssets]
+# path = "dist/dashboard/browser"

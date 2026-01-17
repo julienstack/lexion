@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../shared/services/auth.service';
+import { AuthService, UserMembership } from '../../shared/services/auth.service';
 import { ThemeService } from '../../shared/services/theme.service';
+import { OrganizationService } from '../../shared/services/organization.service';
 
 @Component({
   selector: 'app-sidebar-left',
@@ -14,5 +15,28 @@ import { ThemeService } from '../../shared/services/theme.service';
 export class SidebarLeft {
   public auth = inject(AuthService);
   public theme = inject(ThemeService);
-}
+  public orgService = inject(OrganizationService);
+  private router = inject(Router);
 
+  showOrgSwitcher = signal(false);
+
+  toggleOrgSwitcher(): void {
+    this.showOrgSwitcher.update(v => !v);
+  }
+
+  async switchOrganization(membership: UserMembership): Promise<void> {
+    this.showOrgSwitcher.set(false);
+    await this.auth.setActiveOrganization(membership.organizationId);
+    this.router.navigate(['/', membership.organizationSlug, 'dashboard']);
+  }
+
+  getRoleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      'admin': 'Admin',
+      'committee': 'Vorstand',
+      'member': 'Mitglied',
+      'public': 'Gast'
+    };
+    return labels[role] || role;
+  }
+}
