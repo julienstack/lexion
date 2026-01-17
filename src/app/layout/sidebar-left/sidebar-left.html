@@ -1,76 +1,100 @@
 <div class="flex flex-col gap-2 h-full">
-    <div class="text-xl font-bold text-pink-500 px-2 py-1">Hustle Hub</div>
+    <div class="text-xl font-bold text-linke px-2 py-1">Lexion</div>
 
     <nav class="flex flex-col gap-1 flex-1 overflow-y-auto">
-        <a routerLink="/dashboard" routerLinkActive="bg-gray-800 text-white" [routerLinkActiveOptions]="{exact: true}"
-            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white text-sm">
-            <i class="pi pi-home group-hover:text-pink-500 text-sm"></i>
+        <a routerLink="dashboard" routerLinkActive="bg-linke/10 text-linke" [routerLinkActiveOptions]="{exact: true}"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-home group-hover:text-linke text-sm"></i>
             <span class="font-medium">Dashboard</span>
         </a>
+        <a routerLink="feed" routerLinkActive="bg-linke/10 text-linke"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-megaphone group-hover:text-linke text-sm"></i>
+            <span class="font-medium">Aktuelles</span>
+        </a>
         @if (auth.isAdmin()) {
-        <a routerLink="/dashboard/members" routerLinkActive="bg-gray-800 text-white"
-            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white text-sm">
-            <i class="pi pi-users group-hover:text-pink-500 text-sm"></i>
+        <a routerLink="members" routerLinkActive="bg-linke/10 text-linke"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-users group-hover:text-linke text-sm"></i>
             <span class="font-medium">Mitglieder</span>
         </a>
         }
-        <a routerLink="/dashboard/calendar" routerLinkActive="bg-gray-800 text-white"
-            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white text-sm">
-            <i class="pi pi-calendar group-hover:text-pink-500 text-sm"></i>
+        <a routerLink="calendar" routerLinkActive="bg-linke/10 text-linke"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-calendar group-hover:text-linke text-sm"></i>
             <span class="font-medium">Termine</span>
         </a>
-        <a routerLink="/dashboard/wiki" routerLinkActive="bg-gray-800 text-white"
-            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white text-sm">
-            <i class="pi pi-book group-hover:text-pink-500 text-sm"></i>
+        <a routerLink="wiki" routerLinkActive="bg-linke/10 text-linke"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-book group-hover:text-linke text-sm"></i>
             <span class="font-medium">Wiki</span>
         </a>
-        <a routerLink="/dashboard/ags" routerLinkActive="bg-gray-800 text-white"
-            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white text-sm">
-            <i class="pi pi-briefcase group-hover:text-pink-500 text-sm"></i>
+        <a routerLink="ags" routerLinkActive="bg-linke/10 text-linke"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-briefcase group-hover:text-linke text-sm"></i>
             <span class="font-medium">AGs</span>
         </a>
-        <a routerLink="/dashboard/contacts" routerLinkActive="bg-gray-800 text-white"
-            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer text-gray-300 hover:text-white text-sm">
-            <i class="pi pi-id-card group-hover:text-pink-500 text-sm"></i>
+        <a routerLink="contacts" routerLinkActive="bg-linke/10 text-linke"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-id-card group-hover:text-linke text-sm"></i>
             <span class="font-medium">Kontakte</span>
+        </a>
+        <a routerLink="files" routerLinkActive="bg-linke/10 text-linke"
+            class="group flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm">
+            <i class="pi pi-folder group-hover:text-linke text-sm"></i>
+            <span class="font-medium">Dateien</span>
         </a>
     </nav>
 
-    <div class="mt-auto border-t border-gray-800 pt-3 space-y-2">
+    <div class="mt-auto border-t border-[var(--color-border)] pt-3 space-y-2">
         @if (auth.isAdmin()) {
         <div class="space-y-1">
-            <a routerLink="/dashboard/members"
-                class="flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-pink-500 transition-colors cursor-pointer text-sm">
-                <span class="text-gray-300">Mitglieder</span>
-                <i class="pi pi-cog text-pink-500 text-sm"></i>
+            <a routerLink="members"
+                class="flex items-center justify-between px-3 py-2 bg-[var(--color-surface-overlay)] rounded-lg border border-[var(--color-border)] hover:border-linke transition-colors cursor-pointer text-sm">
+                <span class="text-[var(--color-text-muted)]">Mitglieder</span>
+                <i class="pi pi-cog text-linke text-sm"></i>
             </a>
-            <a routerLink="/dashboard/issue-tracker"
-                class="flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-amber-500 transition-colors cursor-pointer text-sm">
-                <span class="text-gray-300">Feedback</span>
+            <a routerLink="issue-tracker"
+                class="flex items-center justify-between px-3 py-2 bg-[var(--color-surface-overlay)] rounded-lg border border-[var(--color-border)] hover:border-amber-500 transition-colors cursor-pointer text-sm">
+                <span class="text-[var(--color-text-muted)]">Feedback</span>
                 <i class="pi pi-list-check text-amber-500 text-sm"></i>
             </a>
         </div>
         }
 
+
+
         <!-- User Profile (compact) -->
         @if (auth.isLoggedIn()) {
-        <div class="flex items-center gap-2 p-2 bg-gray-800 rounded-lg border border-gray-700/50">
-            <div
-                class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                {{ auth.currentMember()?.name?.charAt(0) || auth.user()?.email?.charAt(0)?.toUpperCase() || 'U' }}
-            </div>
-            <div class="flex-1 min-w-0">
-                <div class="text-xs font-bold text-white truncate">{{ auth.currentMember()?.name || 'Benutzer' }}</div>
-                <div class="text-[10px] text-gray-500 truncate uppercase">{{ auth.userRole() }}</div>
-            </div>
+        <div
+            class="flex items-center gap-2 p-2 bg-[var(--color-surface-raised)] rounded-lg border border-[var(--color-border)]">
+            <a routerLink="profile"
+                class="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer">
+                <div
+                    class="w-8 h-8 rounded-full bg-gradient-to-br from-linke to-linke-dark flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    {{ auth.currentMember()?.name?.charAt(0) || auth.user()?.email?.charAt(0)?.toUpperCase() || 'U' }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-bold text-[var(--color-text)] truncate">{{ auth.currentMember()?.name ||
+                        'Benutzer' }}</div>
+                    <div class="text-[10px] text-[var(--color-text-muted)] truncate uppercase">{{ auth.userRole() }}
+                    </div>
+                </div>
+            </a>
+            <a routerLink="profile"
+                class="text-[var(--color-text-muted)] hover:text-teal p-1 hover:bg-[var(--color-surface-overlay)] rounded transition"
+                title="Profil bearbeiten">
+                <i class="pi pi-user-edit text-sm"></i>
+            </a>
             <button (click)="auth.signOut()"
-                class="text-gray-400 hover:text-white p-1 hover:bg-gray-700 rounded transition" title="Abmelden">
+                class="text-[var(--color-text-muted)] hover:text-linke p-1 hover:bg-[var(--color-surface-overlay)] rounded transition"
+                title="Abmelden">
                 <i class="pi pi-sign-out text-sm"></i>
             </button>
         </div>
         } @else {
         <a routerLink="/login"
-            class="flex items-center justify-center gap-2 w-full py-2 px-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg transition-colors text-sm font-medium">
+            class="flex items-center justify-center gap-2 w-full py-2 px-3 bg-linke hover:bg-linke/90 text-white rounded-lg transition-colors text-sm font-medium">
             <i class="pi pi-sign-in text-sm"></i>
             <span>Anmelden</span>
         </a>

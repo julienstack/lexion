@@ -1,25 +1,77 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  OnInit,
+  signal,
+  ViewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../shared/services/supabase';
+import { Member } from '../../shared/models/member.model';
+
+interface Task {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+interface BirthdayMember {
+  id: string;
+  name: string;
+  avatar_url?: string;
+  birthday: string;
+  isToday: boolean;
+  daysUntil: number;
+  formattedDate: string;
+}
 
 @Component({
   selector: 'app-sidebar-right',
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule],
   templateUrl: './sidebar-right.html',
   styleUrl: './sidebar-right.css',
 })
 export class SidebarRight implements OnInit {
+  @ViewChild('newTaskInput') newTaskInput!: ElementRef<HTMLInputElement>;
+
   private supabase = inject(SupabaseService);
 
   upcomingEvents: any[] = [];
+  upcomingBirthdays = signal<BirthdayMember[]>([]);
+  tasks = signal<Task[]>([]);
+  isLoggedIn = computed(() => !!this.supabase.user());
+  private memberId = signal<string | null>(null);
+
+  // Inline add task
+  showAddInput = signal(false);
+  newTaskTitle = signal('');
+  addingTask = signal(false);
+
+  constructor() {
+    // Re-fetch tasks when user changes
+    effect(() => {
+      const user = this.supabase.user();
+      if (user) {
+        this.fetchMemberAndTasks();
+      } else {
+        this.tasks.set([]);
+        this.memberId.set(null);
+      }
+    });
+  }
 
   ngOnInit() {
     this.fetchUpcoming();
+    this.fetchBirthdays();
   }
 
   async fetchUpcoming() {
     const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await this.supabase
+    const { data } = await this.supabase
       .from('events')
       .select('*')
       .gte('date', today)
@@ -31,15 +83,27 @@ export class SidebarRight implements OnInit {
       this.upcomingEvents = data.map(evt => {
         const isToday = evt.date === today;
         const dateObj = new Date(evt.date);
-        const formattedDate = dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+        const formattedDate = dateObj.toLocaleDateString('de-DE', {
+          day: '2-digit',
+          month: 'short',
+        });
 
-        let color = 'blue';
+        let color = 'teal';
         let icon = 'pi-calendar';
 
         switch (evt.type) {
-          case 'ag': color = 'green'; icon = 'pi-users'; break;
-          case 'personal': color = 'purple'; icon = 'pi-user'; break;
-          case 'general': color = 'blue'; icon = 'pi-flag'; break;
+          case 'ag':
+            color = 'teal';
+            icon = 'pi-users';
+            break;
+          case 'personal':
+            color = 'violet';
+            icon = 'pi-user';
+            break;
+          case 'general':
+            color = 'linke';
+            icon = 'pi-flag';
+            break;
         }
 
         return {
@@ -48,19 +112,200 @@ export class SidebarRight implements OnInit {
           time: evt.start_time,
           type: evt.type,
           icon: icon,
-          color: color
+          color: color,
         };
       });
     }
   }
 
-  tasks = [
-    { id: 1, title: 'Protokoll hochladen', done: false },
-    { id: 2, title: 'Antrag #42 prüfen', done: true },
-    { id: 3, title: 'Raum buchen', done: false }
-  ];
+  async fetchBirthdays() {
+    const { data } = await this.supabase
+      .from('members')
+      .select('id, name, avatar_url, birthday')
+      .not('birthday', 'is', null)
+      .eq('status', 'Active');
 
-  toggleTask(task: any) {
-    task.done = !task.done;
+    if (!data) {
+      this.upcomingBirthdays.set([]);
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const birthdays = data
+      .map((member: any) => {
+        const birthdayInfo = this.parseBirthdayInfo(
+          member.birthday,
+          today
+        );
+        if (!birthdayInfo) return null;
+
+        return {
+          id: member.id,
+          name: member.name,
+          avatar_url: member.avatar_url,
+          birthday: member.birthday,
+          isToday: birthdayInfo.isToday,
+          daysUntil: birthdayInfo.daysUntil,
+          formattedDate: birthdayInfo.formattedDate,
+        } as BirthdayMember;
+      })
+      .filter((b): b is BirthdayMember => b !== null)
+      .filter(b => b.daysUntil <= 7)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+
+    this.upcomingBirthdays.set(birthdays.slice(0, 5));
+  }
+
+  private parseBirthdayInfo(
+    birthdayStr: string,
+    today: Date
+  ): { isToday: boolean; daysUntil: number; formattedDate: string } | null {
+    if (!birthdayStr) return null;
+
+    // Parse German date format (dd.mm.yyyy or dd.mm.yy)
+    const parts = birthdayStr.split('.');
+    if (parts.length < 2) return null;
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+
+    if (isNaN(day) || isNaN(month)) return null;
+
+    // Create this year's birthday
+    const thisYearBirthday = new Date(
+      today.getFullYear(),
+      month,
+      day
+    );
+    thisYearBirthday.setHours(0, 0, 0, 0);
+
+    // If birthday already passed this year, use next year
+    let targetBirthday = thisYearBirthday;
+    if (thisYearBirthday < today) {
+      targetBirthday = new Date(
+        today.getFullYear() + 1,
+        month,
+        day
+      );
+    }
+
+    const diffTime = targetBirthday.getTime() - today.getTime();
+    const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const isToday = daysUntil === 0;
+
+    const formattedDate = targetBirthday.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: 'short',
+    });
+
+    return { isToday, daysUntil, formattedDate };
+  }
+
+  getBirthdayLabel(birthday: BirthdayMember): string {
+    if (birthday.isToday) return 'Heute';
+    if (birthday.daysUntil === 1) return 'Morgen';
+    return birthday.formattedDate;
+  }
+
+  private async fetchMemberAndTasks() {
+    const userId = this.supabase.user()?.id;
+    if (!userId) return;
+
+    const { data: memberData } = await this.supabase
+      .from('members')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (memberData) {
+      this.memberId.set(memberData.id);
+      await this.fetchTasks();
+    }
+  }
+
+  private async fetchTasks() {
+    const memId = this.memberId();
+    if (!memId) return;
+
+    const { data } = await this.supabase
+      .from('user_tasks')
+      .select('id, title, done')
+      .eq('member_id', memId)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      this.tasks.set(data as Task[]);
+    }
+  }
+
+  async toggleTask(task: Task) {
+    const newDone = !task.done;
+
+    this.tasks.update(tasks =>
+      tasks.map(t => (t.id === task.id ? { ...t, done: newDone } : t))
+    );
+
+    await this.supabase
+      .from('user_tasks')
+      .update({ done: newDone, updated_at: new Date().toISOString() })
+      .eq('id', task.id);
+  }
+
+  openAddInput() {
+    this.showAddInput.set(true);
+    this.newTaskTitle.set('');
+    setTimeout(() => this.newTaskInput?.nativeElement?.focus(), 0);
+  }
+
+  cancelAdd() {
+    this.showAddInput.set(false);
+    this.newTaskTitle.set('');
+  }
+
+  async submitTask() {
+    const memId = this.memberId();
+    const title = this.newTaskTitle().trim();
+    if (!memId || !title) return;
+
+    this.addingTask.set(true);
+
+    const { data } = await this.supabase
+      .from('user_tasks')
+      .insert({ member_id: memId, title, done: false })
+      .select('id, title, done')
+      .single();
+
+    if (data) {
+      this.tasks.update(tasks => [data as Task, ...tasks]);
+    }
+
+    this.addingTask.set(false);
+    this.showAddInput.set(false);
+    this.newTaskTitle.set('');
+  }
+
+  onInputKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.submitTask();
+    } else if (event.key === 'Escape') {
+      this.cancelAdd();
+    }
+  }
+
+  async deleteTask(task: Task) {
+    this.tasks.update(tasks => tasks.filter(t => t.id !== task.id));
+    await this.supabase.from('user_tasks').delete().eq('id', task.id);
+  }
+
+  getInitials(name: string): string {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
   }
 }

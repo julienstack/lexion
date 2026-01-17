@@ -18,34 +18,51 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-xl md:text-3xl font-bold text-white">Termine</h1>
-            <p class="text-gray-400 text-sm hidden md:block">Deine anstehenden Termine und Events.</p>
+            <h1 class="text-xl md:text-3xl font-bold text-[var(--color-text)]">Termine</h1>
+            <p class="text-[var(--color-text-muted)] text-sm hidden md:block">Deine anstehenden Termine und Events.</p>
         </div>
-        @if (auth.isAdmin()) {
-        <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
-            (click)="openNew()"></p-button>
-        }
+        <div class="flex items-center gap-2">
+            <!-- iCal Export -->
+            <button (click)="downloadICalFile()"
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors border border-[var(--color-border)]"
+                pTooltip="Kalender exportieren (.ics)" tooltipPosition="bottom">
+                <i class="pi pi-download text-sm"></i>
+            </button>
+            <button (click)="copyICalUrl()"
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors border border-[var(--color-border)]"
+                pTooltip="Abo-Link kopieren" tooltipPosition="bottom">
+                <i class="pi pi-link text-sm"></i>
+            </button>
+
+            @if (canCreateEvent()) {
+            <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
+                (click)="openNew()"></p-button>
+            }
+        </div>
     </div>
 
     <!-- Empty State -->
     @if (events().length === 0) {
     <div class="text-center py-8">
-        <i class="pi pi-calendar text-4xl text-gray-600 mb-3"></i>
-        <p class="text-gray-400">Keine Termine gefunden.</p>
+        <i class="pi pi-calendar text-4xl text-[var(--color-text-muted)] mb-3"></i>
+        <p class="text-[var(--color-text-muted)]">Keine Termine gefunden.</p>
     </div>
     }
 
     <!-- Events List -->
     <div class="space-y-2 md:space-y-3">
         @for (event of sortedEvents; track event.id) {
-        <div class="bg-gray-800/40 rounded-lg p-3 border border-gray-700/50 hover:border-pink-500/50 transition-colors">
+        <div
+            class="bg-[var(--color-surface-raised)] rounded-lg p-3 border border-[var(--color-border)] hover:border-linke/50 transition-colors">
             <div class="flex gap-3">
                 <!-- Compact Date Box -->
                 <div
-                    class="flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-gray-900/60 rounded-lg border border-gray-700">
-                    <span class="text-[10px] md:text-xs font-medium text-gray-400 uppercase leading-tight">{{
+                    class="flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
+                    <span
+                        class="text-[10px] md:text-xs font-medium text-[var(--color-text-muted)] uppercase leading-tight">{{
                         parseDate(event.date) | date:'MMM' }}</span>
-                    <span class="text-base md:text-xl font-bold text-white leading-tight">{{ parseDate(event.date) |
+                    <span class="text-base md:text-xl font-bold text-[var(--color-text)] leading-tight">{{
+                        parseDate(event.date) |
                         date:'dd' }}</span>
                 </div>
 
@@ -53,14 +70,16 @@
                 <div class="flex-1 min-w-0">
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0 flex-1">
-                            <h3 class="text-sm md:text-base font-bold text-white truncate">{{ event.title }}</h3>
-                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 mt-1">
+                            <h3 class="text-sm md:text-base font-bold text-[var(--color-text)] truncate">{{ event.title
+                                }}</h3>
+                            <div
+                                class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--color-text-muted)] mt-1">
                                 <span class="flex items-center gap-1">
-                                    <i class="pi pi-clock text-pink-500 text-[10px]"></i>
+                                    <i class="pi pi-clock text-linke text-[10px]"></i>
                                     {{ event.start_time }}@if(event.end_time) {-{{ event.end_time }}}
                                 </span>
                                 <span class="flex items-center gap-1">
-                                    <i class="pi pi-map-marker text-pink-500 text-[10px]"></i>
+                                    <i class="pi pi-map-marker text-linke text-[10px]"></i>
                                     <span class="truncate max-w-[100px] md:max-w-none">{{ event.location }}</span>
                                 </span>
                             </div>
@@ -70,12 +89,12 @@
                         <div class="flex items-center gap-1 flex-shrink-0">
                             @if (event.type === 'general') {
                             <span
-                                class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[10px] font-medium">
+                                class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-teal/20 text-teal text-[10px] font-medium">
                                 Allg.
                             </span>
                             } @else if (event.type === 'personal') {
                             <span
-                                class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[10px] font-medium">
+                                class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-linke-dark/20 text-violet text-[10px] font-medium">
                                 Priv.
                             </span>
                             } @else if (event.type === 'ag') {
@@ -85,13 +104,33 @@
                             </span>
                             }
 
-                            @if (auth.isAdmin()) {
+                            <!-- Registration Button -->
+                            @if (auth.isLoggedIn()) {
+                            <button (click)="toggleRegistration(event); $event.stopPropagation()"
+                                class="w-7 h-7 rounded-full flex items-center justify-center transition-colors" [class]="getMyRegistration(event.id!) === 'confirmed' 
+                                    ? 'bg-teal/20 text-teal hover:bg-red-500/20 hover:text-red-400' 
+                                    : 'text-[var(--color-text-muted)] hover:text-teal hover:bg-teal/10'"
+                                [pTooltip]="getMyRegistration(event.id!) === 'confirmed' ? 'Abmelden' : 'Anmelden'"
+                                tooltipPosition="top">
+                                <i class="pi text-xs"
+                                    [class]="getMyRegistration(event.id!) === 'confirmed' ? 'pi-check' : 'pi-user-plus'"></i>
+                            </button>
+
+                            <!-- Participants Button -->
+                            <button (click)="openParticipantsDialog(event); $event.stopPropagation()"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+                                pTooltip="Teilnehmer anzeigen" tooltipPosition="top">
+                                <i class="pi pi-users text-xs"></i>
+                            </button>
+                            }
+
+                            @if (canCreateEvent()) {
                             <button (click)="editEvent(event)"
-                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors">
                                 <i class="pi pi-pencil text-xs"></i>
                             </button>
                             <button (click)="confirmDelete(event)"
-                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-gray-700 transition-colors">
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-red-400 hover:bg-[var(--color-surface-overlay)] transition-colors">
                                 <i class="pi pi-trash text-xs"></i>
                             </button>
                             }
@@ -99,7 +138,8 @@
                     </div>
 
                     @if (event.description) {
-                    <p class="text-xs text-gray-500 mt-1.5 line-clamp-1 md:line-clamp-2">{{ event.description }}</p>
+                    <p class="text-xs text-[var(--color-text-muted)] mt-1.5 line-clamp-1 md:line-clamp-2">{{
+                        event.description }}</p>
                     }
                 </div>
             </div>
@@ -115,51 +155,51 @@
     [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
     <div class="space-y-3">
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Titel *</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Titel *</label>
             <input pInputText [(ngModel)]="currentEvent.title" class="w-full" placeholder="Vorstandssitzung" />
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Datum *</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Datum *</label>
                 <p-datepicker [(ngModel)]="eventDate" dateFormat="dd.mm.yy" styleClass="w-full" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Typ</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Typ</label>
                 <p-select [(ngModel)]="currentEvent.type" [options]="typeOptions" optionLabel="label"
                     optionValue="value" styleClass="w-full" />
             </div>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Sichtbarkeit</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Sichtbarkeit</label>
             <p-select [(ngModel)]="tempVisibility" [options]="visibilityOptions" optionLabel="label" optionValue="value"
                 styleClass="w-full" />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Startzeit *</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Startzeit *</label>
                 <input pInputText [(ngModel)]="currentEvent.start_time" class="w-full" placeholder="19:00" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Endzeit</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Endzeit</label>
                 <input pInputText [(ngModel)]="currentEvent.end_time" class="w-full" placeholder="21:00" />
             </div>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Ort *</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Ort *</label>
             <input pInputText [(ngModel)]="currentEvent.location" class="w-full" placeholder="Vereinsheim" />
         </div>
         @if (currentEvent.type === 'ag') {
-        <div class="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
-            <label class="block text-sm font-medium text-gray-300 mb-1">Arbeitsgruppe</label>
+        <div class="bg-[var(--color-surface-raised)] p-3 rounded-lg border border-[var(--color-border)]">
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Arbeitsgruppe</label>
             <p-select [(ngModel)]="currentEvent.working_group_id" [options]="workingGroups()" optionLabel="name"
                 optionValue="id" placeholder="AG auswählen..." styleClass="w-full">
             </p-select>
         </div>
         }
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Beschreibung</label>
             <textarea pTextarea [(ngModel)]="currentEvent.description" class="w-full" rows="2"
                 placeholder="Details..."></textarea>
         </div>
@@ -170,5 +210,43 @@
             [disabled]="saving()" />
         <p-button [label]="editMode() ? 'Speichern' : 'Erstellen'" icon="pi pi-check" (click)="saveEvent()"
             [loading]="saving()" />
+    </ng-template>
+</p-dialog>
+
+<!-- Participants Dialog -->
+<p-dialog [header]="'Teilnehmer: ' + selectedEventForParticipants()?.title" [visible]="participantsDialogVisible()"
+    (visibleChange)="participantsDialogVisible.set($event)" [modal]="true" [draggable]="false" [resizable]="false"
+    maskStyleClass="backdrop-blur-sm bg-black/50" [style]="{width: '400px', maxWidth: '95vw'}">
+
+    <div class="space-y-2">
+        @for (reg of participants(); track reg.id) {
+        <div
+            class="flex items-center gap-3 p-3 bg-[var(--color-surface-raised)] rounded-lg border border-[var(--color-border)]">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                [style.background-color]="getAvatarColor(reg.member?.name || '')">
+                {{ getInitials(reg.member?.name || '') }}
+            </div>
+            <div class="flex-1 min-w-0">
+                <span class="text-sm font-medium text-[var(--color-text)] truncate block">{{ reg.member?.name }}</span>
+                <span class="text-xs text-[var(--color-text-muted)]">
+                    {{ reg.status === 'confirmed' ? 'Zugesagt' : 'Vielleicht' }}
+                </span>
+            </div>
+            @if (reg.status === 'confirmed') {
+            <i class="pi pi-check text-teal text-sm"></i>
+            } @else {
+            <i class="pi pi-question text-amber-500 text-sm"></i>
+            }
+        </div>
+        } @empty {
+        <div class="text-center py-8 text-[var(--color-text-muted)]">
+            <i class="pi pi-users text-3xl mb-2"></i>
+            <p class="text-sm">Noch keine Anmeldungen</p>
+        </div>
+        }
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Schließen" severity="secondary" [text]="true" (click)="participantsDialogVisible.set(false)" />
     </ng-template>
 </p-dialog>

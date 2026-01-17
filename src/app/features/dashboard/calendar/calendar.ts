@@ -12,11 +12,19 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { EventsService } from '../../../shared/services/events.service';
 import { CalendarEvent } from '../../../shared/models/calendar-event.model';
 import { AuthService } from '../../../shared/services/auth.service';
+import { PermissionsService } from '../../../shared/services/permissions.service';
 import { WorkingGroupsService } from '../../../shared/services/working-groups.service';
+import { OnboardingService } from '../../../shared/services/onboarding.service';
+import {
+  EventRegistrationService,
+  EventRegistration,
+  RegistrationStatus
+} from '../../../shared/services/event-registration.service';
 
 @Component({
   selector: 'app-calendar',
@@ -36,6 +44,7 @@ import { WorkingGroupsService } from '../../../shared/services/working-groups.se
     MessageModule,
     ConfirmDialogModule,
     ToastModule,
+    TooltipModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './calendar.html',
@@ -45,11 +54,17 @@ export class CalendarComponent implements OnInit {
   private eventsService = inject(EventsService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private onboardingService = inject(OnboardingService);
   public auth = inject(AuthService);
+  public permissions = inject(PermissionsService);
+  public registrationService = inject(EventRegistrationService);
 
   // For AG linking
   private workingGroupsService = inject(WorkingGroupsService);
   workingGroups = this.workingGroupsService.workingGroups;
+
+  // Permission-based visibility
+  canCreateEvent = this.permissions.canCreateEvents;
 
   events = this.eventsService.events;
   loading = this.eventsService.loading;
@@ -58,6 +73,12 @@ export class CalendarComponent implements OnInit {
   dialogVisible = signal(false);
   editMode = signal(false);
   saving = signal(false);
+
+  // Registration
+  participantsDialogVisible = signal(false);
+  selectedEventForParticipants = signal<CalendarEvent | null>(null);
+  participants = signal<EventRegistration[]>([]);
+  participantCounts = signal<Map<string, number>>(new Map());
 
   currentEvent: Partial<CalendarEvent> = this.getEmptyEvent();
   eventDate: Date | null = null;
@@ -80,6 +101,10 @@ export class CalendarComponent implements OnInit {
   ngOnInit(): void {
     this.eventsService.fetchEvents();
     this.workingGroupsService.fetchWorkingGroups();
+    // Track calendar visit for onboarding
+    this.onboardingService.trackCalendarVisit();
+    // Load user's registrations
+    this.registrationService.fetchMyRegistrations();
   }
 
   getEmptyEvent(): Partial<CalendarEvent> {
@@ -229,6 +254,128 @@ export class CalendarComponent implements OnInit {
       case 'committee': return ['committee', 'admin'];
       case 'admin': return ['admin'];
       default: return ['public', 'member', 'committee', 'admin'];
+    }
+  }
+
+  // --- Registration Methods ---
+
+  /**
+   * Check if current user is registered for an event
+   */
+  getMyRegistration(eventId: string): RegistrationStatus | null {
+    return this.registrationService.isRegistered(eventId);
+  }
+
+  /**
+   * Toggle registration for an event
+   */
+  async toggleRegistration(event: CalendarEvent): Promise<void> {
+    if (!event.id) return;
+
+    try {
+      const currentStatus = this.getMyRegistration(event.id);
+
+      if (currentStatus === 'confirmed') {
+        await this.registrationService.unregister(event.id);
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Abgemeldet',
+          detail: `Du hast dich von "${event.title}" abgemeldet.`,
+        });
+      } else {
+        await this.registrationService.register(event.id, 'confirmed');
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Angemeldet',
+          detail: `Du hast dich für "${event.title}" angemeldet!`,
+        });
+      }
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: (e as Error).message,
+      });
+    }
+  }
+
+  /**
+   * Open participants dialog for an event
+   */
+  async openParticipantsDialog(event: CalendarEvent): Promise<void> {
+    if (!event.id) return;
+
+    this.selectedEventForParticipants.set(event);
+    this.participantsDialogVisible.set(true);
+
+    try {
+      const regs = await this.registrationService.getEventRegistrations(event.id);
+      this.participants.set(regs);
+    } catch (e) {
+      console.error('Error loading participants:', e);
+    }
+  }
+
+  /**
+   * Get participant count for display
+   */
+  getParticipantCount(eventId: string): number {
+    return this.participantCounts().get(eventId) ?? 0;
+  }
+
+  /**
+   * Helper: Get initials from name
+   */
+  getInitials(name: string): string {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  }
+
+  /**
+   * Helper: Get color from name
+   */
+  getAvatarColor(name: string): string {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}, 70%, 50%)`;
+  }
+
+  // --- iCal Export Methods ---
+
+  /**
+   * Download iCal file
+   */
+  downloadICalFile(): void {
+    this.eventsService.downloadICalFile();
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Download',
+      detail: 'Kalender wird heruntergeladen...',
+    });
+  }
+
+  /**
+   * Copy iCal subscription URL to clipboard
+   */
+  async copyICalUrl(): Promise<void> {
+    const url = this.eventsService.getICalUrl();
+
+    try {
+      await navigator.clipboard.writeText(url);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Kopiert',
+        detail: 'Abo-Link in Zwischenablage kopiert!',
+      });
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: 'Link konnte nicht kopiert werden.',
+      });
     }
   }
 }

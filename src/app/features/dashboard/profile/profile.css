@@ -1,0 +1,85 @@
+/* Profile component styles */
+
+/* DatePicker dark mode adjustments */
+:host ::ng-deep .p-datepicker-input-icon-container {
+    background-color: var(--color-surface-overlay) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-muted) !important;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+:host ::ng-deep .p-datepicker-input-icon-container:hover {
+    background-color: var(--color-surface-raised) !important;
+    color: var(--color-text) !important;
+    border-color: rgba(228, 0, 43, 0.3) !important;
+}
+
+:host ::ng-deep .p-datepicker-input-icon-container .p-icon {
+    color: var(--color-text-muted) !important;
+}
+
+:host ::ng-deep .p-datepicker-input-icon-container:hover .p-icon {
+    color: var(--color-text) !important;
+}
+
+/* DatePicker dropdown panel */
+:host ::ng-deep .p-datepicker-panel {
+    background-color: var(--color-surface-raised) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+}
+
+:host ::ng-deep .p-datepicker-header {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+}
+
+:host ::ng-deep .p-datepicker-calendar td>span {
+    color: var(--color-text) !important;
+}
+
+:host ::ng-deep .p-datepicker-calendar td>span:hover {
+    background-color: var(--color-surface-overlay) !important;
+}
+
+:host ::ng-deep .p-datepicker-calendar td>span.p-highlight {
+    background-color: #e4002b !important;
+    color: white !important;
+}
+
+:host ::ng-deep .p-datepicker-calendar th {
+    color: var(--color-text-muted) !important;
+}
+
+:host ::ng-deep .p-datepicker-title button {
+    color: var(--color-text) !important;
+}
+
+:host ::ng-deep .p-datepicker-prev,
+:host ::ng-deep .p-datepicker-next {
+    color: var(--color-text-muted) !important;
+}
+
+:host ::ng-deep .p-datepicker-prev:hover,
+:host ::ng-deep .p-datepicker-next:hover {
+    color: var(--color-text) !important;
+    background-color: var(--color-surface-overlay) !important;
+}
+
+/* Input field styling */
+:host ::ng-deep .p-inputtext {
+    background-color: var(--color-surface-overlay) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+}
+
+:host ::ng-deep .p-inputtext:focus {
+    border-color: rgba(228, 0, 43, 0.5) !important;
+    box-shadow: 0 0 0 2px rgba(228, 0, 43, 0.1) !important;
+}
+
+:host ::ng-deep .p-inputtext::placeholder {
+    color: var(--color-text-muted) !important;
+}

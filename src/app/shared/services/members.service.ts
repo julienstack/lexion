@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
+import { OrganizationService } from './organization.service';
 import { Member } from '../models/member.model';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
@@ -14,6 +15,7 @@ import { environment } from '../../../environments/environment';
 })
 export class MembersService implements OnDestroy {
     private supabase = inject(SupabaseService);
+    private org = inject(OrganizationService);
     private readonly TABLE_NAME = 'members';
     private realtimeChannel: RealtimeChannel | null = null;
     private readonly FUNCTIONS_URL = `${environment.supabase.url}/functions/v1`;
@@ -30,10 +32,19 @@ export class MembersService implements OnDestroy {
         this._loading.set(true);
         this._error.set(null);
 
-        const { data, error } = await this.supabase
+        const orgId = this.org.currentOrgId();
+
+        let query = this.supabase
             .from(this.TABLE_NAME)
             .select('*')
             .order('name', { ascending: true });
+
+        // Filter by organization if set
+        if (orgId) {
+            query = query.eq('organization_id', orgId);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             this._error.set(error.message);
@@ -65,6 +76,7 @@ export class MembersService implements OnDestroy {
         switch (eventType) {
             case 'INSERT':
                 this._members.update(members => {
+                    if (members.some(m => m.id === newRecord.id)) return members;
                     const sorted = [...members, newRecord]
                         .sort((a, b) => a.name.localeCompare(b.name));
                     return sorted;
@@ -90,14 +102,87 @@ export class MembersService implements OnDestroy {
     }
 
     async addMember(member: Omit<Member, 'id' | 'created_at' | 'updated_at'>) {
+        // Add organization_id to new members
+        const orgId = this.org.currentOrgId();
+        const memberWithOrg = orgId ? { ...member, organization_id: orgId } : member;
+
         const { data, error } = await this.supabase
             .from(this.TABLE_NAME)
-            .insert(member)
+            .insert(memberWithOrg)
             .select()
             .single();
 
         if (error) throw new Error(error.message);
         return data;
+    }
+
+    async importMembers(members: Partial<Member>[]) {
+        // 1. Get existing emails to identify updates
+        const { data: existingMembers, error: fetchError } = await this.supabase
+            .from(this.TABLE_NAME)
+            .select('id, email, status, name, join_date');
+
+        if (fetchError) throw new Error(fetchError.message);
+
+        // Map email to full record to access current values
+        const emailMap = new Map<string, any>();
+        existingMembers?.forEach(m => {
+            if (m.email) emailMap.set(m.email.toLowerCase(), m);
+        });
+
+        // 2. Prepare Data Splitting (PostgREST requires uniform keys in batch)
+        const toUpdate: any[] = [];
+        const toInsert: any[] = [];
+
+        members.forEach(m => {
+            const email = m.email?.toLowerCase();
+            if (email && emailMap.has(email)) {
+                // UPDATE: Has ID. 
+                // We MUST include existing NOT NULL values (like status) to satisfy "INSERT ... ON CONFLICT" constraints
+                const current = emailMap.get(email);
+                toUpdate.push({
+                    status: current.status, // Pre-fill with existing status so upsert doesn't fail on NOT NULL
+                    name: current.name,     // Pre-fill name just in case
+                    join_date: current.join_date, // Pre-fill join_date
+                    ...m,                   // Overwrite with imported data if present
+                    id: current.id
+                });
+            } else {
+                // INSERT: No ID, apply defaults
+                toInsert.push({
+                    status: 'Active',
+                    role: 'Mitglied',
+                    join_date: new Date().toLocaleDateString('de-DE'),
+                    app_role: 'member',
+                    ...m
+                });
+            }
+        });
+
+        const results: any[] = [];
+
+        // 3. Execute Operations
+        if (toUpdate.length > 0) {
+            const { data, error } = await this.supabase
+                .from(this.TABLE_NAME)
+                .upsert(toUpdate)
+                .select();
+
+            if (error) throw new Error(error.message);
+            if (data) results.push(...data);
+        }
+
+        if (toInsert.length > 0) {
+            const { data, error } = await this.supabase
+                .from(this.TABLE_NAME)
+                .insert(toInsert)
+                .select();
+
+            if (error) throw new Error(error.message);
+            if (data) results.push(...data);
+        }
+
+        return results;
     }
 
     async updateMember(id: string, updates: Partial<Member>) {

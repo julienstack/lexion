@@ -1,0 +1,441 @@
+<p-toast></p-toast>
+<div class="p-4 md:p-6 max-w-7xl mx-auto animate-fade-in">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-[var(--color-text)]">Aktuelles & Beiträge</h1>
+            <p class="text-[var(--color-text-muted)] text-sm mt-1">Neuigkeiten und Artikel aus der Community</p>
+        </div>
+        @if (canCreate()) {
+        <p-button label="Neuer Beitrag" icon="pi pi-plus" (click)="openNew()" severity="primary"
+            [raised]="true"></p-button>
+        }
+    </div>
+
+    <p-tabs value="0">
+        <p-tablist>
+            <p-tab value="0">Aktuelles</p-tab>
+            <p-tab value="1" *ngIf="auth.isMember()">Meine Beiträge</p-tab>
+            <p-tab value="2" *ngIf="canApprove()">Verwaltung</p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+            <!-- Tab 1: Feed (Öffentlich/Approved) -->
+            <p-tabpanel value="0">
+                <div class="grid gap-6">
+                    @for (item of feedItems(); track item.id) {
+                    <div
+                        class="bg-[var(--color-surface-card)] rounded-xl border border-[var(--color-border)] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <div class="p-6">
+                            <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
+                                <div>
+                                    <h2 class="text-xl font-bold text-[var(--color-text)] mb-2">{{ item.title }}</h2>
+                                    <div class="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+                                        <i class="pi pi-calendar"></i>
+                                        <span>{{ item.created_at | date:'dd.MM.yyyy' }}</span>
+                                        <span>•</span>
+                                        <i class="pi pi-user"></i>
+                                        <span>{{ item.author?.name || 'Unbekannt' }}</span>
+                                        <p-tag [value]="item.type === 'link' ? 'Link' : 'Artikel'" severity="info"
+                                            styleClass="text-xs ml-2"></p-tag>
+                                    </div>
+                                </div>
+                                <div *ngIf="item.status === 'sent'"
+                                    class="text-xs text-green-500 font-medium border border-green-500/20 bg-green-500/10 px-2 py-1 rounded">
+                                    <i class="pi pi-check"></i> Newsletter versendet
+                                </div>
+                            </div>
+
+                            <div class="prose prose-sm max-w-none text-[var(--color-text)] leading-relaxed">
+                                @if (item.type === 'link') {
+                                <a [href]="item.url" target="_blank" class="block group mt-1 mb-4 no-underline">
+                                    <div
+                                        class="p-3 rounded-lg bg-[var(--color-surface-ground)] border border-[var(--color-border)] group-hover:border-[var(--linke)] transition-all flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-[var(--color-surface-raised)] flex items-center justify-center shrink-0 border border-[var(--color-border)]">
+                                            <i
+                                                class="pi pi-link text-[var(--color-text-muted)] group-hover:text-[var(--linke)] transition-colors"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div
+                                                class="text-sm font-medium truncate text-[var(--linke)] group-hover:underline">
+                                                {{ item.url }}</div>
+                                            <div class="text-xs text-[var(--color-text-muted)]">Externer Link</div>
+                                        </div>
+                                        <i
+                                            class="pi pi-external-link text-[var(--color-text-muted)] opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                                    </div>
+                                </a>
+                                @if (item.content) {
+                                <div class="pl-2 border-l-2 border-[var(--color-border)] text-sm text-[var(--color-text-muted)] italic"
+                                    [innerHTML]="item.content"></div>
+                                }
+                                } @else {
+                                <div [innerHTML]="item.content"></div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    }
+                    @if (feedItems().length === 0) {
+                    <div
+                        class="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)] bg-[var(--color-surface-raised)] rounded-xl border border-[var(--color-border)] border-dashed">
+                        <i class="pi pi-inbox text-4xl mb-3 opacity-50"></i>
+                        <p>Keine Beiträge vorhanden.</p>
+                    </div>
+                    }
+                </div>
+            </p-tabpanel>
+
+            <!-- Tab 2: Meine Beiträge -->
+            <p-tabpanel value="1" *ngIf="auth.isMember()">
+                <div class="space-y-4">
+                    @for (item of myItems(); track item.id) {
+                    <div
+                        class="bg-[var(--color-surface-card)] p-4 rounded-lg border border-[var(--color-border)] flex flex-col md:flex-row gap-4 justify-between items-start md:items-center hover:bg-[var(--color-surface-overlay)] transition-colors">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-2 mb-1">
+                                <h3 class="font-bold text-lg truncate">{{ item.title }}</h3>
+                                <p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)"></p-tag>
+                            </div>
+                            <div class="text-sm text-[var(--color-text-muted)] flex items-center gap-2">
+                                <span>{{ item.created_at | date:'dd.MM.yyyy HH:mm' }}</span>
+                                <span>•</span>
+                                <span class="capitalize">{{ item.type }}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            @if (item.status === 'draft') {
+                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (click)="openEdit(item)"
+                                pTooltip="Bearbeiten" tooltipPosition="top"></p-button>
+                            <p-button icon="pi pi-send" [text]="true" [rounded]="true" severity="success"
+                                (click)="submitForReview(item)" pTooltip="Zur Prüfung einreichen"
+                                tooltipPosition="top"></p-button>
+                            <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
+                                (click)="deleteItem(item)" pTooltip="Löschen" tooltipPosition="top"></p-button>
+                            } @else {
+                            <p-button icon="pi pi-eye" [text]="true" [rounded]="true" (click)="openEdit(item)"
+                                pTooltip="Ansehen" tooltipPosition="top"></p-button>
+                            }
+                        </div>
+                    </div>
+                    }
+                    @if (myItems().length === 0) {
+                    <div class="text-center text-[var(--color-text-muted)] py-8">Du hast noch keine Beiträge verfasst.
+                    </div>
+                    }
+                </div>
+            </p-tabpanel>
+
+            <!-- Tab 3: Verwaltung (Admin/Approver) -->
+            <p-tabpanel value="2" *ngIf="canApprove()">
+                <div class="space-y-6">
+
+                    <!-- Sub Navigation -->
+                    <div class="flex justify-center md:justify-start">
+                        <p-selectButton [options]="adminViewOptions" [(ngModel)]="adminView" optionLabel="label"
+                            optionValue="value" [allowEmpty]="false"></p-selectButton>
+                    </div>
+
+                    <!-- View: Config -->
+                    <div *ngIf="adminView() === 'config'"
+                        class="animate-fade-in bg-[var(--color-surface-card)] p-5 rounded-lg border border-[var(--color-border)] shadow-sm">
+                        @if (newsletterConfig(); as config) {
+                        <div class="flex justify-between items-center mb-4 border-b border-[var(--color-border)] pb-2">
+                            <h3 class="text-xl font-bold flex items-center gap-2">
+                                <i class="pi pi-cog"></i> Newsletter Konfiguration
+                            </h3>
+                            <p-tag [value]="config.active ? 'Aktiv' : 'Inaktiv'"
+                                [severity]="config.active ? 'success' : 'secondary'"></p-tag>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex flex-col gap-2">
+                                    <label class="font-medium text-sm">Frequenz</label>
+                                    <p-select [options]="frequencies" [(ngModel)]="config.frequency" optionLabel="label"
+                                        optionValue="value" styleClass="w-full"></p-select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="flex flex-col gap-2" *ngIf="config.frequency === 'weekly'">
+                                        <label class="font-medium text-sm">Wochentag</label>
+                                        <p-select [options]="days" [(ngModel)]="config.day_of_week" optionLabel="label"
+                                            optionValue="value" styleClass="w-full"></p-select>
+                                    </div>
+
+                                    <div class="flex flex-col gap-2" *ngIf="config.frequency !== 'manual'">
+                                        <label class="font-medium text-sm">Uhrzeit</label>
+                                        <input type="time" pInputText [(ngModel)]="config.time_of_day"
+                                            class="w-full h-[42px]" />
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="flex items-center justify-between mt-2 p-3 bg-[var(--color-surface-ground)] rounded border border-[var(--color-border)]">
+                                    <label for="active" class="cursor-pointer select-none font-medium">Automatischer
+                                        Versand</label>
+                                    <p-checkbox [(ngModel)]="config.active" binary="true" inputId="active"></p-checkbox>
+                                </div>
+
+                                <!-- SMTP Configuration Component -->
+                                <p-fieldset legend="E-Mail Server (SMTP)" [toggleable]="true" [collapsed]="true"
+                                    styleClass="border border-[var(--color-border)] rounded-lg overflow-hidden bg-[var(--color-surface-ground)]">
+                                    <div class="grid grid-cols-1 gap-4 p-1">
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-sm">Host</label>
+                                            <input pInputText [(ngModel)]="config.smtp_host"
+                                                placeholder="smtp.provider.com" class="w-full p-inputtext-sm" />
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="flex flex-col gap-2">
+                                                <label class="text-sm">Port</label>
+                                                <input pInputText type="number" [(ngModel)]="config.smtp_port"
+                                                    placeholder="587" class="w-full p-inputtext-sm" />
+                                            </div>
+                                            <div class="flex flex-col gap-2 justify-end pb-2">
+                                                <div class="flex items-center gap-2">
+                                                    <p-checkbox [(ngModel)]="config.smtp_secure" binary="true"
+                                                        inputId="secure"></p-checkbox>
+                                                    <label for="secure" class="cursor-pointer text-sm">SSL/TLS</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="flex flex-col gap-2">
+                                                <label class="text-sm">User</label>
+                                                <input pInputText [(ngModel)]="config.smtp_user"
+                                                    class="w-full p-inputtext-sm" autocomplete="off" />
+                                            </div>
+                                            <div class="flex flex-col gap-2">
+                                                <label class="text-sm">Password</label>
+                                                <input pInputText type="password" [(ngModel)]="config.smtp_pass"
+                                                    class="w-full p-inputtext-sm" autocomplete="new-password" />
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-sm">From Email</label>
+                                            <input pInputText [(ngModel)]="config.smtp_from"
+                                                placeholder="news@lexion.dev" class="w-full p-inputtext-sm" />
+                                        </div>
+                                    </div>
+                                </p-fieldset>
+
+                                <!-- Email Design -->
+                                <p-fieldset legend="E-Mail Design" [toggleable]="true" [collapsed]="true"
+                                    styleClass="border border-[var(--color-border)] rounded-lg overflow-hidden bg-[var(--color-surface-ground)]">
+                                    <div class="grid grid-cols-1 gap-4 p-1">
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-sm">Logo-URL</label>
+                                            <input pInputText [(ngModel)]="config.logo_url"
+                                                placeholder="https://example.com/logo.png (optional)"
+                                                class="w-full p-inputtext-sm" />
+                                            <small class="text-[var(--color-text-muted)]">Leer lassen für
+                                                Text-Logo</small>
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-sm">Footer-Text</label>
+                                            <input pInputText [(ngModel)]="config.footer_text"
+                                                placeholder="Lexion - Vereinsverwaltung"
+                                                class="w-full p-inputtext-sm" />
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-sm">Primärfarbe</label>
+                                            <div class="flex items-center gap-2">
+                                                <input type="color" [(ngModel)]="config.primary_color"
+                                                    class="w-10 h-10 rounded border border-[var(--color-border)] cursor-pointer" />
+                                                <input pInputText [(ngModel)]="config.primary_color"
+                                                    placeholder="#DE0000" class="flex-1 p-inputtext-sm font-mono" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </p-fieldset>
+                            </div>
+
+                            <div
+                                class="flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-[var(--color-border)] pt-4 lg:pt-0 lg:pl-8">
+                                <div class="space-y-4">
+                                    <div>
+                                        <div
+                                            class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
+                                            Letzter Versand</div>
+                                        <div class="font-mono text-lg">
+                                            @if (config.last_sent_at) { {{ config.last_sent_at | date:'dd.MM.yyyy HH:mm'
+                                            }} } @else { - }
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div
+                                            class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
+                                            Nächster geplanter Lauf</div>
+                                        <div class="font-bold text-lg text-linke">
+                                            @if (config.active && config.frequency !== 'manual') {
+                                            Laut Zeitplan
+                                            } @else {
+                                            Manuell
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap gap-3 mt-6 justify-end">
+                                    <p-button label="Speichern" icon="pi pi-save" (click)="saveConfig()"
+                                        severity="primary" [raised]="true"></p-button>
+                                    <p-button label="Test-E-Mail" icon="pi pi-envelope" severity="secondary"
+                                        [outlined]="true" (click)="openTestEmailDialog()"></p-button>
+                                    <p-button label="Jetzt Senden" icon="pi pi-send" severity="danger" [outlined]="true"
+                                        (click)="triggerNewsletter()" pTooltip="Newsletter sofort versenden"
+                                        tooltipPosition="left"></p-button>
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- View: Review -->
+                    <div *ngIf="adminView() === 'review'" class="animate-fade-in space-y-4">
+                        <div class="flex items-center gap-2 text-amber-500 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20 mb-4"
+                            *ngIf="reviewItems().length > 0">
+                            <i class="pi pi-info-circle"></i>
+                            <span class="font-medium font-sm">{{ reviewItems().length }} Beiträge warten auf
+                                Freigabe.</span>
+                        </div>
+
+                        @for (item of reviewItems(); track item.id) {
+                        <div
+                            class="bg-[var(--color-surface-card)] p-5 rounded-lg border border-l-4 border-l-amber-500 border-[var(--color-border)] flex flex-col gap-4 shadow-sm">
+                            <div class="flex justify-between items-start flex-wrap gap-4">
+                                <div>
+                                    <div class="font-bold text-lg">{{ item.title }}</div>
+                                    <div class="text-sm text-[var(--color-text-muted)] mt-1">Von: <span
+                                            class="font-medium text-[var(--color-text)]">{{ item.author?.name }}</span>
+                                        • {{ item.created_at | date:'short' }}</div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <p-button label="Freigeben" icon="pi pi-check" severity="success" size="small"
+                                        [raised]="true" (click)="approveItem(item)"></p-button>
+                                    <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" size="small"
+                                        [outlined]="true" (click)="openEdit(item)"></p-button>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-[var(--color-bg)] p-4 rounded border border-[var(--color-border)] text-sm max-h-60 overflow-y-auto">
+                                <div [innerHTML]="item.content"></div>
+                                @if (item.url) {
+                                <div class="mt-3 pt-3 border-t border-[var(--color-border)]">
+                                    <a [href]="item.url" target="_blank"
+                                        class="text-linke hover:underline flex items-center gap-1">
+                                        {{ item.url }} <i class="pi pi-external-link text-xs"></i>
+                                    </a>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                        }
+                        @if (reviewItems().length === 0) {
+                        <div class="flex flex-col items-center justify-center py-12 text-[var(--color-text-muted)]">
+                            <i class="pi pi-check-circle text-4xl mb-3 text-green-500/50"></i>
+                            <p>Alles erledigt! Keine Einträge zur Prüfung.</p>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- View: Sent (History) -->
+                    <div *ngIf="adminView() === 'sent'" class="animate-fade-in space-y-4">
+                        @for (item of sentItems(); track item.id) {
+                        <div
+                            class="bg-[var(--color-surface-card)] p-4 rounded-lg border border-[var(--color-border)] flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center flex-wrap gap-2 mb-1">
+                                    <h3 class="font-bold text-lg truncate">{{ item.title }}</h3>
+                                    <p-tag value="Versendet" severity="info"></p-tag>
+                                    <p-tag [value]="item.type" severity="secondary"></p-tag>
+                                </div>
+                                <div class="text-sm text-[var(--color-text-muted)] flex items-center gap-2">
+                                    <i class="pi pi-envelope text-xs"></i>
+                                    <span>Versendet am: {{ item.sent_at | date:'dd.MM.yyyy HH:mm' }}</span>
+                                    <span>•</span>
+                                    <span>Von {{ item.author?.name }}</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <p-button icon="pi pi-eye" [text]="true" [rounded]="true" (click)="openEdit(item)"
+                                    pTooltip="Ansehen" tooltipPosition="top"></p-button>
+                            </div>
+                        </div>
+                        }
+                        @if (sentItems().length === 0) {
+                        <div class="text-center text-[var(--color-text-muted)] py-8">Keine Einträge im Archiv.</div>
+                        }
+                    </div>
+
+                </div>
+            </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+
+    <!-- Test Email Dialog -->
+    <p-dialog [(visible)]="testEmailDialogVisible" header="Newsletter Vorschau senden" [modal]="true"
+        [style]="{width: '400px'}" [resizable]="false">
+        <div class="flex flex-col gap-4 pt-2">
+            <p class="text-[var(--color-text-muted)] text-sm">Sendet eine Vorschau aller aktuellen Beiträge an die
+                angegebene Adresse, ohne den Status "Versendet" zu setzen.</p>
+            <div class="flex flex-col gap-2">
+                <label class="font-medium text-sm">E-Mail Adresse</label>
+                <input pInputText [(ngModel)]="testEmail" placeholder="name@beispiel.de" class="w-full"
+                    (keydown.enter)="sendTest()" />
+            </div>
+        </div>
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-2 pt-4">
+                <p-button label="Abbrechen" (click)="testEmailDialogVisible.set(false)" [text]="true"
+                    severity="secondary"></p-button>
+                <p-button label="Senden" icon="pi pi-send" (click)="sendTest()" [raised]="true"></p-button>
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Create/Edit Dialog remains same -->
+    <p-dialog [(visible)]="dialogVisible" [header]="editMode() ? 'Beitrag bearbeiten' : 'Neuer Beitrag'" [modal]="true"
+        [style]="{width: '90vw', maxWidth: '800px'}" [maximizable]="true" [draggable]="false" [resizable]="false">
+        <div class="flex flex-col gap-5 pt-2">
+
+            <div class="flex flex-col gap-2">
+                <label class="font-medium text-sm text-[var(--color-text-muted)]">Beitragstyp</label>
+                <p-selectButton [options]="typeOptions" [(ngModel)]="currentItem.type" optionLabel="label"
+                    optionValue="value" [disabled]="editMode()"></p-selectButton>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-medium text-sm text-[var(--color-text-muted)]">Titel</label>
+                <input pInputText [(ngModel)]="currentItem.title" placeholder="Titel des Beitrags" class="w-full" />
+            </div>
+
+            @if (currentItem.type === 'link') {
+            <div class="flex flex-col gap-2">
+                <label class="font-medium text-sm text-[var(--color-text-muted)]">Link-URL</label>
+                <input pInputText [(ngModel)]="currentItem.url" placeholder="https://..." class="w-full" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label class="font-medium text-sm text-[var(--color-text-muted)]">Beschreibung / Kommentar
+                    (Optional)</label>
+                <p-editor [(ngModel)]="currentItem.content" [style]="{height: '150px'}"
+                    placeholder="Beschreibe den Link kurz..."></p-editor>
+            </div>
+            } @else {
+            <div class="flex flex-col gap-2">
+                <label class="font-medium text-sm text-[var(--color-text-muted)]">Artikelinhalt</label>
+                <p-editor [(ngModel)]="currentItem.content" [style]="{height: '400px'}"
+                    placeholder="Schreibe hier deinen Artikel..."></p-editor>
+            </div>
+            }
+        </div>
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-2 pt-4">
+                <p-button label="Abbrechen" icon="pi pi-times" [text]="true" (click)="dialogVisible.set(false)"
+                    severity="secondary"></p-button>
+                <p-button label="Speichern" icon="pi pi-check" (click)="saveItem()" [raised]="true"></p-button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

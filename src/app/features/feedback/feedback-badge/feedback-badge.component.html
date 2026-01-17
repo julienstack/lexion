@@ -1,25 +1,36 @@
 @if (isLoggedIn()) {
-<div class="bg-slate-900/95 text-white shadow-2xl backdrop-blur-md rounded-full px-4 py-2 cursor-pointer transition-all duration-300 hover:bg-slate-800 hover:scale-105 border border-slate-700/50 flex items-center gap-2 group"
-    (click)="toggleDialog()" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+<div class="fixed bottom-4 left-4 z-50 flex items-center gap-2">
+    <!-- Main Alpha Badge -->
+    <div class="bg-[var(--color-surface-raised)] text-[var(--color-text)] shadow-2xl backdrop-blur-md rounded-full px-4 py-2 cursor-pointer transition-all duration-300 hover:bg-[var(--color-surface-overlay)] hover:scale-105 border border-[var(--color-border)] flex items-center gap-2 group"
+        (click)="toggleDialog()" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
 
-    <div class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+        <div class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+        </div>
+
+        <div class="flex flex-col">
+            <span class="font-bold text-xs tracking-wider uppercase text-amber-500">Alpha</span>
+            <span
+                class="font-semibold text-xs text-[var(--color-text-muted)] hidden group-hover:block transition-all duration-300">
+                Produktiv-Build
+            </span>
+        </div>
+
+        <div
+            class="text-xs text-[var(--color-text-muted)] border-l border-[var(--color-border)] pl-2 ml-1 max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-500 ease-in-out">
+            Problem melden
+        </div>
+
+        <i class="pi pi-comment text-[var(--color-text-muted)] text-sm ml-1"></i>
     </div>
 
-    <div class="flex flex-col">
-        <span class="font-bold text-xs tracking-wider uppercase text-amber-500">Alpha</span>
-        <span class="font-semibold text-xs text-slate-300 hidden group-hover:block transition-all duration-300">
-            Produktiv-Build
-        </span>
-    </div>
-
-    <div
-        class="text-xs text-slate-400 border-l border-slate-700 pl-2 ml-1 max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-500 ease-in-out">
-        Problem melden
-    </div>
-
-    <i class="pi pi-comment text-slate-400 text-sm ml-1"></i>
+    <!-- Roadmap Button -->
+    <button (click)="navigateToRoadmap()"
+        class="bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] shadow-2xl backdrop-blur-md rounded-full w-10 h-10 flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[var(--color-surface-overlay)] hover:scale-110 hover:text-amber-500 border border-[var(--color-border)]"
+        title="Roadmap anzeigen">
+        <i class="pi pi-map text-sm"></i>
+    </button>
 </div>
 }
 
@@ -29,7 +40,7 @@
 
     <div class="flex flex-col gap-6 py-2">
         <!-- Intro Text -->
-        <p class="text-base text-white/90 leading-relaxed">
+        <p class="text-base text-[var(--color-text-muted)] leading-relaxed">
             Du hast einen Bug gefunden oder eine Idee? Lass es uns wissen!
         </p>
 
@@ -37,22 +48,24 @@
         <div class="flex gap-3 w-full">
             <button type="button" (click)="type.set('suggestion')"
                 class="flex-1 py-4 px-5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 border-2"
-                [class.bg-blue-600]="type() === 'suggestion'" [class.border-blue-500]="type() === 'suggestion'"
-                [class.text-white]="type() === 'suggestion'" [class.shadow-lg]="type() === 'suggestion'"
-                [class.shadow-blue-500/30]="type() === 'suggestion'" [class.bg-gray-800]="type() !== 'suggestion'"
-                [class.border-gray-700]="type() !== 'suggestion'" [class.text-gray-300]="type() !== 'suggestion'"
-                [class.hover:bg-gray-700]="type() !== 'suggestion'"
-                [class.hover:border-gray-600]="type() !== 'suggestion'">
+                [class.bg-teal-900]="type() === 'suggestion' && isDarkMode()"
+                [class.bg-teal-100]="type() === 'suggestion' && !isDarkMode()"
+                [class.border-teal]="type() === 'suggestion'" [class.text-teal]="type() === 'suggestion'"
+                [class.bg-[var(--color-surface-raised)]]="type() !== 'suggestion'"
+                [class.border-[var(--color-border)]]="type() !== 'suggestion'"
+                [class.text-[var(--color-text-muted)]]="type() !== 'suggestion'"
+                [class.hover:bg-[var(--color-surface-overlay)]]="type() !== 'suggestion'">
                 <i class="pi pi-lightbulb text-lg"></i>
                 <span>Vorschlag</span>
             </button>
             <button type="button" (click)="type.set('bug')"
                 class="flex-1 py-4 px-5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 border-2"
-                [class.bg-rose-600]="type() === 'bug'" [class.border-rose-500]="type() === 'bug'"
-                [class.text-white]="type() === 'bug'" [class.shadow-lg]="type() === 'bug'"
-                [class.shadow-rose-500/30]="type() === 'bug'" [class.bg-gray-800]="type() !== 'bug'"
-                [class.border-gray-700]="type() !== 'bug'" [class.text-gray-300]="type() !== 'bug'"
-                [class.hover:bg-gray-700]="type() !== 'bug'" [class.hover:border-gray-600]="type() !== 'bug'">
+                [class.bg-rose-900]="type() === 'bug' && isDarkMode()"
+                [class.bg-rose-100]="type() === 'bug' && !isDarkMode()" [class.border-rose-500]="type() === 'bug'"
+                [class.text-rose-500]="type() === 'bug'" [class.bg-[var(--color-surface-raised)]]="type() !== 'bug'"
+                [class.border-[var(--color-border)]]="type() !== 'bug'"
+                [class.text-[var(--color-text-muted)]]="type() !== 'bug'"
+                [class.hover:bg-[var(--color-surface-overlay)]]="type() !== 'bug'">
                 <i class="pi pi-exclamation-triangle text-lg"></i>
                 <span>Fehlermeldung</span>
             </button>
@@ -60,24 +73,24 @@
 
         <!-- Description Field -->
         <div class="flex flex-col gap-3">
-            <label for="feedback-desc" class="font-semibold text-sm text-white">
+            <label for="feedback-desc" class="font-semibold text-sm text-[var(--color-text)]">
                 Beschreibung
             </label>
             <textarea pInputTextarea id="feedback-desc" [ngModel]="description()"
                 (ngModelChange)="description.set($event)" rows="5"
                 placeholder="Beschreibe den Bug oder deinen Vorschlag möglichst genau..."
-                class="w-full !resize-none !text-base !bg-gray-800 !text-white !border-gray-600 !rounded-xl !p-4 focus:!border-amber-500 focus:!ring-amber-500/20 placeholder:!text-gray-500">
+                class="w-full !resize-none !text-base !bg-[var(--color-surface)] !text-[var(--color-text)] !border-[var(--color-border)] !rounded-xl !p-4 focus:!border-linke focus:!ring-linke/20 placeholder:!text-[var(--color-text-muted)]">
             </textarea>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex justify-end gap-3 pt-2 border-t border-gray-700/50">
+        <div class="flex justify-end gap-3 pt-2 border-t border-[var(--color-border)]">
             <button type="button" (click)="visible.set(false)"
-                class="px-5 py-2.5 rounded-lg font-medium text-sm text-gray-400 hover:text-white hover:bg-gray-700 transition-all">
+                class="px-5 py-2.5 rounded-lg font-medium text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-all">
                 Abbrechen
             </button>
             <button type="button" (click)="submitFeedback()" [disabled]="loading()"
-                class="px-6 py-2.5 rounded-lg font-semibold text-sm bg-amber-500 hover:bg-amber-400 text-gray-900 transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                class="px-6 py-2.5 rounded-lg font-semibold text-sm bg-linke hover:bg-linke-light text-white transition-all flex items-center gap-2 shadow-lg shadow-linke/20 disabled:opacity-50 disabled:cursor-not-allowed">
                 @if (loading()) {
                 <i class="pi pi-spin pi-spinner"></i>
                 } @else {

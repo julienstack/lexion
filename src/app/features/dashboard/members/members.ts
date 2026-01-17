@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import * as XLSX from 'xlsx';
 import { FormsModule } from '@angular/forms';
 // PrimeNG Imports
 import { Table, TableModule } from 'primeng/table';
@@ -21,8 +22,13 @@ import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
 
 import { MembersService } from '../../../shared/services/members.service';
-import { Member } from '../../../shared/models/member.model';
+import { Member, Permission, AppRole } from '../../../shared/models/member.model';
 import { AuthService } from '../../../shared/services/auth.service';
+import {
+  PermissionsService,
+  PERMISSION_LABELS,
+  ALL_PERMISSIONS,
+} from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-members',
@@ -58,6 +64,7 @@ export class MembersComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   public auth = inject(AuthService);
+  public permissionsService = inject(PermissionsService);
 
   members = this.membersService.members;
   loading = this.membersService.loading;
@@ -108,11 +115,37 @@ export class MembersComponent implements OnInit {
 
   currentMember: Partial<Member> = this.getEmptyMember();
 
+  importDialogVisible = signal(false);
+  importStep = signal<'upload' | 'mapping' | 'preview' | 'processing'>('upload');
+  importedData: any[] = [];
+  detectedHeaders: string[] = [];
+  mappingColumns: { key: string; label: string; required: boolean; mappedHeader?: string }[] = [
+    { key: 'name', label: 'Name', required: true },
+    { key: 'email', label: 'E-Mail', required: true },
+    { key: 'role', label: 'Funktion', required: false },
+    { key: 'status', label: 'Status', required: false },
+    { key: 'street', label: 'Straße', required: false },
+    { key: 'zip_code', label: 'PLZ', required: false },
+    { key: 'city', label: 'Ort', required: false },
+    { key: 'phone', label: 'Telefon', required: false },
+    { key: 'birthday', label: 'Geburtstag', required: false },
+    { key: 'join_date', label: 'Beitritt', required: false }
+  ];
+
   statusOptions = [
     { label: 'Aktiv', value: 'Active' },
     { label: 'Inaktiv', value: 'Inactive' },
     { label: 'Ausstehend', value: 'Pending' },
   ];
+
+  appRoleOptions = [
+    { label: 'Mitglied', value: 'member' },
+    { label: 'Vorstand', value: 'committee' },
+    { label: 'Administrator', value: 'admin' },
+  ];
+
+  allPermissions = ALL_PERMISSIONS;
+  permissionLabels = PERMISSION_LABELS;
 
   ngOnInit(): void {
     this.membersService.fetchMembers();
@@ -128,6 +161,7 @@ export class MembersComponent implements OnInit {
       join_date: new Date().toLocaleDateString('de-DE'),
       avatar_url: '',
       app_role: 'member',
+      permissions: [],
       user_id: '',
       street: '',
       zip_code: '',
@@ -144,20 +178,50 @@ export class MembersComponent implements OnInit {
   }
 
   editMember(member: Member) {
-    this.currentMember = { ...member };
+    this.currentMember = {
+      ...member,
+      permissions: member.permissions || []
+    };
     this.editMode.set(true);
     this.dialogVisible.set(true);
   }
 
+  hasPermission(perm: Permission): boolean {
+    return (this.currentMember.permissions || []).includes(perm);
+  }
+
+  togglePermission(perm: Permission, enabled: boolean): void {
+    const perms = new Set(this.currentMember.permissions || []);
+    if (enabled) {
+      perms.add(perm);
+    } else {
+      perms.delete(perm);
+    }
+    this.currentMember.permissions = Array.from(perms);
+  }
+
+  getAppRoleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      public: 'Öffentlich',
+      member: 'Mitglied',
+      committee: 'Vorstand',
+      admin: 'Administrator'
+    };
+    return labels[role] || role;
+  }
+
   async saveMember() {
     if (!this.currentMember.name || !this.currentMember.email) return;
+
+    const memberData = { ...this.currentMember };
+    if (memberData.user_id === '') delete memberData.user_id;
 
     this.saving.set(true);
     try {
       if (this.editMode() && this.currentMember.id) {
         await this.membersService.updateMember(
           this.currentMember.id,
-          this.currentMember
+          memberData
         );
         this.messageService.add({
           severity: 'success',
@@ -165,7 +229,7 @@ export class MembersComponent implements OnInit {
           detail: 'Mitglied aktualisiert',
         });
       } else {
-        await this.membersService.addMember(this.currentMember as Member);
+        await this.membersService.addMember(memberData as Member);
         this.messageService.add({
           severity: 'success',
           summary: 'Erfolg',
@@ -301,5 +365,73 @@ export class MembersComponent implements OnInit {
       });
     }
     this.invitingMemberId = null;
+  }
+
+  // Import Methods
+  openImport() {
+    this.importStep.set('upload');
+    this.importedData = [];
+    this.detectedHeaders = [];
+    this.mappingColumns.forEach(c => c.mappedHeader = undefined);
+    this.importDialogVisible.set(true);
+  }
+
+  onFileSelect(event: any) {
+    const file = event.files[0];
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const data = e.target.result;
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      this.importedData = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+      if (this.importedData.length > 0) {
+        this.detectedHeaders = Object.keys(this.importedData[0]);
+        this.autoMapFields();
+        this.importStep.set('mapping');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  autoMapFields() {
+    this.mappingColumns.forEach(col => {
+      const match = this.detectedHeaders.find(h =>
+        h.toLowerCase().includes(col.label.toLowerCase()) ||
+        h.toLowerCase().includes(col.key.toLowerCase())
+      );
+      if (match) col.mappedHeader = match;
+    });
+  }
+
+  async executeImport() {
+    this.importStep.set('processing');
+    const membersToImport = this.importedData.map(row => {
+      // Create empty object to only include mapped fields (prevents overwriting with defaults on update)
+      const member: any = {};
+      this.mappingColumns.forEach(col => {
+        if (col.mappedHeader && row[col.mappedHeader] !== undefined) {
+          const val = row[col.mappedHeader];
+          if (val !== null && val !== undefined && val !== '') {
+            member[col.key] = String(val).trim();
+          }
+        }
+      });
+
+      return member;
+    }).filter(m => m.name && m.email); // Name & Email required for merge/insert
+
+    try {
+      if (membersToImport.length === 0) throw new Error('Keine gültigen Datensätze gefunden (Name & Email erforderlich).');
+      // Use importMembers for smart upsert logic
+      await this.membersService.importMembers(membersToImport);
+      this.messageService.add({ severity: 'success', summary: 'Import erfolgreich', detail: `${membersToImport.length} Mitglieder verarbeitet` });
+      this.importDialogVisible.set(false);
+      this.membersService.fetchMembers();
+    } catch (e) {
+      this.messageService.add({ severity: 'error', summary: 'Import Fehler', detail: (e as Error).message });
+      this.importStep.set('mapping');
+    }
   }
 }

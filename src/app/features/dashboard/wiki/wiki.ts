@@ -15,6 +15,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { WikiService } from '../../../shared/services/wiki.service';
 import { WikiDoc } from '../../../shared/models/wiki-doc.model';
 import { AuthService } from '../../../shared/services/auth.service';
+import { PermissionsService } from '../../../shared/services/permissions.service';
+import { OnboardingService } from '../../../shared/services/onboarding.service';
 
 @Component({
   selector: 'app-wiki',
@@ -41,7 +43,12 @@ export class WikiComponent implements OnInit {
   private wikiService = inject(WikiService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private onboardingService = inject(OnboardingService);
   public auth = inject(AuthService);
+  public permissions = inject(PermissionsService);
+
+  // Permission-based visibility
+  canEdit = this.permissions.canEditWiki;
 
   docs = this.wikiService.docs;
   loading = this.wikiService.loading;
@@ -104,6 +111,8 @@ export class WikiComponent implements OnInit {
 
   ngOnInit(): void {
     this.wikiService.fetchDocs();
+    // Track wiki visit for onboarding
+    this.onboardingService.trackWikiVisit();
   }
 
   /** Toggle category expansion and filter */

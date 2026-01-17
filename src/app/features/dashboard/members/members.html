@@ -18,21 +18,25 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-xl md:text-3xl font-bold text-white">Mitglieder</h1>
-            <p class="text-gray-400 text-sm hidden md:block mt-1">Übersicht aller Vereinsmitglieder</p>
+            <h1 class="text-xl md:text-3xl font-bold text-[var(--color-text)]">Mitglieder</h1>
+            <p class="text-[var(--color-text-muted)] text-sm hidden md:block mt-1">Übersicht aller Vereinsmitglieder</p>
         </div>
         @if (auth.isAdmin()) {
-        <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
-            (click)="openNew()"></p-button>
+        <div class="flex gap-2">
+            <p-button label="Import" icon="pi pi-upload" severity="secondary" [outlined]="true" size="small"
+                (click)="openImport()"></p-button>
+            <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
+                (click)="openNew()"></p-button>
+        </div>
         }
     </div>
 
     <!-- Search Bar -->
     <div class="flex items-center gap-2 mb-3">
         <div class="relative flex-1">
-            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm"></i>
             <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Suchen..."
-                class="w-full pl-9 py-2 text-sm !bg-gray-800 !border-gray-700 rounded-lg" />
+                class="w-full pl-9 py-2 text-sm !bg-[var(--color-surface-raised)] !border-[var(--color-border)] rounded-lg" />
         </div>
         @if (auth.isAdmin() && selectedMembers && selectedMembers.length > 0) {
         <p-button icon="pi pi-trash" severity="danger" size="small" [outlined]="true"
@@ -43,12 +47,12 @@
     <!-- Mobile: Card List View -->
     <div class="lg:hidden space-y-2">
         @for (member of filteredMembers(); track member.id) {
-        <div class="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
+        <div class="bg-[var(--color-surface-raised)] border border-[var(--color-border)] rounded-lg overflow-hidden">
             <!-- Header Row -->
             <div class="p-3 flex items-center gap-3" (click)="toggleRow(member)">
 
                 <!-- Avatar -->
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-[var(--color-text)] text-sm font-bold flex-shrink-0"
                     [style.background-color]="getAvatarColor(member.name)">
                     {{getInitials(member.name)}}
                 </div>
@@ -56,64 +60,64 @@
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1.5">
-                        <span class="text-sm font-bold text-white truncate">{{ member.name }}</span>
+                        <span class="text-sm font-bold text-[var(--color-text)] truncate">{{ member.name }}</span>
                         @if(member.user_id) {
                         <i class="pi pi-link text-green-500 text-[10px]"></i>
                         }
                         @if(member.app_role === 'admin') {
-                        <i class="pi pi-verified text-pink-500 text-[10px]"></i>
+                        <i class="pi pi-verified text-linke text-[10px]"></i>
                         }
                     </div>
-                    <div class="text-xs text-gray-500 truncate">{{ member.email }}</div>
+                    <div class="text-xs text-[var(--color-text-muted)] truncate">{{ member.email }}</div>
                 </div>
 
                 <!-- Status + Expand -->
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <p-tag [value]="getStatusLabel(member.status)" [severity]="getStatusSeverity(member.status)"
                         styleClass="!text-[10px] !px-1.5 !py-0.5"></p-tag>
-                    <i class="pi text-gray-400 text-xs"
+                    <i class="pi text-[var(--color-text-muted)] text-xs"
                         [class]="isRowExpanded(member) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                 </div>
             </div>
 
             <!-- Expanded Content -->
             @if (isRowExpanded(member)) {
-            <div class="border-t border-gray-700/50 p-3 bg-gray-800/20 text-sm">
+            <div class="border-t border-[var(--color-border)] p-3 bg-[var(--color-surface-raised)]/20 text-sm">
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Funktion</div>
-                        <div class="text-white">{{member.role || '-'}}</div>
+                        <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Funktion</div>
+                        <div class="text-[var(--color-text)]">{{member.role || '-'}}</div>
                     </div>
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Beitritt</div>
-                        <div class="text-white">{{member.join_date || '-'}}</div>
+                        <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Beitritt</div>
+                        <div class="text-[var(--color-text)]">{{member.join_date || '-'}}</div>
                     </div>
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Telefon</div>
-                        <div class="text-white">{{member.phone || '-'}}</div>
+                        <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Telefon</div>
+                        <div class="text-[var(--color-text)]">{{member.phone || '-'}}</div>
                     </div>
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Geburtstag</div>
-                        <div class="text-white">{{member.birthday || '-'}}</div>
+                        <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Geburtstag</div>
+                        <div class="text-[var(--color-text)]">{{member.birthday || '-'}}</div>
                     </div>
                 </div>
                 @if (member.street || member.city) {
                 <div class="mb-3">
-                    <div class="text-[10px] uppercase text-gray-500 font-semibold">Adresse</div>
-                    <div class="text-white">{{member.street || ''}}</div>
-                    <div class="text-gray-400">{{member.zip_code}} {{member.city}}</div>
+                    <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Adresse</div>
+                    <div class="text-[var(--color-text)]">{{member.street || ''}}</div>
+                    <div class="text-[var(--color-text-muted)]">{{member.zip_code}} {{member.city}}</div>
                 </div>
                 }
 
                 @if (auth.isAdmin()) {
-                <div class="flex gap-2 pt-2 border-t border-gray-700/50">
+                <div class="flex gap-2 pt-2 border-t border-[var(--color-border)]">
                     @if (member.email) {
                     <p-button [icon]="member.user_id ? 'pi pi-key' : 'pi pi-envelope'"
                         [label]="member.user_id ? 'Reset' : 'Einladen'" [severity]="member.user_id ? 'warn' : 'success'"
                         size="small" (click)="inviteMember(member); $event.stopPropagation()"
                         [loading]="invitingMemberId === member.id"></p-button>
                     }
-                    <p-button icon="pi pi-pencil" label="Bearbeiten" severity="info" size="small"
+                    <p-button icon="pi pi-pencil" label="Bearbeiten" severity="secondary" size="small"
                         (click)="editMember(member); $event.stopPropagation()"></p-button>
                     <p-button icon="pi pi-trash" severity="danger" size="small"
                         (click)="confirmDelete(member); $event.stopPropagation()"></p-button>
@@ -123,7 +127,7 @@
             }
         </div>
         } @empty {
-        <div class="text-center py-8 text-gray-500">
+        <div class="text-center py-8 text-[var(--color-text-muted)]">
             <i class="pi pi-users text-3xl mb-2"></i>
             <p class="text-sm">Keine Mitglieder gefunden</p>
         </div>
@@ -131,7 +135,7 @@
 
         <!-- Mobile Pagination Info -->
         @if (filteredMembers().length > 0) {
-        <div class="text-center text-xs text-gray-500 py-2">
+        <div class="text-center text-xs text-[var(--color-text-muted)] py-2">
             {{filteredMembers().length}} Mitglieder
         </div>
         }
@@ -173,7 +177,7 @@
                     }
                     <td>
                         <button type="button" (click)="toggleRow(member)"
-                            class="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                            class="w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors">
                             <i class="text-xs"
                                 [class]="isRowExpanded(member) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
                         </button>
@@ -184,24 +188,25 @@
                                 [style]="{'background-color': getAvatarColor(member.name), 'color': '#ffffff'}" />
                             <div class="flex flex-col min-w-0">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="font-medium text-white text-sm truncate">{{ member.name }}</span>
+                                    <span class="font-medium text-[var(--color-text)] text-sm truncate">{{ member.name
+                                        }}</span>
                                     @if(member.user_id) {
                                     <i class="pi pi-link text-green-500 text-xs" pTooltip="Login verbunden"></i>
                                     }
                                     @if(member.app_role === 'admin') {
-                                    <i class="pi pi-verified text-pink-500 text-xs" pTooltip="Administrator"></i>
+                                    <i class="pi pi-verified text-linke text-xs" pTooltip="Administrator"></i>
                                     }
                                 </div>
-                                <span class="text-xs text-gray-400 truncate">{{ member.email }}</span>
+                                <span class="text-xs text-[var(--color-text-muted)] truncate">{{ member.email }}</span>
                             </div>
                         </div>
                     </td>
-                    <td class="text-gray-300 text-sm">{{ member.role }}</td>
+                    <td class="text-[var(--color-text)] text-sm">{{ member.role }}</td>
                     <td>
                         <p-tag [value]="getStatusLabel(member.status)" [severity]="getStatusSeverity(member.status)"
                             [rounded]="true"></p-tag>
                     </td>
-                    <td class="text-gray-400 text-sm">{{ member.join_date }}</td>
+                    <td class="text-[var(--color-text-muted)] text-sm">{{ member.join_date }}</td>
                     @if (auth.isAdmin()) {
                     <td>
                         <div class="flex justify-end gap-0.5">
@@ -211,7 +216,7 @@
                                 [pTooltip]="member.user_id ? 'Passwort zurücksetzen' : 'Einladung senden'"
                                 (click)="inviteMember(member)" [loading]="invitingMemberId === member.id"></p-button>
                             }
-                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="info"
+                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
                                 (click)="editMember(member)"></p-button>
                             <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
                                 (click)="confirmDelete(member)"></p-button>
@@ -222,20 +227,25 @@
                 @if (isRowExpanded(member)) {
                 <tr>
                     <td [attr.colspan]="auth.isAdmin() ? 7 : 5" class="!p-0 !border-0">
-                        <div class="p-4 bg-gray-800/30 rounded-lg mx-2 my-2 border border-gray-700/50">
+                        <div
+                            class="p-4 bg-[var(--color-surface-raised)]/30 rounded-lg mx-2 my-2 border border-[var(--color-border)]">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
-                                    <div class="text-xs text-gray-500 uppercase font-semibold mb-1">Adresse</div>
-                                    <div class="text-white">{{member.street || '-'}}</div>
-                                    <div class="text-gray-400 text-sm">{{member.zip_code}} {{member.city}}</div>
+                                    <div class="text-xs text-[var(--color-text-muted)] uppercase font-semibold mb-1">
+                                        Adresse</div>
+                                    <div class="text-[var(--color-text)]">{{member.street || '-'}}</div>
+                                    <div class="text-[var(--color-text-muted)] text-sm">{{member.zip_code}}
+                                        {{member.city}}</div>
                                 </div>
                                 <div>
-                                    <div class="text-xs text-gray-500 uppercase font-semibold mb-1">Telefon</div>
-                                    <div class="text-white">{{member.phone || '-'}}</div>
+                                    <div class="text-xs text-[var(--color-text-muted)] uppercase font-semibold mb-1">
+                                        Telefon</div>
+                                    <div class="text-[var(--color-text)]">{{member.phone || '-'}}</div>
                                 </div>
                                 <div>
-                                    <div class="text-xs text-gray-500 uppercase font-semibold mb-1">Geburtstag</div>
-                                    <div class="text-white">{{member.birthday || '-'}}</div>
+                                    <div class="text-xs text-[var(--color-text-muted)] uppercase font-semibold mb-1">
+                                        Geburtstag</div>
+                                    <div class="text-[var(--color-text)]">{{member.birthday || '-'}}</div>
                                 </div>
                             </div>
                         </div>
@@ -246,7 +256,7 @@
 
             <ng-template pTemplate="emptymessage">
                 <tr>
-                    <td [attr.colspan]="auth.isAdmin() ? 7 : 5" class="text-center p-8 text-gray-400">
+                    <td [attr.colspan]="auth.isAdmin() ? 7 : 5" class="text-center p-8 text-[var(--color-text-muted)]">
                         <i class="pi pi-users text-4xl mb-3 block"></i>
                         Keine Mitglieder gefunden.
                     </td>
@@ -258,34 +268,34 @@
 </div>
 
 <!-- Member Dialog -->
-<p-dialog [header]="editMode() ? 'Mitglied bearbeiten' : 'Neues Mitglied'" [(visible)]="dialogVisible" [modal]="true"
-    [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
-    [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
+<p-dialog [header]="editMode() ? 'Mitglied bearbeiten' : 'Neues Mitglied'" [visible]="dialogVisible()"
+    (visibleChange)="dialogVisible.set($event)" [modal]="true" [draggable]="false" [resizable]="false"
+    maskStyleClass="backdrop-blur-sm bg-black/50" [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
     <div class="space-y-3">
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Name *</label>
             <input pInputText [(ngModel)]="currentMember.name" class="w-full" placeholder="Max Mustermann" />
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">E-Mail *</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">E-Mail *</label>
             <input pInputText [(ngModel)]="currentMember.email" type="email" class="w-full"
                 placeholder="max@example.com" />
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Funktion</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Funktion</label>
                 <input pInputText [(ngModel)]="currentMember.role" class="w-full" placeholder="Schriftführer" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Status</label>
                 <p-select [(ngModel)]="currentMember.status" [options]="statusOptions" optionLabel="label"
                     optionValue="value" styleClass="w-full" />
             </div>
         </div>
 
         <!-- Address Section -->
-        <div class="border-t border-gray-700 pt-3">
-            <h4 class="text-white font-medium text-sm mb-2">Adresse & Kontakt</h4>
+        <div class="border-t border-[var(--color-border)] pt-3">
+            <h4 class="text-[var(--color-text)] font-medium text-sm mb-2">Adresse & Kontakt</h4>
             <div class="space-y-3">
                 <input pInputText [(ngModel)]="currentMember.street" class="w-full" placeholder="Straße & Nr." />
                 <div class="grid grid-cols-3 gap-2">
@@ -300,21 +310,72 @@
             </div>
         </div>
 
-        <!-- Admin Section -->
+        <!-- Rolle & Berechtigungen -->
         @if (auth.isAdmin()) {
-        <div class="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
-            <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                <i class="pi pi-lock"></i> Administration
+        <div class="border-t border-[var(--color-border)] pt-3 space-y-4">
+            <h4 class="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
+                <i class="pi pi-shield text-linke"></i>
+                Rolle & Berechtigungen
             </h4>
-            <div class="space-y-2">
-                <input pInputText [(ngModel)]="currentMember.user_id" class="w-full font-mono text-xs"
-                    placeholder="Benutzer-ID (UUID)" />
-                <div class="flex items-center gap-2">
-                    <p-checkbox [binary]="true" inputId="adminCheck" [ngModel]="currentMember.app_role === 'admin'"
-                        (ngModelChange)="$event ? currentMember.app_role = 'admin' : currentMember.app_role = 'member'">
-                    </p-checkbox>
-                    <label for="adminCheck" class="text-sm text-gray-300 cursor-pointer">Administrator</label>
+
+            <!-- App Role -->
+            <div>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">
+                    System-Rolle
+                </label>
+                <p-select [(ngModel)]="currentMember.app_role" [options]="appRoleOptions" optionLabel="label"
+                    optionValue="value" styleClass="w-full" />
+                <p class="text-xs text-[var(--color-text-muted)] mt-1">
+                    @switch (currentMember.app_role) {
+                    @case ('admin') { Vollzugriff auf alle Funktionen }
+                    @case ('committee') { Vorstandsmitglied - erhöhte Rechte }
+                    @default { Normales Vereinsmitglied }
+                    }
+                </p>
+            </div>
+
+            <!-- Permissions (only if not admin/committee) -->
+            @if (currentMember.app_role === 'member') {
+            <div>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Zusätzliche Berechtigungen
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    @for (perm of allPermissions; track perm) {
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-lg bg-[var(--color-surface-raised)] border border-[var(--color-border)] hover:border-linke/30 transition-colors">
+                        <p-checkbox [binary]="true" [inputId]="'perm_' + perm" [ngModel]="hasPermission(perm)"
+                            (ngModelChange)="togglePermission(perm, $event)">
+                        </p-checkbox>
+                        <label [for]="'perm_' + perm" class="text-sm text-[var(--color-text)] cursor-pointer flex-1">
+                            {{ permissionLabels[perm] }}
+                        </label>
+                    </div>
+                    }
                 </div>
+                <p class="text-xs text-[var(--color-text-muted)] mt-2">
+                    Vorstand und Admins haben automatisch alle Berechtigungen.
+                </p>
+            </div>
+            } @else {
+            <div class="p-3 rounded-lg bg-teal/10 border border-teal/30 text-sm text-[var(--color-text)]">
+                <i class="pi pi-info-circle text-teal mr-2"></i>
+                {{ currentMember.app_role === 'admin' ? 'Administratoren' : 'Vorstandsmitglieder' }} haben
+                automatisch alle Berechtigungen.
+            </div>
+            }
+
+            <!-- User ID (Advanced) -->
+            <div class="border-t border-[var(--color-border)] pt-3">
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">
+                    Verknüpfte Login-ID
+                    <span class="text-[var(--color-text-muted)] font-normal">(Optional)</span>
+                </label>
+                <input pInputText [(ngModel)]="currentMember.user_id" class="w-full font-mono text-xs"
+                    placeholder="UUID des Auth-Accounts" />
+                <p class="text-xs text-[var(--color-text-muted)] mt-1">
+                    Wird automatisch beim Einladen gesetzt.
+                </p>
             </div>
         </div>
         }
@@ -325,5 +386,61 @@
             [disabled]="saving()" />
         <p-button [label]="editMode() ? 'Speichern' : 'Erstellen'" icon="pi pi-check" (click)="saveMember()"
             [loading]="saving()" />
+    </ng-template>
+</p-dialog>
+
+<!-- Import Dialog -->
+<p-dialog header="Mitglieder importieren" [visible]="importDialogVisible()"
+    (visibleChange)="importDialogVisible.set($event)" [modal]="true" [style]="{width: '600px'}" [draggable]="false"
+    [resizable]="false">
+
+    <div class="space-y-4">
+        @if (importStep() === 'upload') {
+        <div
+            class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-surface-raised)]">
+            <i class="pi pi-file-excel text-4xl text-[var(--color-text-muted)] mb-4"></i>
+            <p class="text-[var(--color-text)] font-medium mb-4">Excel oder CSV Datei auswählen</p>
+            <p-fileUpload mode="basic" chooseLabel="Datei wählen" accept=".xlsx,.xls,.csv" maxFileSize="5000000"
+                (onSelect)="onFileSelect($event)" [auto]="true" styleClass="p-button-secondary"
+                [chooseIcon]="'pi pi-upload'">
+            </p-fileUpload>
+        </div>
+        }
+
+        @if (importStep() === 'mapping') {
+        <div>
+            <p class="text-sm text-[var(--color-text-muted)] mb-4">Ordne die Spalten aus deiner Datei den
+                Mitglieder-Feldern zu.</p>
+            <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                @for (col of mappingColumns; track col.key) {
+                <div
+                    class="grid grid-cols-2 gap-4 items-center p-3 bg-[var(--color-surface-raised)] rounded-lg border border-[var(--color-border)]">
+                    <div>
+                        <span class="text-sm font-medium text-[var(--color-text)]">{{col.label}}</span>
+                        @if (col.required) { <span class="text-red-500">*</span> }
+                    </div>
+                    <p-select [options]="detectedHeaders" [(ngModel)]="col.mappedHeader" placeholder="Nicht zugeordnet"
+                        styleClass="w-full" [appendTo]="'body'">
+                    </p-select>
+                </div>
+                }
+            </div>
+        </div>
+        }
+
+        @if (importStep() === 'processing') {
+        <div class="flex justify-center py-8">
+            <p-progressSpinner ariaLabel="Verarbeite Import..." />
+        </div>
+        }
+    </div>
+
+    <ng-template pTemplate="footer">
+        @if (importStep() === 'mapping') {
+        <p-button label="Abbrechen" (click)="importDialogVisible.set(false)" [text]="true"
+            severity="secondary"></p-button>
+        <p-button label="Importieren starten" (click)="executeImport()" icon="pi pi-check"
+            severity="success"></p-button>
+        }
     </ng-template>
 </p-dialog>

@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarLeft } from '../sidebar-left/sidebar-left';
 import { SidebarRight } from '../sidebar-right/sidebar-right';
 import { FeedbackBadgeComponent } from '../../features/feedback/feedback-badge/feedback-badge.component';
+import { ThemeService } from '../../shared/services/theme.service';
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -22,6 +23,7 @@ import { TooltipModule } from 'primeng/tooltip';
   styleUrl: './main-layout.css',
 })
 export class MainLayout {
+  theme = inject(ThemeService);
   leftSidebarVisible = signal(false);
   rightSidebarVisible = signal(false);
 

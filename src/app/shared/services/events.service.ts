@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
+import { OrganizationService } from './organization.service';
 import { CalendarEvent } from '../models/calendar-event.model';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -12,6 +13,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 })
 export class EventsService implements OnDestroy {
     private supabase = inject(SupabaseService);
+    private org = inject(OrganizationService);
     private readonly TABLE_NAME = 'events';
     private realtimeChannel: RealtimeChannel | null = null;
 
@@ -27,10 +29,18 @@ export class EventsService implements OnDestroy {
         this._loading.set(true);
         this._error.set(null);
 
-        const { data, error } = await this.supabase
+        const orgId = this.org.currentOrgId();
+
+        let query = this.supabase
             .from(this.TABLE_NAME)
             .select('*')
             .order('date', { ascending: true });
+
+        if (orgId) {
+            query = query.eq('organization_id', orgId);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             this._error.set(error.message);
@@ -90,14 +100,16 @@ export class EventsService implements OnDestroy {
     async addEvent(
         event: Omit<CalendarEvent, 'id' | 'created_at' | 'updated_at'>
     ) {
+        const orgId = this.org.currentOrgId();
+        const eventWithOrg = orgId ? { ...event, organization_id: orgId } : event;
+
         const { data, error } = await this.supabase
             .from(this.TABLE_NAME)
-            .insert(event)
+            .insert(eventWithOrg)
             .select()
             .single();
 
         if (error) throw new Error(error.message);
-        // Realtime will handle the update
         return data;
     }
 
@@ -122,5 +134,39 @@ export class EventsService implements OnDestroy {
 
         if (error) throw new Error(error.message);
         // Realtime will handle the update
+    }
+
+    /**
+     * Get iCal subscription URL
+     * @param agId Optional: Filter by working group
+     */
+    getICalUrl(agId?: string): string {
+        const baseUrl = this.supabase.getSupabaseUrl();
+        let url = `${baseUrl}/functions/v1/ical-export`;
+
+        const params = new URLSearchParams();
+        if (agId) {
+            params.set('ag', agId);
+        }
+        params.set('download', 'false'); // For subscription, not download
+
+        const queryString = params.toString();
+        return queryString ? `${url}?${queryString}` : url;
+    }
+
+    /**
+     * Download iCal file
+     * @param agId Optional: Filter by working group
+     */
+    async downloadICalFile(agId?: string): Promise<void> {
+        const baseUrl = this.supabase.getSupabaseUrl();
+        let url = `${baseUrl}/functions/v1/ical-export?download=true`;
+
+        if (agId) {
+            url += `&ag=${agId}`;
+        }
+
+        // Open download in new tab
+        window.open(url, '_blank');
     }
 }

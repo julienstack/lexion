@@ -1,7 +1,9 @@
 import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { SupabaseService } from './supabase';
+import { OrganizationService } from './organization.service';
 import { WorkingGroup } from '../models/working-group.model';
 import { CalendarEvent } from '../models/calendar-event.model';
+import { AgRole } from '../models/member.model';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
@@ -13,6 +15,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 })
 export class WorkingGroupsService implements OnDestroy {
     private supabase = inject(SupabaseService);
+    private org = inject(OrganizationService);
     private readonly TABLE_NAME = 'working_groups';
     private realtimeChannel: RealtimeChannel | null = null;
     private memberRealtimeChannel: RealtimeChannel | null = null;
@@ -21,23 +24,33 @@ export class WorkingGroupsService implements OnDestroy {
     private _loading = signal(false);
     private _error = signal<string | null>(null);
     private _myMemberships = signal<Set<string>>(new Set());
+    private _myAgRoles = signal<Map<string, AgRole>>(new Map());
     private _agEvents = signal<Map<string, CalendarEvent[]>>(new Map());
 
     readonly workingGroups = this._workingGroups.asReadonly();
     readonly loading = this._loading.asReadonly();
     readonly error = this._error.asReadonly();
     readonly myMemberships = this._myMemberships.asReadonly();
+    readonly myAgRoles = this._myAgRoles.asReadonly();
     readonly agEvents = this._agEvents.asReadonly();
 
     async fetchWorkingGroups(): Promise<void> {
         this._loading.set(true);
         this._error.set(null);
 
-        // Fetch working groups with actual member count via join
-        const { data: groups, error } = await this.supabase
+        const orgId = this.org.currentOrgId();
+
+        // Fetch working groups with organization filter
+        let query = this.supabase
             .from(this.TABLE_NAME)
             .select('*')
             .order('name', { ascending: true });
+
+        if (orgId) {
+            query = query.eq('organization_id', orgId);
+        }
+
+        const { data: groups, error } = await query;
 
         if (error) {
             this._error.set(error.message);
@@ -177,8 +190,28 @@ export class WorkingGroupsService implements OnDestroy {
     async fetchMyMemberships(memberId: string) {
         if (!memberId) {
             this._myMemberships.set(new Set());
+            this._myAgRoles.set(new Map());
             return;
         }
+
+        // Try new ag_memberships table first (with roles)
+        const { data: agData, error: agError } = await this.supabase
+            .from('ag_memberships')
+            .select('working_group_id, role')
+            .eq('member_id', memberId);
+
+        if (!agError && agData && agData.length > 0) {
+            // Use new table with roles
+            const membershipSet = new Set(agData.map(d => d.working_group_id));
+            const rolesMap = new Map<string, AgRole>();
+            agData.forEach(d => rolesMap.set(d.working_group_id, d.role as AgRole));
+
+            this._myMemberships.set(membershipSet);
+            this._myAgRoles.set(rolesMap);
+            return;
+        }
+
+        // Fallback to old working_group_members table
         const { data, error } = await this.supabase
             .from('working_group_members')
             .select('working_group_id')
@@ -191,7 +224,26 @@ export class WorkingGroupsService implements OnDestroy {
 
         if (data) {
             this._myMemberships.set(new Set(data.map((d: any) => d.working_group_id)));
+            // All members from old table are regular members
+            const rolesMap = new Map<string, AgRole>();
+            data.forEach((d: any) => rolesMap.set(d.working_group_id, 'member'));
+            this._myAgRoles.set(rolesMap);
         }
+    }
+
+    /**
+     * Get current user's role in a specific AG
+     */
+    getMyRole(groupId: string): AgRole | null {
+        return this._myAgRoles().get(groupId) || null;
+    }
+
+    /**
+     * Check if current user is admin/lead of a specific AG
+     */
+    isMyAgAdmin(groupId: string): boolean {
+        const role = this.getMyRole(groupId);
+        return role === 'admin' || role === 'lead';
     }
 
     async addWorkingGroup(
@@ -228,33 +280,111 @@ export class WorkingGroupsService implements OnDestroy {
         if (error) throw new Error(error.message);
     }
 
-    async joinGroup(groupId: string, memberId: string) {
-        const { error } = await this.supabase
-            .from('working_group_members')
-            .insert({ working_group_id: groupId, member_id: memberId });
+    async joinGroup(groupId: string, memberId: string, role: AgRole = 'member') {
+        // Try new ag_memberships table first
+        const { error: agError } = await this.supabase
+            .from('ag_memberships')
+            .insert({
+                working_group_id: groupId,
+                member_id: memberId,
+                role: role
+            });
 
-        if (error) throw error;
+        if (agError) {
+            // Fallback to old table if new one doesn't exist
+            const { error } = await this.supabase
+                .from('working_group_members')
+                .insert({ working_group_id: groupId, member_id: memberId });
+
+            if (error) throw error;
+        }
 
         this._myMemberships.update(s => {
             const newSet = new Set(s);
             newSet.add(groupId);
             return newSet;
         });
+
+        this._myAgRoles.update(m => {
+            const newMap = new Map(m);
+            newMap.set(groupId, role);
+            return newMap;
+        });
     }
 
     async leaveGroup(groupId: string, memberId: string) {
-        const { error } = await this.supabase
-            .from('working_group_members')
+        // Try new ag_memberships table first
+        const { error: agError } = await this.supabase
+            .from('ag_memberships')
             .delete()
             .eq('working_group_id', groupId)
             .eq('member_id', memberId);
 
-        if (error) throw error;
+        if (agError) {
+            // Fallback to old table
+            const { error } = await this.supabase
+                .from('working_group_members')
+                .delete()
+                .eq('working_group_id', groupId)
+                .eq('member_id', memberId);
+
+            if (error) throw error;
+        }
 
         this._myMemberships.update(s => {
             const newSet = new Set(s);
             newSet.delete(groupId);
             return newSet;
         });
+
+        this._myAgRoles.update(m => {
+            const newMap = new Map(m);
+            newMap.delete(groupId);
+            return newMap;
+        });
+    }
+
+    /**
+     * Update a member's role in an AG (for AG admins)
+     */
+    async updateMemberRole(
+        groupId: string,
+        memberId: string,
+        newRole: AgRole
+    ): Promise<void> {
+        const { error } = await this.supabase
+            .from('ag_memberships')
+            .update({ role: newRole })
+            .eq('working_group_id', groupId)
+            .eq('member_id', memberId);
+
+        if (error) throw new Error(error.message);
+    }
+
+    /**
+     * Get all members of an AG with their roles
+     */
+    async getAgMembers(
+        groupId: string
+    ): Promise<{ member_id: string; name: string; role: AgRole }[]> {
+        const { data, error } = await this.supabase
+            .from('ag_memberships')
+            .select(`
+                member_id,
+                role,
+                members(name)
+            `)
+            .eq('working_group_id', groupId);
+
+        if (error) {
+            console.error('Error fetching AG members:', error);
+            return [];
+        }
+
+        return data?.map((m: any) => ({
+            member_id: m.member_id,
+            name: m.members?.name || 'Unbekannt',
+            role: m.role as AgRole
+        })) || [];
     }
 }

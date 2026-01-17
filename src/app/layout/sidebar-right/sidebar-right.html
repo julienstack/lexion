@@ -1,16 +1,66 @@
 <div class="flex flex-col gap-4 h-full">
 
+    <!-- Upcoming Birthdays -->
+    @if (upcomingBirthdays().length > 0) {
+    <div>
+        <h3
+            class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5 px-1">
+            <i class="pi pi-gift text-linke text-[10px]"></i>
+            Geburtstage
+        </h3>
+
+        <div class="space-y-1.5">
+            @for (birthday of upcomingBirthdays(); track birthday.id) {
+            <div class="bg-[var(--color-surface-raised)] rounded-lg p-2 border border-[var(--color-border)] flex items-center gap-2"
+                [class.border-linke/30]="birthday.isToday" [class.bg-linke/5]="birthday.isToday">
+                <!-- Avatar -->
+                @if (birthday.avatar_url) {
+                <img [src]="birthday.avatar_url" [alt]="birthday.name"
+                    class="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                } @else {
+                <div
+                    class="w-8 h-8 rounded-full bg-linke/20 flex items-center justify-center text-linke text-[10px] font-semibold flex-shrink-0">
+                    {{ getInitials(birthday.name) }}
+                </div>
+                }
+
+                <!-- Name -->
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-medium text-[var(--color-text)] truncate">
+                        {{ birthday.name }}
+                    </div>
+                </div>
+
+                <!-- Date Badge -->
+                <span class="text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0"
+                    [class.bg-linke/20]="birthday.isToday" [class.text-linke]="birthday.isToday"
+                    [class.bg-[var(--color-surface-overlay)]]="!birthday.isToday"
+                    [class.text-[var(--color-text-muted)]]="!birthday.isToday">
+                    @if (birthday.isToday) {
+                    <i class="pi pi-cake mr-0.5"></i>
+                    }
+                    {{ getBirthdayLabel(birthday) }}
+                </span>
+            </div>
+            }
+        </div>
+    </div>
+
+    <div class="w-full h-px bg-[var(--color-border)]"></div>
+    }
+
     <!-- Upcoming Events -->
     <div>
-        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5 px-1">
-            <i class="pi pi-calendar text-pink-500 text-[10px]"></i>
+        <h3
+            class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5 px-1">
+            <i class="pi pi-calendar text-teal text-[10px]"></i>
             Nächste Termine
         </h3>
 
         <div class="space-y-1.5">
             @for (event of upcomingEvents; track event.title) {
             <div
-                class="bg-gray-800/40 rounded-lg p-2 hover:bg-gray-800/60 transition-colors cursor-pointer group border border-transparent hover:border-gray-700">
+                class="bg-[var(--color-surface-raised)] rounded-lg p-2 hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer group border border-[var(--color-border)] hover:border-teal/30">
                 <div class="flex items-start gap-2">
                     <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                         [class]="'bg-' + event.color + '-500/20'">
@@ -19,15 +69,15 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-1">
                             <span
-                                class="font-medium text-white text-xs group-hover:text-pink-400 transition-colors truncate">
+                                class="font-medium text-[var(--color-text)] text-xs group-hover:text-teal transition-colors truncate">
                                 {{ event.title }}
                             </span>
                             @if(event.date === 'Heute') {
                             <span
-                                class="text-[9px] text-red-400 bg-red-500/20 px-1 py-0.5 rounded font-medium flex-shrink-0">Heute</span>
+                                class="text-[9px] text-linke bg-linke/20 px-1 py-0.5 rounded font-medium flex-shrink-0">Heute</span>
                             }
                         </div>
-                        <div class="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                        <div class="text-[10px] text-[var(--color-text-muted)] flex items-center gap-1 mt-0.5">
                             <i class="pi pi-clock text-[8px]"></i>
                             <span>{{ event.date !== 'Heute' ? event.date + ', ' : '' }}{{ event.time }}</span>
                         </div>
@@ -37,47 +87,82 @@
             }
         </div>
 
-        <a routerLink="/dashboard/calendar" class="block mt-2 text-right text-[10px] text-gray-500 hover:text-white">
+        <a routerLink="calendar"
+            class="block mt-2 text-right text-[10px] text-[var(--color-text-muted)] hover:text-teal">
             Alle anzeigen <i class="pi pi-arrow-right text-[8px] ml-0.5"></i>
         </a>
     </div>
 
-    <div class="w-full h-px bg-gray-800"></div>
+    <div class="w-full h-px bg-[var(--color-border)]"></div>
 
     <!-- My Tasks -->
+    @if (isLoggedIn()) {
     <div class="flex-1 flex flex-col min-h-0">
-        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5 px-1">
-            <i class="pi pi-check-circle text-green-500 text-[10px]"></i>
-            Aufgaben
+        <h3
+            class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5 px-1">
+            <i class="pi pi-check-circle text-violet text-[10px]"></i>
+            Meine Aufgaben
         </h3>
 
         <div class="space-y-1.5 overflow-y-auto">
-            @for (task of tasks; track task.id) {
-            <div (click)="toggleTask(task)"
-                class="bg-gray-800/40 rounded-lg p-2 hover:bg-gray-800/60 transition-colors cursor-pointer border border-transparent hover:border-gray-700 flex items-center gap-2 group">
+            @for (task of tasks(); track task.id) {
+            <div
+                class="bg-[var(--color-surface-raised)] rounded-lg p-2 hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer border border-[var(--color-border)] hover:border-violet/30 flex items-center gap-2 group">
 
-                <div class="w-4 h-4 rounded border border-gray-600 flex items-center justify-center flex-shrink-0 transition-colors"
-                    [class.bg-green-500]="task.done" [class.border-green-500]="task.done"
-                    [class.group-hover:border-gray-500]="!task.done">
+                <div (click)="toggleTask(task)"
+                    class="w-4 h-4 rounded border border-[var(--color-border)] flex items-center justify-center flex-shrink-0 transition-colors"
+                    [class.bg-violet]="task.done" [class.border-violet]="task.done"
+                    [class.group-hover:border-violet]="!task.done">
                     @if(task.done) {
-                    <i class="pi pi-check text-[8px] text-black font-bold"></i>
+                    <i class="pi pi-check text-[8px] text-white font-bold"></i>
                     }
                 </div>
 
-                <span class="text-xs text-gray-300 group-hover:text-white transition-colors truncate"
-                    [class.line-through]="task.done" [class.text-gray-500]="task.done">
+                <span (click)="toggleTask(task)"
+                    class="flex-1 text-xs text-[var(--color-text)] group-hover:text-[var(--color-text)] transition-colors truncate"
+                    [class.line-through]="task.done" [class.text-[var(--color-text-muted)]]="task.done">
                     {{ task.title }}
                 </span>
+
+                <!-- Delete button (visible on hover) -->
+                <button (click)="deleteTask(task); $event.stopPropagation()"
+                    class="w-5 h-5 rounded flex items-center justify-center text-[var(--color-text-muted)] hover:text-linke hover:bg-linke/20 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
+                    <i class="pi pi-trash text-[10px]"></i>
+                </button>
             </div>
             }
 
-            <!-- Add Task Button -->
-            <button
-                class="w-full py-1.5 border border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-gray-300 hover:border-gray-600 hover:bg-gray-800/30 transition-all text-[10px] flex items-center justify-center gap-1 group">
-                <i class="pi pi-plus group-hover:text-pink-500 text-[10px]"></i>
+            <!-- Add Task -->
+            @if (showAddInput()) {
+            <div class="bg-[var(--color-surface-raised)] rounded-lg p-2 border border-violet/50">
+                <div class="flex items-center gap-1.5">
+                    <input #newTaskInput type="text" [ngModel]="newTaskTitle()"
+                        (ngModelChange)="newTaskTitle.set($event)" (keydown)="onInputKeydown($event)"
+                        [disabled]="addingTask()" placeholder="Neue Aufgabe..."
+                        class="flex-1 bg-transparent text-[var(--color-text)] text-xs outline-none placeholder-[var(--color-text-muted)]" />
+                    <button (click)="submitTask()" [disabled]="addingTask() || !newTaskTitle().trim()"
+                        class="w-5 h-5 rounded flex items-center justify-center text-violet hover:bg-violet/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        @if (addingTask()) {
+                        <i class="pi pi-spin pi-spinner text-[10px]"></i>
+                        } @else {
+                        <i class="pi pi-check text-[10px]"></i>
+                        }
+                    </button>
+                    <button (click)="cancelAdd()" [disabled]="addingTask()"
+                        class="w-5 h-5 rounded flex items-center justify-center text-[var(--color-text-muted)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text)] disabled:opacity-30 transition-colors">
+                        <i class="pi pi-times text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+            } @else {
+            <button (click)="openAddInput()"
+                class="w-full py-1.5 border border-dashed border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-violet/50 hover:bg-[var(--color-surface-overlay)] transition-all text-[10px] flex items-center justify-center gap-1 group">
+                <i class="pi pi-plus group-hover:text-violet text-[10px]"></i>
                 Aufgabe
             </button>
+            }
         </div>
     </div>
+    }
 
 </div>

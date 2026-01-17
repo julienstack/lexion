@@ -105,6 +105,11 @@ export class SupabaseService {
     return this.supabase.from(table);
   }
 
+  /** Get the base Supabase URL for building Edge Function URLs */
+  getSupabaseUrl(): string {
+    return environment.supabase.url;
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // STORAGE
   // ═══════════════════════════════════════════════════════════════════════════

@@ -17,11 +17,12 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-xl md:text-3xl font-bold text-white">Arbeitsgemeinschaften (AGs)</h1>
-            <p class="text-gray-400 text-sm hidden md:block mt-1">Hier findest du alle aktiven Gruppen</p>
+            <h1 class="text-xl md:text-3xl font-bold text-[var(--color-text)]">Arbeitsgemeinschaften (AGs)</h1>
+            <p class="text-[var(--color-text-muted)] text-sm hidden md:block mt-1">Hier findest du alle aktiven Gruppen
+            </p>
         </div>
         @if (auth.isAdmin()) {
-        <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
+        <p-button label="Neue AG" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
             (click)="openNew()"></p-button>
         }
     </div>
@@ -29,20 +30,21 @@
     <!-- AG List -->
     <div class="space-y-2">
         @for (group of groups(); track group.id) {
-        <div class="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
+        <div class="bg-[var(--color-surface-raised)] border border-[var(--color-border)] rounded-lg overflow-hidden">
             <!-- Header (Always Visible) -->
             <div class="p-3 cursor-pointer" (click)="toggleExpand(group.id!)">
                 <div class="flex items-center gap-3">
                     <!-- Avatar -->
-                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--color-text)] text-sm font-bold flex-shrink-0"
                         [style.background-color]="getAvatarColor(group.name)">
                         {{getInitials(group.name)}}
                     </div>
 
                     <!-- Info -->
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-sm md:text-base font-bold text-white truncate">{{group.name}}</h3>
-                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 mt-0.5">
+                        <h3 class="text-sm md:text-base font-bold text-[var(--color-text)] truncate">{{group.name}}</h3>
+                        <div
+                            class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)] mt-0.5">
                             <span class="flex items-center gap-1">
                                 <i [ngClass]="getIconForType(group.contact_type)" class="text-[10px]"></i>
                                 {{group.contact_type}}
@@ -57,9 +59,19 @@
                                 {{getAgEvents(group.id!)[0].date}}
                             </span>
                             } @else {
-                            <span class="hidden sm:flex items-center gap-1 text-gray-500">
+                            <span class="hidden sm:flex items-center gap-1 text-[var(--color-text-muted)]">
                                 <i class="pi pi-calendar text-[10px]"></i>
                                 Kein Termin
+                            </span>
+                            }
+                            <!-- My Role Badge -->
+                            @if (getMyAgRole(group.id!)) {
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium" [ngClass]="{
+                                    'bg-teal/20 text-teal': getMyAgRole(group.id!) === 'lead',
+                                    'bg-linke/20 text-linke': getMyAgRole(group.id!) === 'admin',
+                                    'bg-gray-500/20 text-gray-400': getMyAgRole(group.id!) === 'member'
+                                }">
+                                {{ getRoleLabel(getMyAgRole(group.id!)!) }}
                             </span>
                             }
                         </div>
@@ -67,17 +79,24 @@
 
                     <!-- Actions + Expand -->
                     <div class="flex items-center gap-1 flex-shrink-0">
-                        @if (auth.isAdmin()) {
+                        @if (auth.isAdmin() || canEditAg(group.id!)) {
+                        <button (click)="openMembersDialog(group); $event.stopPropagation()"
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-teal hover:bg-[var(--color-surface-overlay)] transition-colors"
+                            pTooltip="Mitglieder verwalten">
+                            <i class="pi pi-users text-xs"></i>
+                        </button>
                         <button (click)="editGroup(group); $event.stopPropagation()"
-                            class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors">
                             <i class="pi pi-pencil text-xs"></i>
                         </button>
+                        }
+                        @if (auth.isAdmin()) {
                         <button (click)="confirmDelete(group); $event.stopPropagation()"
-                            class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-gray-700 transition-colors">
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-red-400 hover:bg-[var(--color-surface-overlay)] transition-colors">
                             <i class="pi pi-trash text-xs"></i>
                         </button>
                         }
-                        <i class="pi text-gray-400 text-xs ml-1"
+                        <i class="pi text-[var(--color-text-muted)] text-xs ml-1"
                             [class]="expandedGroups[group.id!] ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                     </div>
                 </div>
@@ -85,20 +104,23 @@
 
             <!-- Expanded Content -->
             @if (expandedGroups[group.id!]) {
-            <div class="border-t border-gray-700/50 p-3 bg-gray-800/20 space-y-3">
+            <div class="border-t border-[var(--color-border)] p-3 bg-[var(--color-surface-raised)]/20 space-y-3">
                 <!-- Description -->
                 <div>
-                    <div class="text-[10px] uppercase text-gray-500 font-semibold mb-1">Beschreibung</div>
-                    <p class="text-sm text-gray-300">{{group.description || 'Keine Beschreibung'}}</p>
+                    <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold mb-1">Beschreibung
+                    </div>
+                    <p class="text-sm text-[var(--color-text)]">{{group.description || 'Keine Beschreibung'}}</p>
                 </div>
 
                 <!-- Tags -->
                 @if (group.tags && group.tags.length > 0) {
                 <div>
-                    <div class="text-[10px] uppercase text-gray-500 font-semibold mb-1">Schwerpunkte</div>
+                    <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold mb-1">Schwerpunkte
+                    </div>
                     <div class="flex flex-wrap gap-1">
                         @for (tag of group.tags; track tag) {
-                        <span class="px-2 py-0.5 bg-gray-700 text-gray-300 rounded-full text-[10px]">{{tag}}</span>
+                        <span
+                            class="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-[10px]">{{tag}}</span>
                         }
                     </div>
                 </div>
@@ -107,13 +129,14 @@
                 <!-- Lead & Next Meeting -->
                 <div class="flex flex-wrap gap-4 text-sm">
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Leitung</div>
-                        <div class="text-white">{{group.lead || '-'}}</div>
+                        <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Leitung</div>
+                        <div class="text-[var(--color-text)]">{{group.lead || '-'}}</div>
                     </div>
                     @if (group.next_meeting) {
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 font-semibold">Nächstes Treffen</div>
-                        <div class="text-white">{{group.next_meeting}}</div>
+                        <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Nächstes Treffen
+                        </div>
+                        <div class="text-[var(--color-text)]">{{group.next_meeting}}</div>
                     </div>
                     }
                 </div>
@@ -121,13 +144,13 @@
                 <!-- Upcoming Events -->
                 @if (getAgEvents(group.id!).length > 0) {
                 <div>
-                    <div class="text-[10px] uppercase text-gray-500 font-semibold mb-1">Termine</div>
+                    <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold mb-1">Termine</div>
                     <div class="space-y-1">
                         @for (evt of getAgEvents(group.id!).slice(0, 2); track evt.id) {
-                        <div class="flex items-center gap-2 text-xs bg-gray-900/50 rounded px-2 py-1.5">
-                            <i class="pi pi-calendar text-pink-400 text-[10px]"></i>
-                            <span class="text-white">{{evt.title}}</span>
-                            <span class="text-gray-500">{{evt.date}} • {{evt.start_time}}</span>
+                        <div class="flex items-center gap-2 text-xs bg-[var(--color-surface)]/50 rounded px-2 py-1.5">
+                            <i class="pi pi-calendar text-linke-light text-[10px]"></i>
+                            <span class="text-[var(--color-text)]">{{evt.title}}</span>
+                            <span class="text-[var(--color-text-muted)]">{{evt.date}} • {{evt.start_time}}</span>
                         </div>
                         }
                     </div>
@@ -135,7 +158,7 @@
                 }
 
                 <!-- Join Actions -->
-                <div class="pt-2 border-t border-gray-700/50">
+                <div class="pt-2 border-t border-[var(--color-border)]">
                     @if (auth.isLoggedIn()) {
                     <div class="flex flex-wrap gap-2">
                         @if (group.contact_link) {
@@ -162,7 +185,7 @@
             }
         </div>
         } @empty {
-        <div class="text-center py-8 text-gray-500">
+        <div class="text-center py-8 text-[var(--color-text-muted)]">
             <i class="pi pi-users text-3xl mb-2"></i>
             <p class="text-sm">Keine AGs gefunden</p>
         </div>
@@ -171,35 +194,35 @@
 </div>
 
 <!-- AG Dialog -->
-<p-dialog [header]="editMode() ? 'AG bearbeiten' : 'Neue AG'" [(visible)]="dialogVisible" [modal]="true"
-    [draggable]="false" [resizable]="false" maskStyleClass="backdrop-blur-sm bg-black/50"
-    [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
+<p-dialog [header]="editMode() ? 'AG bearbeiten' : 'Neue AG'" [visible]="dialogVisible()"
+    (visibleChange)="dialogVisible.set($event)" [modal]="true" [draggable]="false" [resizable]="false"
+    maskStyleClass="backdrop-blur-sm bg-black/50" [style]="{width: '600px', maxWidth: '95vw'}" [closable]="!saving()">
     <div class="space-y-3">
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Name *</label>
             <input pInputText [(ngModel)]="currentGroup.name" class="w-full" placeholder="z.B. Öffentlichkeitsarbeit" />
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung *</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Beschreibung *</label>
             <textarea pTextarea [(ngModel)]="currentGroup.description" class="w-full" rows="2"
                 placeholder="Zielsetzung..."></textarea>
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Leitung *</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Leitung *</label>
                 <input pInputText [(ngModel)]="currentGroup.lead" class="w-full" placeholder="Name" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Nächstes Treffen</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Nächstes Treffen</label>
                 <input pInputText [(ngModel)]="currentGroup.next_meeting" class="w-full" placeholder="Montags 19:00" />
             </div>
         </div>
 
-        <div class="border-t border-gray-700 pt-3">
-            <h4 class="text-white font-medium mb-2 text-sm">Kontakt</h4>
+        <div class="border-t border-[var(--color-border)] pt-3">
+            <h4 class="text-[var(--color-text)] font-medium mb-2 text-sm">Kontakt</h4>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Typ</label>
+                    <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Typ</label>
                     <p-select [(ngModel)]="currentGroup.contact_type" [options]="contactTypes" optionLabel="label"
                         optionValue="value" styleClass="w-full">
                         <ng-template pTemplate="selectedItem" let-item>
@@ -217,11 +240,11 @@
                     </p-select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Anzeige-Wert</label>
+                    <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Anzeige-Wert</label>
                     <input pInputText [(ngModel)]="currentGroup.contact_value" class="w-full" placeholder="#kanal" />
                 </div>
                 <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Link</label>
+                    <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Link</label>
                     <input pInputText [(ngModel)]="currentGroup.contact_link" class="w-full"
                         placeholder="https://discord.gg/..." />
                 </div>
@@ -229,7 +252,7 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Tags (Komma-getrennt)</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Tags (Komma-getrennt)</label>
             <input pInputText [(ngModel)]="tagsInput" class="w-full" placeholder="technik, design..." />
         </div>
     </div>
@@ -239,5 +262,45 @@
             [disabled]="saving()" />
         <p-button [label]="editMode() ? 'Speichern' : 'Erstellen'" icon="pi pi-check" (click)="saveGroup()"
             [loading]="saving()" />
+    </ng-template>
+</p-dialog>
+
+<!-- AG Members Dialog -->
+<p-dialog [header]="'Mitglieder: ' + currentAgForMembers()?.name" [visible]="membersDialogVisible()"
+    (visibleChange)="membersDialogVisible.set($event)" [modal]="true" [draggable]="false" [resizable]="false"
+    maskStyleClass="backdrop-blur-sm bg-black/50" [style]="{width: '500px', maxWidth: '95vw'}">
+
+    @if (loadingMembers()) {
+    <div class="flex justify-center py-8">
+        <p-progressSpinner strokeWidth="4" ariaLabel="Lade Mitglieder..." />
+    </div>
+    } @else {
+    <div class="space-y-2">
+        @for (member of agMembers(); track member.member_id) {
+        <div
+            class="flex items-center justify-between gap-3 p-3 bg-[var(--color-surface-raised)] rounded-lg border border-[var(--color-border)]">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                    [style.background-color]="getAvatarColor(member.name)">
+                    {{ getInitials(member.name) }}
+                </div>
+                <span class="text-sm font-medium text-[var(--color-text)] truncate">{{ member.name }}</span>
+            </div>
+            <p-select [ngModel]="member.role" (ngModelChange)="updateMemberRole(member.member_id, $event)"
+                [options]="agRoleOptions" optionLabel="label" optionValue="value" appendTo="body" styleClass="w-[110px]"
+                size="small">
+            </p-select>
+        </div>
+        } @empty {
+        <div class="text-center py-8 text-[var(--color-text-muted)]">
+            <i class="pi pi-users text-3xl mb-2"></i>
+            <p class="text-sm">Keine Mitglieder in dieser AG</p>
+        </div>
+        }
+    </div>
+    }
+
+    <ng-template pTemplate="footer">
+        <p-button label="Schließen" severity="secondary" [text]="true" (click)="membersDialogVisible.set(false)" />
     </ng-template>
 </p-dialog>

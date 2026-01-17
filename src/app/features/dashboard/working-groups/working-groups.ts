@@ -3,7 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkingGroupsService } from '../../../shared/services/working-groups.service';
 import { WorkingGroup } from '../../../shared/models/working-group.model';
+import { AgRole } from '../../../shared/models/member.model';
 import { AuthService } from '../../../shared/services/auth.service';
+import {
+  PermissionsService,
+  AG_ROLE_LABELS,
+} from '../../../shared/services/permissions.service';
 
 // PrimeNG Imports
 import { TableModule } from 'primeng/table';
@@ -66,11 +71,13 @@ export class WorkingGroupsComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   public auth = inject(AuthService);
+  public permissions = inject(PermissionsService);
 
   groups = this.workingGroupsService.workingGroups;
   loading = this.workingGroupsService.loading;
   error = this.workingGroupsService.error;
   myMemberships = this.workingGroupsService.myMemberships;
+  myAgRoles = this.workingGroupsService.myAgRoles;
   agEvents = this.workingGroupsService.agEvents;
 
   dialogVisible = signal(false);
@@ -79,6 +86,20 @@ export class WorkingGroupsComponent implements OnInit {
   currentGroup: WorkingGroup = this.getEmptyGroup();
   tagsInput = ''; // Comma-separated string for tags input
   expandedGroups: Record<string, boolean> = {}; // Custom expand state
+
+  // AG Member Management
+  membersDialogVisible = signal(false);
+  currentAgForMembers = signal<WorkingGroup | null>(null);
+  agMembers = signal<{ member_id: string; name: string; role: AgRole }[]>([]);
+  loadingMembers = signal(false);
+
+  // AG Role options
+  agRoleOptions = [
+    { label: 'Mitglied', value: 'member' },
+    { label: 'Admin', value: 'admin' },
+    { label: 'Leitung', value: 'lead' },
+  ];
+  agRoleLabels = AG_ROLE_LABELS;
 
   // Toggle expand/collapse for a group
   toggleExpand(groupId: string) {
@@ -268,5 +289,84 @@ export class WorkingGroupsComponent implements OnInit {
     }
     const hue = Math.abs(hash % 360);
     return `hsl(${hue}, 70%, 50%)`;
+  }
+
+  /**
+   * Check if current user can edit a specific AG
+   */
+  canEditAg(groupId: string): boolean {
+    return this.permissions.canEditAg(groupId);
+  }
+
+  /**
+   * Get role label for display
+   */
+  getRoleLabel(role: AgRole): string {
+    return this.agRoleLabels[role];
+  }
+
+  /**
+   * Get current user's role in an AG
+   */
+  getMyAgRole(groupId: string): AgRole | null {
+    return this.myAgRoles().get(groupId) || null;
+  }
+
+  /**
+   * Open member management dialog for an AG
+   */
+  async openMembersDialog(group: WorkingGroup): Promise<void> {
+    if (!group.id) return;
+    this.currentAgForMembers.set(group);
+    this.loadingMembers.set(true);
+    this.membersDialogVisible.set(true);
+
+    try {
+      const members = await this.workingGroupsService.getAgMembers(group.id);
+      this.agMembers.set(members);
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: 'Mitglieder konnten nicht geladen werden',
+      });
+    }
+    this.loadingMembers.set(false);
+  }
+
+  /**
+   * Update a member's role in the current AG
+   */
+  async updateMemberRole(
+    memberId: string,
+    newRole: AgRole
+  ): Promise<void> {
+    const ag = this.currentAgForMembers();
+    if (!ag?.id) return;
+
+    try {
+      await this.workingGroupsService.updateMemberRole(
+        ag.id,
+        memberId,
+        newRole
+      );
+      // Update local state
+      this.agMembers.update(members =>
+        members.map(m =>
+          m.member_id === memberId ? { ...m, role: newRole } : m
+        )
+      );
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Erfolg',
+        detail: 'Rolle aktualisiert',
+      });
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: (e as Error).message,
+      });
+    }
   }
 }

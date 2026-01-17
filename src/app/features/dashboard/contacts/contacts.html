@@ -18,8 +18,8 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-xl md:text-3xl font-bold text-white">Ansprechpartner</h1>
-            <p class="text-gray-400 text-sm hidden md:block mt-1">Hier findest du die wichtigsten Kontakte</p>
+            <h1 class="text-xl md:text-3xl font-bold text-[var(--color-text)]">Ansprechpartner</h1>
+            <p class="text-[var(--color-text-muted)] text-sm hidden md:block mt-1">Hier findest du die wichtigsten Kontakte</p>
         </div>
         @if (auth.isAdmin()) {
         <p-button label="Neu" icon="pi pi-plus" severity="danger" [raised]="true" size="small"
@@ -30,8 +30,8 @@
     <!-- Empty State -->
     @if (contacts().length === 0) {
     <div class="text-center py-8">
-        <i class="pi pi-users text-4xl text-gray-600 mb-3"></i>
-        <p class="text-gray-400">Keine Ansprechpartner gefunden.</p>
+        <i class="pi pi-users text-4xl text-[var(--color-text-muted)] mb-3"></i>
+        <p class="text-[var(--color-text-muted)]">Keine Ansprechpartner gefunden.</p>
     </div>
     }
 
@@ -39,7 +39,7 @@
     @if (contacts().length > 0) {
     <div class="space-y-2">
         @for (contact of contacts(); track contact.id ?? contact.name) {
-        <div class="bg-gray-800/40 rounded-lg border border-gray-700/50 p-3 hover:border-pink-500/50 transition-colors">
+        <div class="bg-[var(--color-surface-raised)] rounded-lg border border-[var(--color-border)] p-3 hover:border-linke/50 transition-colors">
             <div class="flex gap-3">
                 <!-- Avatar (smaller on mobile) -->
                 <div
@@ -47,7 +47,7 @@
                     @if (contact.image_url) {
                     <img [src]="contact.image_url" [alt]="contact.name" class="w-full h-full object-cover">
                     } @else {
-                    <i class="pi pi-user text-lg md:text-2xl text-gray-400"></i>
+                    <i class="pi pi-user text-lg md:text-2xl text-[var(--color-text-muted)]"></i>
                     }
                 </div>
 
@@ -55,17 +55,17 @@
                 <div class="flex-1 min-w-0">
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0">
-                            <h3 class="text-sm md:text-base font-bold text-white truncate">{{ contact.name }}</h3>
-                            <p class="text-pink-400 text-xs md:text-sm font-medium truncate">{{ contact.role }}</p>
+                            <h3 class="text-sm md:text-base font-bold text-[var(--color-text)] truncate">{{ contact.name }}</h3>
+                            <p class="text-linke-light text-xs md:text-sm font-medium truncate">{{ contact.role }}</p>
                         </div>
                         @if (auth.isAdmin()) {
                         <div class="flex gap-1 flex-shrink-0">
                             <button (click)="editContact(contact)"
-                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors">
                                 <i class="pi pi-pencil text-xs"></i>
                             </button>
                             <button (click)="confirmDelete(contact)"
-                                class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-gray-700 transition-colors">
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-red-400 hover:bg-[var(--color-surface-overlay)] transition-colors">
                                 <i class="pi pi-trash text-xs"></i>
                             </button>
                         </div>
@@ -74,24 +74,24 @@
 
                     <!-- Description (truncated on mobile) -->
                     @if (contact.description) {
-                    <p class="text-xs text-gray-500 mt-1 line-clamp-1 md:line-clamp-2">{{ contact.description }}</p>
+                    <p class="text-xs text-[var(--color-text-muted)] mt-1 line-clamp-1 md:line-clamp-2">{{ contact.description }}</p>
                     }
 
                     <!-- Contact Details (compact) -->
-                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
+                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-[var(--color-text-muted)]">
                         @if (contact.location) {
                         <span class="flex items-center gap-1">
-                            <i class="pi pi-map-marker text-pink-500 text-[10px]"></i>
+                            <i class="pi pi-map-marker text-linke text-[10px]"></i>
                             {{ contact.location }}
                         </span>
                         }
-                        <a [href]="'mailto:' + contact.email" class="flex items-center gap-1 hover:text-white">
-                            <i class="pi pi-envelope text-pink-500 text-[10px]"></i>
+                        <a [href]="'mailto:' + contact.email" class="flex items-center gap-1 hover:text-[var(--color-text)]">
+                            <i class="pi pi-envelope text-linke text-[10px]"></i>
                             <span class="truncate max-w-[120px] md:max-w-none">{{ contact.email }}</span>
                         </a>
                         @if (contact.phone) {
-                        <a [href]="'tel:' + contact.phone" class="flex items-center gap-1 hover:text-white">
-                            <i class="pi pi-phone text-pink-500 text-[10px]"></i>
+                        <a [href]="'tel:' + contact.phone" class="flex items-center gap-1 hover:text-[var(--color-text)]">
+                            <i class="pi pi-phone text-linke text-[10px]"></i>
                             {{ contact.phone }}
                         </a>
                         }
@@ -111,37 +111,37 @@
     [style]="{width: '500px', maxWidth: '95vw'}" [closable]="!saving()">
     <div class="space-y-3">
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Name *</label>
             <input pInputText [(ngModel)]="currentContact.name" class="w-full" placeholder="Max Mustermann" />
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Rolle *</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Rolle *</label>
                 <input pInputText [(ngModel)]="currentContact.role" class="w-full" placeholder="Vorsitzender" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Ort</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Ort</label>
                 <input pInputText [(ngModel)]="currentContact.location" class="w-full" placeholder="Berlin" />
             </div>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Beschreibung</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Beschreibung</label>
             <textarea pTextarea [(ngModel)]="currentContact.description" class="w-full" rows="2"
                 placeholder="Zuständigkeiten..."></textarea>
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">E-Mail *</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">E-Mail *</label>
                 <input pInputText [(ngModel)]="currentContact.email" type="email" class="w-full"
                     placeholder="max@example.com" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Telefon</label>
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Telefon</label>
                 <input pInputText [(ngModel)]="currentContact.phone" class="w-full" placeholder="+49 123..." />
             </div>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Bild-URL</label>
+            <label class="block text-sm font-medium text-[var(--color-text)] mb-1">Bild-URL</label>
             <input pInputText [(ngModel)]="currentContact.image_url" class="w-full" placeholder="https://..." />
         </div>
     </div>

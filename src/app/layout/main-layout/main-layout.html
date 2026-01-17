@@ -1,6 +1,7 @@
-<div class="flex h-screen bg-[var(--bg-color)] text-white overflow-hidden">
+<div class="flex h-screen bg-[var(--color-bg)] text-[var(--color-text)] overflow-hidden">
     <!-- Left Sidebar (Desktop) -->
-    <aside class="hidden lg:flex w-64 flex-col border-r border-gray-800 bg-gray-900/50 p-4 z-20">
+    <aside
+        class="hidden lg:flex w-64 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4 z-20">
         <app-sidebar-left></app-sidebar-left>
     </aside>
 
@@ -8,47 +9,75 @@
     <div class="flex-1 flex flex-col min-w-0 h-full relative">
         <!-- Mobile Header -->
         <header
-            class="lg:hidden flex items-center justify-between p-4 bg-gray-900 border-b border-gray-800 z-10 sticky top-0">
+            class="lg:hidden flex items-center justify-between p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] z-10 sticky top-0">
             <p-button icon="pi pi-bars" [text]="true" (click)="leftSidebarVisible.set(true)"
-                styleClass="text-gray-300 hover:text-white" />
-            <span class="text-lg font-bold text-[var(--primary-color)]">Hustle Hub</span>
+                styleClass="text-[var(--color-text-muted)] hover:text-[var(--color-text)]" />
+            <span class="text-lg font-bold text-linke">Lexion</span>
             <p-button icon="pi pi-calendar" [text]="true" (click)="rightSidebarVisible.set(true)"
-                styleClass="text-gray-300 hover:text-white" />
+                styleClass="text-[var(--color-text-muted)] hover:text-[var(--color-text)]" />
         </header>
 
         <!-- Main Content Scroll Area -->
-        <main class="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth">
-            <router-outlet></router-outlet>
+        <main class="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth flex flex-col">
+            <div class="flex-1">
+                <router-outlet></router-outlet>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-8 pt-6 border-t border-[var(--color-border)]">
+                <div
+                    class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--color-text-muted)]">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-linke">Lexion</span>
+                        <span>v1.0.0</span>
+                        <span class="hidden md:inline">•</span>
+                        <span class="hidden md:inline">© 2026 Julien Lieske</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button (click)="theme.toggle()"
+                            class="p-1.5 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors text-[var(--color-text-muted)] hover:text-linke"
+                            [title]="theme.isDark() ? 'Light Mode aktivieren' : 'Dark Mode aktivieren'">
+                            <i class="pi text-sm" [class.pi-moon]="theme.isDark()" [class.pi-sun]="!theme.isDark()"></i>
+                        </button>
+                        <div class="w-px h-4 bg-[var(--color-border)] mx-1"></div>
+                        <a routerLink="/impressum" class="hover:text-linke transition-colors">Impressum</a>
+                        <a routerLink="/datenschutz" class="hover:text-linke transition-colors">Datenschutz</a>
+                        <a href="mailto:support@example.com" class="hover:text-linke transition-colors">Hilfe</a>
+                    </div>
+                </div>
+            </footer>
         </main>
     </div>
 
     <!-- Right Sidebar (Desktop) - Collapsible -->
     @if (!rightSidebarCollapsed()) {
-    <aside class="hidden xl:flex w-72 flex-col border-l border-gray-800 bg-gray-900/50 p-4 z-20 relative">
+    <aside
+        class="hidden xl:flex w-72 flex-col border-l border-[var(--color-border)] bg-[var(--color-surface)] p-4 z-20 relative">
         <!-- Collapse Button -->
         <button (click)="toggleRightSidebar()" pTooltip="Sidebar einklappen" tooltipPosition="left"
-            class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-gray-800 border border-gray-700 rounded-l-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors z-30">
+            class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-[var(--color-surface-raised)] border border-[var(--color-border)] rounded-l-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors z-30">
             <i class="pi pi-chevron-right text-xs"></i>
         </button>
         <app-sidebar-right></app-sidebar-right>
     </aside>
     } @else {
     <!-- Collapsed Sidebar - Just a toggle button -->
-    <div class="hidden xl:flex flex-col items-center py-4 px-1 border-l border-gray-800 bg-gray-900/50 z-20">
+    <div
+        class="hidden xl:flex flex-col items-center py-4 px-1 border-l border-[var(--color-border)] bg-[var(--color-surface)] z-20">
         <button (click)="toggleRightSidebar()" pTooltip="Sidebar ausklappen" tooltipPosition="left"
-            class="w-8 h-8 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+            class="w-8 h-8 bg-[var(--color-surface-raised)] border border-[var(--color-border)] rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors">
             <i class="pi pi-chevron-left text-xs"></i>
         </button>
         <!-- Quick icons when collapsed -->
         <div class="mt-4 space-y-2">
             <button (click)="rightSidebarVisible.set(true); toggleRightSidebar()" pTooltip="Termine"
                 tooltipPosition="left"
-                class="w-8 h-8 bg-gray-800/50 rounded-lg flex items-center justify-center text-gray-500 hover:text-pink-400 transition-colors">
+                class="w-8 h-8 bg-[var(--color-surface-raised)] rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-linke transition-colors">
                 <i class="pi pi-calendar text-sm"></i>
             </button>
             <button (click)="rightSidebarVisible.set(true); toggleRightSidebar()" pTooltip="Aufgaben"
                 tooltipPosition="left"
-                class="w-8 h-8 bg-gray-800/50 rounded-lg flex items-center justify-center text-gray-500 hover:text-green-400 transition-colors">
+                class="w-8 h-8 bg-[var(--color-surface-raised)] rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-teal transition-colors">
                 <i class="pi pi-check-circle text-sm"></i>
             </button>
         </div>
@@ -58,7 +87,8 @@
 
 <!-- Mobile Left Drawer (Navigation) -->
 <p-drawer [(visible)]="leftSidebarVisible" position="left"
-    styleClass="!bg-gray-900 !border-r !border-gray-800 !w-[85vw] max-w-xs" [modal]="true" [dismissible]="true">
+    [styleClass]="'!bg-[var(--color-surface)] !border-r !border-[var(--color-border)] !w-[85vw] max-w-xs'"
+    [modal]="true" [dismissible]="true">
     <ng-template pTemplate="content">
         <div class="h-full py-2">
             <app-sidebar-left (click)="leftSidebarVisible.set(false)"></app-sidebar-left>
@@ -68,7 +98,8 @@
 
 <!-- Mobile Right Drawer (Widgets) -->
 <p-drawer [(visible)]="rightSidebarVisible" position="right"
-    styleClass="!bg-gray-900 !border-l !border-gray-800 !w-[85vw] max-w-xs" [modal]="true" [dismissible]="true">
+    [styleClass]="'!bg-[var(--color-surface)] !border-l !border-[var(--color-border)] !w-[85vw] max-w-xs'"
+    [modal]="true" [dismissible]="true">
     <ng-template pTemplate="content">
         <div class="h-full py-2">
             <app-sidebar-right></app-sidebar-right>
