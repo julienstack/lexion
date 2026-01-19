@@ -5,7 +5,7 @@
 Lexion ist keine weitere langweilige Vereinsverwaltung. Es ist dein **System of Engagement**.
 Wir ersetzen das Chaos aus WhatsApp-Gruppen, Excel-Listen und verlorenen E-Mails durch eine strukturierte, datenschutzkonforme Plattform.
 
-**Fokus:** Politische Parteien, NGOs, Aktionsbündnisse und moderne Sportvereine.
+**Fokus:** Politische Parteien, NGOs, Aktionsbündnisse und moderne Vereine.
 
 ---
 

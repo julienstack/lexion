@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './shared/guards/admin.guard';
 import { issueTrackerGuard } from './shared/guards/issue-tracker.guard';
-import { devPasswordGuard } from './shared/guards/dev-password.guard';
+
 import { organizationGuard } from './shared/guards/organization.guard';
 
 export const routes: Routes = [
@@ -14,14 +14,14 @@ export const routes: Routes = [
     // Public Landing
     {
         path: '',
-        canActivate: [devPasswordGuard],
+
         loadComponent: () => import('./features/public/landing-page/landing-page').then(m => m.LandingPage)
     },
 
     // Auth
     {
         path: 'login',
-        canActivate: [devPasswordGuard],
+
         loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
     },
     {
@@ -32,29 +32,29 @@ export const routes: Routes = [
     // Organization Management
     {
         path: 'registrieren',
-        canActivate: [devPasswordGuard],
+
         loadComponent: () => import('./features/organizations/register-organization.component').then(m => m.RegisterOrganizationComponent)
     },
     {
         path: 'erstellen',
-        canActivate: [devPasswordGuard],
+
         loadComponent: () => import('./features/organizations/create-organization/create-organization.component').then(m => m.CreateOrganizationComponent)
     },
     {
         path: 'organisationen',
-        canActivate: [devPasswordGuard],
+
         loadComponent: () => import('./features/organizations/select-organization.component').then(m => m.SelectOrganizationComponent)
     },
 
     // Legal Pages
     {
         path: 'impressum',
-        canActivate: [devPasswordGuard],
+
         loadComponent: () => import('./features/legal/impressum.component').then(m => m.ImpressumComponent)
     },
     {
         path: 'datenschutz',
-        canActivate: [devPasswordGuard],
+
         loadComponent: () => import('./features/legal/datenschutz.component').then(m => m.DatenschutzComponent)
     },
 
@@ -68,7 +68,7 @@ export const routes: Routes = [
     // Organization Routes (/:slug/...)
     {
         path: ':slug',
-        canActivate: [devPasswordGuard],
+
         children: [
             // Public landing page for the organization
             {

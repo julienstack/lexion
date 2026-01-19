@@ -18,6 +18,8 @@ import { AuthService } from '../../../shared/services/auth.service';
 import { MembersService } from '../../../shared/services/members.service';
 import { OrganizationService } from '../../../shared/services/organization.service';
 import { SkillService, Skill, SkillCategory } from '../../../shared/services/skill.service';
+import { NotificationService } from '../../../shared/services/notification.service';
+import { TagModule } from 'primeng/tag';
 
 @Component({
     selector: 'app-profile',
@@ -32,7 +34,9 @@ import { SkillService, Skill, SkillCategory } from '../../../shared/services/ski
         ToastModule,
         DividerModule,
         DatePickerModule,
+        DatePickerModule,
         TabsModule,
+        TagModule,
     ],
     providers: [MessageService],
     templateUrl: './profile.html',
@@ -44,6 +48,7 @@ export class ProfileComponent implements OnInit {
     private readonly org = inject(OrganizationService);
     readonly skillService = inject(SkillService);
     private readonly messageService = inject(MessageService);
+    readonly notificationService = inject(NotificationService);
 
     saving = signal(false);
     birthdayDate: Date | null = null;

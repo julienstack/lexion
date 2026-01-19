@@ -11,6 +11,26 @@
         }
     </div>
 
+    <!-- Notification Onboarding Banner -->
+    @if (notificationService.permissionStatus() === 'default' && notificationService.isSupported()) {
+    <div
+        class="mb-6 p-4 rounded-xl bg-gradient-to-r from-teal-500/10 to-blue-500/10 border border-teal-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fadein">
+        <div class="flex items-center gap-4">
+            <div
+                class="w-10 h-10 rounded-full bg-[var(--color-surface)] flex items-center justify-center border border-teal-500/30 shadow-sm shrink-0">
+                <i class="pi pi-bell text-teal-500 text-lg"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-[var(--color-text)]">Nichts Wichtiges verpassen</h3>
+                <p class="text-sm text-[var(--color-text-muted)]">Erhalte Benachrichtigungen bei neuen Beiträgen &
+                    Terminen.</p>
+            </div>
+        </div>
+        <p-button label="Aktivieren" icon="pi pi-check" (click)="enableNotifications()" size="small" [raised]="true"
+            severity="info"></p-button>
+    </div>
+    }
+
     <p-tabs value="0">
         <p-tablist>
             <p-tab value="0">Aktuelles</p-tab>

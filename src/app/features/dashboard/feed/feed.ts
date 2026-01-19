@@ -19,6 +19,7 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { AuthService } from '../../../shared/services/auth.service';
 import { PermissionsService } from '../../../shared/services/permissions.service';
 import { FeedService, FeedItem, NewsletterConfig } from '../../../shared/services/feed.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
     selector: 'app-feed',
@@ -41,6 +42,7 @@ export class FeedComponent {
     permissions = inject(PermissionsService);
     feedService = inject(FeedService);
     messageService = inject(MessageService);
+    notificationService = inject(NotificationService);
 
     // Permission-based visibility
     canCreate = this.permissions.canCreateFeed;
@@ -254,6 +256,15 @@ export class FeedComponent {
             case 'sent': return 'info';
             case 'review': return 'warn';
             default: return 'secondary';
+        }
+    }
+
+    async enableNotifications() {
+        const granted = await this.notificationService.requestPermission();
+        if (granted) {
+            this.messageService.add({ severity: 'success', summary: 'Aktiviert', detail: 'Benachrichtigungen sind jetzt an. Du verpasst nichts mehr.' });
+        } else {
+            this.messageService.add({ severity: 'info', summary: 'Info', detail: 'Benachrichtigungen wurden nicht aktiviert.' });
         }
     }
 }

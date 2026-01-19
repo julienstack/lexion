@@ -99,7 +99,7 @@ import { SupabaseService } from '../../shared/services/supabase';
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-[var(--color-text)]">Name der Organisation</label>
                             <input pInputText [(ngModel)]="orgName" (ngModelChange)="generateSlug()"
-                                class="w-full" placeholder="z.B. Sportverein Musterstadt e.V." />
+                                class="w-full" placeholder="z.B. Verein Musterstadt e.V." />
                         </div>
 
                         <div class="space-y-2">
