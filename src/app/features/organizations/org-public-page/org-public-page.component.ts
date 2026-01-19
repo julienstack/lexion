@@ -326,8 +326,9 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                         <span class="font-bold text-[var(--color-text)] tracking-wider text-sm">{{ org()!.name }}</span>
                     </div>
                     <div class="flex gap-8 text-sm font-medium text-[var(--color-text-muted)]">
-                        <a href="#" class="hover:text-[var(--color-text)] transition-colors">Impressum</a>
-                        <a href="#" class="hover:text-[var(--color-text)] transition-colors">Datenschutz</a>
+                        <a routerLink="/impressum" class="hover:text-[var(--color-text)] transition-colors">Impressum</a>
+                        <a routerLink="/docs" class="hover:text-[var(--color-text)] transition-colors">Handbuch</a>
+                        <a routerLink="/datenschutz" class="hover:text-[var(--color-text)] transition-colors">Datenschutz</a>
                         <a routerLink="/" class="hover:text-linke transition-colors">Lexion</a>
                     </div>
                 </div>

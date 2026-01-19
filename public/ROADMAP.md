@@ -67,6 +67,8 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 - [x] **Termine-Sidebar:** Filtert nach Org & Auto-Refresh beim Wechsel
 - [x] **Onboarding:** Speicherfehler (`409 Conflict`) behoben
 - [x] **UI:** Feedback-Button auf Admin beschränkt, Version im Footer aktualisiert
+- [x] **Dokumentation:** Umfangreiches Handbuch (`/docs`) integriert & verlinkt
+- [x] **UX:** Footer-Links (Impressum/Docs) auf allen Seiten korrigiert
 
 ---
 

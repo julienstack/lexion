@@ -57,6 +57,10 @@ export const routes: Routes = [
 
         loadComponent: () => import('./features/legal/datenschutz.component').then(m => m.DatenschutzComponent)
     },
+    {
+        path: 'docs',
+        loadComponent: () => import('./features/public/docs/docs.component').then(m => m.DocsComponent)
+    },
 
     // Legacy dashboard route (redirect to organization select)
     {

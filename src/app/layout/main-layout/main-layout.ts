@@ -1,5 +1,5 @@
 import { Component, signal, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterModule } from '@angular/router';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { SidebarLeft } from '../sidebar-left/sidebar-left';
 import { SidebarRight } from '../sidebar-right/sidebar-right';
@@ -14,6 +14,7 @@ import { TooltipModule } from 'primeng/tooltip';
   selector: 'app-main-layout',
   imports: [
     RouterOutlet,
+    RouterModule,
     SidebarLeft,
     SidebarRight,
     FeedbackBadgeComponent,
