@@ -46,7 +46,7 @@ export class DashboardHome implements OnInit {
         this.lastOrgId = currentOrgId;
         this.loadAllData();
       }
-    }, { allowSignalWrites: true });
+    });
 
     // React to membership changes
     effect(() => {

@@ -136,7 +136,7 @@ export class WorkingGroupsComponent implements OnInit {
       if (member && member.id) {
         this.workingGroupsService.fetchMyMemberships(member.id);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   ngOnInit(): void {

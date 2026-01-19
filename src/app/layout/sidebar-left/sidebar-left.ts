@@ -39,4 +39,8 @@ export class SidebarLeft {
     };
     return labels[role] || role;
   }
+
+  get isJulien(): boolean {
+    return this.auth.user()?.id === '2d8af6a7-507c-4834-aff9-3b00d1ad9c7c';
+  }
 }

@@ -58,7 +58,7 @@
         </h3>
 
         <div class="space-y-1.5">
-            @for (event of upcomingEvents; track event.title) {
+            @for (event of upcomingEvents(); track event.title) {
             <div
                 class="bg-[var(--color-surface-raised)] rounded-lg p-2 hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer group border border-[var(--color-border)] hover:border-teal/30">
                 <div class="flex items-start gap-2">

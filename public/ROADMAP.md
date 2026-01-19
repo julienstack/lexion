@@ -1,7 +1,7 @@
 # 🚀 Lexion Roadmap
 
-> **Letzte Aktualisierung:** 18. Januar 2026  
-> **Aktuelle Version:** Alpha 0.7.0
+> **Letzte Aktualisierung:** 19. Januar 2026  
+> **Aktuelle Version:** Alpha 0.9.0
 
 ---
 
@@ -58,6 +58,17 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 ---
 
 ## ✅ Abgeschlossen (Patch Notes)
+
+### v0.9.0 Alpha – 19. Januar 2026
+
+**🐛 Bugfixes & Stabilisierung**
+- [x] **Ansprechpartner:** Korrekte Trennung nach Organisation (Datenbank & Anzeige)
+- [x] **Dateien:** Ordner-Liste und Suche jetzt organisations-spezifisch
+- [x] **Termine-Sidebar:** Filtert nach Org & Auto-Refresh beim Wechsel
+- [x] **Onboarding:** Speicherfehler (`409 Conflict`) behoben
+- [x] **UI:** Feedback-Button auf Admin beschränkt, Version im Footer aktualisiert
+
+---
 
 ### v0.7.0 – 18. Januar 2026
 

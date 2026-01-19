@@ -75,9 +75,16 @@ export class FileService {
      * Fetch all unique folders
      */
     async fetchFolders(): Promise<void> {
-        const { data, error } = await this.supabase.client
+        const orgId = this.org.currentOrgId();
+        let query = this.supabase.client
             .from('files')
             .select('folder');
+
+        if (orgId) {
+            query = query.eq('organization_id', orgId);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error('Error fetching folders:', error);
@@ -92,7 +99,8 @@ export class FileService {
      * Search files by name
      */
     async searchFiles(query: string): Promise<FileMetadata[]> {
-        const { data, error } = await this.supabase.client
+        const orgId = this.org.currentOrgId();
+        let q = this.supabase.client
             .from('files')
             .select(`
                 *,
@@ -102,6 +110,12 @@ export class FileService {
             .ilike('name', `%${query}%`)
             .order('name', { ascending: true })
             .limit(50);
+
+        if (orgId) {
+            q = q.eq('organization_id', orgId);
+        }
+
+        const { data, error } = await q;
 
         if (error) throw new Error(error.message);
         return data as FileMetadata[];

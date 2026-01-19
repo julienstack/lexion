@@ -10,6 +10,7 @@ export interface ContactPerson {
     phone?: string | null;
     location: string;
     image_url?: string | null;
+    organization_id?: string;
     created_at?: string;
     updated_at?: string;
 }

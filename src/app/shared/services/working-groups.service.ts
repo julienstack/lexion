@@ -61,7 +61,7 @@ export class WorkingGroupsService implements OnDestroy {
 
         // Fetch actual member counts for each group
         const { data: memberCounts } = await this.supabase
-            .from('working_group_members')
+            .from('ag_memberships')
             .select('working_group_id');
 
         // Build count map
@@ -125,7 +125,7 @@ export class WorkingGroupsService implements OnDestroy {
 
         if (!this.memberRealtimeChannel) {
             this.memberRealtimeChannel = this.supabase.subscribeToTable(
-                'working_group_members',
+                'ag_memberships',
                 (payload: any) => {
                     this.handleMemberRealtimeUpdate(payload);
                 }

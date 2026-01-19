@@ -183,7 +183,7 @@ export class OnboardingService {
             .upsert({
                 member_id: member.id,
                 step_key: stepKey,
-            });
+            }, { onConflict: 'member_id,step_key', ignoreDuplicates: true });
 
         if (error) {
             console.error('Error completing onboarding step:', error);

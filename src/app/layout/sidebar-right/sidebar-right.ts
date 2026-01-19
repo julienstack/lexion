@@ -11,6 +11,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../shared/services/supabase';
+import { AuthService } from '../../shared/services/auth.service';
+import { OrganizationService } from '../../shared/services/organization.service';
 import { Member } from '../../shared/models/member.model';
 
 interface Task {
@@ -34,13 +36,16 @@ interface BirthdayMember {
   imports: [RouterLink, FormsModule],
   templateUrl: './sidebar-right.html',
   styleUrl: './sidebar-right.css',
+  standalone: true
 })
 export class SidebarRight implements OnInit {
   @ViewChild('newTaskInput') newTaskInput!: ElementRef<HTMLInputElement>;
 
   private supabase = inject(SupabaseService);
+  private auth = inject(AuthService);
+  private orgService = inject(OrganizationService);
 
-  upcomingEvents: any[] = [];
+  upcomingEvents = signal<any[]>([]);
   upcomingBirthdays = signal<BirthdayMember[]>([]);
   tasks = signal<Task[]>([]);
   isLoggedIn = computed(() => !!this.supabase.user());
@@ -52,35 +57,51 @@ export class SidebarRight implements OnInit {
   addingTask = signal(false);
 
   constructor() {
-    // Re-fetch tasks when user changes
+    // Re-fetch tasks when current member changes
     effect(() => {
-      const user = this.supabase.user();
-      if (user) {
-        this.fetchMemberAndTasks();
+      const member = this.auth.currentMember();
+      if (member?.id) {
+        this.memberId.set(member.id);
+        this.fetchTasks();
       } else {
         this.tasks.set([]);
         this.memberId.set(null);
       }
     });
+
+    // Re-fetch org data when organization changes
+    effect(() => {
+      const orgId = this.orgService.currentOrgId();
+      if (orgId) {
+        this.fetchUpcoming();
+        this.fetchBirthdays();
+      } else {
+        this.upcomingEvents.set([]);
+        this.upcomingBirthdays.set([]);
+      }
+    });
   }
 
   ngOnInit() {
-    this.fetchUpcoming();
-    this.fetchBirthdays();
+    // Initial fetch handled by effect
   }
 
   async fetchUpcoming() {
+    const orgId = this.orgService.currentOrgId();
+    if (!orgId) return;
+
     const today = new Date().toISOString().split('T')[0];
     const { data } = await this.supabase
       .from('events')
       .select('*')
+      .eq('organization_id', orgId)
       .gte('date', today)
       .order('date', { ascending: true })
       .order('start_time', { ascending: true })
       .limit(5);
 
     if (data) {
-      this.upcomingEvents = data.map(evt => {
+      const events = data.map(evt => {
         const isToday = evt.date === today;
         const dateObj = new Date(evt.date);
         const formattedDate = dateObj.toLocaleDateString('de-DE', {
@@ -101,13 +122,18 @@ export class SidebarRight implements OnInit {
           color: color,
         };
       });
+      this.upcomingEvents.set(events);
     }
   }
 
   async fetchBirthdays() {
+    const orgId = this.orgService.currentOrgId();
+    if (!orgId) return;
+
     const { data } = await this.supabase
       .from('members')
       .select('id, name, avatar_url, birthday')
+      .eq('organization_id', orgId)
       .not('birthday', 'is', null)
       .eq('status', 'Active');
 
@@ -193,22 +219,6 @@ export class SidebarRight implements OnInit {
     if (birthday.isToday) return 'Heute';
     if (birthday.daysUntil === 1) return 'Morgen';
     return birthday.formattedDate;
-  }
-
-  private async fetchMemberAndTasks() {
-    const userId = this.supabase.user()?.id;
-    if (!userId) return;
-
-    const { data: memberData } = await this.supabase
-      .from('members')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-
-    if (memberData) {
-      this.memberId.set(memberData.id);
-      await this.fetchTasks();
-    }
   }
 
   private async fetchTasks() {

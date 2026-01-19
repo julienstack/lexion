@@ -69,17 +69,14 @@ export class PermissionsService {
 
     constructor() {
         // Fetch AG roles when member changes
-        effect(
-            () => {
-                const member = this.auth.currentMember();
-                if (member?.id) {
-                    this.fetchAgRoles(member.id);
-                } else {
-                    this.agRoles.set(new Map());
-                }
-            },
-            { allowSignalWrites: true }
-        );
+        effect(() => {
+            const member = this.auth.currentMember();
+            if (member?.id) {
+                this.fetchAgRoles(member.id);
+            } else {
+                this.agRoles.set(new Map());
+            }
+        });
     }
 
     /**

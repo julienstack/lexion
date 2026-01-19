@@ -85,8 +85,7 @@ export class AuthService {
                     this.currentMember.set(null);
                     this.currentOrgId.set(null);
                 }
-            },
-            { allowSignalWrites: true }
+            }
         );
     }
 

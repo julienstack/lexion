@@ -65,42 +65,64 @@ export class FeedService {
 
     /** Get items waiting for review (Admins only) */
     async getReviewItems() {
-        const { data, error } = await this.supabase.client
+        const orgId = this.org.currentOrgId();
+
+        let query = this.supabase.client
             .from('feed_items')
             .select('*, author:members(name)')
             .eq('status', 'review')
             .order('created_at', { ascending: false });
 
+        if (orgId) {
+            query = query.eq('organization_id', orgId);
+        }
+
+        const { data, error } = await query;
         if (error) throw new Error(error.message);
         return data as FeedItem[];
     }
 
     /** Get un-sent approved items (for newsletter generation) */
     async getNewsletterQueue() {
-        const { data, error } = await this.supabase.client
+        const orgId = this.org.currentOrgId();
+
+        let query = this.supabase.client
             .from('feed_items')
             .select('*, author:members(name)')
             .eq('status', 'approved')
             .order('created_at', { ascending: false });
 
+        if (orgId) {
+            query = query.eq('organization_id', orgId);
+        }
+
+        const { data, error } = await query;
         if (error) throw new Error(error.message);
         return data as FeedItem[];
     }
 
     /** Get already sent items (History) */
     async getSentItems() {
-        const { data, error } = await this.supabase.client
+        const orgId = this.org.currentOrgId();
+
+        let query = this.supabase.client
             .from('feed_items')
             .select('*, author:members(name)')
             .eq('status', 'sent')
             .order('sent_at', { ascending: false });
 
+        if (orgId) {
+            query = query.eq('organization_id', orgId);
+        }
+
+        const { data, error } = await query;
         if (error) throw new Error(error.message);
         return data as FeedItem[];
     }
 
     async createItem(item: Partial<FeedItem>) {
         const memberId = this.auth.currentMember()?.id;
+        const orgId = this.org.currentOrgId();
         if (!memberId) throw new Error('Not member');
 
         // Remove joined fields if any
@@ -108,7 +130,11 @@ export class FeedService {
 
         const { data, error } = await this.supabase.client
             .from('feed_items')
-            .insert({ ...cleanItem, author_id: memberId })
+            .insert({
+                ...cleanItem,
+                author_id: memberId,
+                organization_id: orgId
+            })
             .select()
             .single();
 
