@@ -1,64 +1,103 @@
-# Hustle Hub Dashboard
+# Lexion - The Engagement Layer for Modern Organizations 🇪🇺
 
-Dieses Projekt ist ein modernes Dashboard für Vereine und Parteien, entwickelt mit [Angular](https://github.com/angular/angular-cli), [Tailwind CSS](https://tailwindcss.com), [PrimeNG](https://primeng.org) und [Supabase](https://supabase.com).
+![Lexion Badge](https://img.shields.io/badge/Status-Alpha-orange) ![License](https://img.shields.io/badge/License-AGPLv3-blue) ![Made in EU](https://img.shields.io/badge/Made_in-EU-blue?labelColor=yellow)
 
-## Funktionen
+Lexion ist keine weitere langweilige Vereinsverwaltung. Es ist dein **System of Engagement**.
+Wir ersetzen das Chaos aus WhatsApp-Gruppen, Excel-Listen und verlorenen E-Mails durch eine strukturierte, datenschutzkonforme Plattform.
 
-*   **Dreispaltiges Layout**: Navigationsleiste links, Hauptinhalt in der Mitte, Kalender und Widgets rechts.
-*   **Mitgliederbereich**: Übersicht für Mitglieder (in Entwicklung).
-*   **Öffentlicher Bereich**: Landingpage mit Informationen.
-*   **Anpassbares Design**: Dark Mode mit konfigurierbaren Akzentfarben (Standard: Rot).
-*   **Supabase Integration**: Vorbereitet für Authentifizierung und Datenbankanbindung.
+**Fokus:** Politische Parteien, NGOs, Aktionsbündnisse und moderne Sportvereine.
 
-## Voraussetzungen
+---
 
-*   Node.js (Version 18 oder höher empfohlen)
-*   npm
+## 🚀 Warum Lexion?
 
-## Installation & Start
+### Das Problem (The Horror)
+*   **Datenschutz-Albtraum:** In WhatsApp-Gruppen sieht jeder jede Handynummer.
+*   **Info-Friedhof:** Wichtige Ankündigungen verschwinden nach 5 Minuten im Chat-Verlauf.
+*   **Verbindlichkeit = 0:** "Wer bringt den Grill mit?" -> 50 Nachrichten, kein Ergebnis.
 
-1.  Abhängigkeiten installieren:
+### Die Lösung (The Fix)
+*   **📌 Pinned News:** Wichtiges bleibt oben. Lesebestätigungen (anonymisiert) für Vorstände.
+*   **📅 Event Slots:** Klickbare Aufgabenverteilung. Einer klickt, Job erledigt.
+*   **🔒 Privacy First:** Volle Datensouveränität. Gehostet in der EU. Sicher vor dem US Cloud Act.
+*   **🔔 Push statt Spam:** Benachrichtigungen nur, wenn es wirklich wichtig ist.
+
+---
+
+## 🛠 Tech Stack
+
+Lexion setzt auf moderne, robuste Technologien:
+
+*   **Frontend:** [Angular 18](https://angular.io) (Standalone Components, Signals)
+*   **UI Library:** [PrimeNG](https://primeng.org) + [Tailwind CSS](https://tailwindcss.com) (für Utility-Styling)
+*   **Backend / DB:** [Supabase](https://supabase.com) (PostgreSQL, Auth, Edge Functions)
+*   **Mobile:** [Capacitor](https://capacitorjs.com) (Native Android/iOS Apps)
+*   **Deploy:** Docker / Coolify
+
+---
+
+## 📦 Features (Aktuell)
+
+*   **Dashboard:** Personalisierter Feed mit News und anstehenden Terminen.
+*   **Kalender:** Terminverwaltung mit Helfer-Slots ("Wer macht Schicht 1?").
+*   **Wiki:** Zentraler Wissensspeicher für Protokolle und Satzungen.
+*   **Mitgliederverwaltung:** Einfache Listen, Filterung nach AGs (Arbeitsgruppen).
+*   **Rollen & Rechte:** Granulares Rechtesystem (Admin, Vorstand, Mitglied).
+
+---
+
+## 🔧 Installation & Entwicklung
+
+### Voraussetzungen
+*   Node.js (v20+)
+*   Docker (optional, für lokales Supabase)
+
+### Setup
+
+1.  **Repo klonen:**
+    ```bash
+    git clone https://github.com/julienstack/lexion.git
+    cd lexion
+    ```
+
+2.  **Abhängigkeiten installieren:**
     ```bash
     npm install
     ```
 
-2.  Entwicklungsserver starten:
+3.  **Environment konfigurieren:**
+    Erstelle eine `.env` Datei oder passe `src/environments/environment.ts` an mit deinen Supabase-Credentials.
+
+4.  **Starten:**
     ```bash
     npm start
-    # oder
-    ng serve
+    # Öffnet http://localhost:4200
     ```
 
-3.  Öffne `http://localhost:4200/` in deinem Browser.
-
-## Build für Produktion
-
-Um das Projekt für die Produktion zu bauen:
+### Android Build (Capacitor)
 
 ```bash
 npm run build
-# oder
-ng build
+npx cap sync
+npx cap open android
 ```
 
-Die kompilierten Dateien befinden sich dann im Ordner `dist/`.
+---
 
-## Konfiguration
+## 🤝 Contributing & Support
 
-### Supabase
-Trage deine Supabase-URL und den API-Key in die Datei `src/app/shared/services/supabase.ts` (oder später in die `environment`-Dateien) ein.
+Lexion ist Open Source, um demokratische Strukturen zu stärken.
+Trag gerne Code bei oder unterstütze uns, damit wir wach bleiben:
 
-### Design
-Die Farben können in `src/styles.css` über CSS-Variablen angepasst werden:
-```css
-:root {
-    --primary-color: #e11d48; /* Beispiel: Rot */
-}
-```
+<a href="https://buymeacoffee.com/lexion" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="60" width="217">
+</a>
 
-## Projektstruktur
+---
 
-*   `src/app/layout`: Hauptlayout-Komponenten (Sidebar Links/Rechts).
-*   `src/app/features/public`: Öffentliche Seiten (Landingpage).
-*   `src/app/features/dashboard`: Der geschützte Mitgliederbereich.
-*   `src/app/shared`: Gemeinsam genutzte Services und Komponenten.
+## 📄 Lizenz
+
+Dieses Projekt ist lizenziert unter der **GNU Affero General Public License v3.0 (AGPLv3)**.
+Das bedeutet: Wenn du Lexion nutzt, veränderst und als Service anbietest, musst du deine Änderungen ebenfalls der Community zur Verfügung stellen.
+
+*Datensouveränität ist kein Feature, sondern ein Grundrecht.* 🛡️
