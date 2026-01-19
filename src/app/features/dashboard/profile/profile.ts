@@ -134,6 +134,12 @@ export class ProfileComponent implements OnInit {
         const success = await this.members.updateMember(member.id, updates);
 
         if (success) {
+            // Refresh auth state to update UI (e.g. isProfileComplete)
+            const orgId = this.org.currentOrganization()?.id;
+            if (orgId) {
+                await this.auth.setActiveOrganization(orgId);
+            }
+
             this.messageService.add({
                 severity: 'success',
                 summary: 'Gespeichert',

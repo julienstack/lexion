@@ -382,7 +382,7 @@
                 Icon
             </label>
             <p-select [options]="iconOptions" [(ngModel)]="editingSkill()!.icon" optionLabel="label" optionValue="value"
-                styleClass="w-full">
+                styleClass="w-full" [appendTo]="'body'">
                 <ng-template #selectedItem let-selected>
                     <div class="flex items-center gap-2">
                         <i [class]="'pi ' + selected.value"></i>

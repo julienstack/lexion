@@ -69,6 +69,9 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 - [x] **UI:** Feedback-Button auf Admin beschränkt, Version im Footer aktualisiert
 - [x] **Dokumentation:** Umfangreiches Handbuch (`/docs`) integriert & verlinkt
 - [x] **UX:** Footer-Links (Impressum/Docs) auf allen Seiten korrigiert
+- [x] **Navigation:** Blockierte Desktop-Sidebar im eingeklappten Zustand gefixt
+- [x] **Settings:** Icon-Liste im Admin-Dialog scrollbar gemacht
+- [x] **Profil:** "Fast geschafft"-Meldung verschwindet sofort nach Speichern
 
 ---
 

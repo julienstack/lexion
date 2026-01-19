@@ -72,13 +72,11 @@
         </button>
         <!-- Quick icons when collapsed -->
         <div class="mt-4 space-y-2">
-            <button (click)="rightSidebarVisible.set(true); toggleRightSidebar()" pTooltip="Termine"
-                tooltipPosition="left"
+            <button (click)="toggleRightSidebar()" pTooltip="Termine" tooltipPosition="left"
                 class="w-8 h-8 bg-[var(--color-surface-raised)] rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-linke transition-colors">
                 <i class="pi pi-calendar text-sm"></i>
             </button>
-            <button (click)="rightSidebarVisible.set(true); toggleRightSidebar()" pTooltip="Aufgaben"
-                tooltipPosition="left"
+            <button (click)="toggleRightSidebar()" pTooltip="Aufgaben" tooltipPosition="left"
                 class="w-8 h-8 bg-[var(--color-surface-raised)] rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-teal transition-colors">
                 <i class="pi pi-check-circle text-sm"></i>
             </button>

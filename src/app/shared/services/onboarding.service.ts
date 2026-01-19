@@ -186,8 +186,11 @@ export class OnboardingService {
             }, { onConflict: 'member_id,step_key', ignoreDuplicates: true });
 
         if (error) {
-            console.error('Error completing onboarding step:', error);
-            return;
+            // Ignore duplicate key error (23505), treat as success
+            if (error.code !== '23505') {
+                console.error('Error completing onboarding step:', error);
+                return;
+            }
         }
 
         this._completedSteps.update(s => {
