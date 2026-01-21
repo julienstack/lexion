@@ -104,7 +104,7 @@ Deno.serve(async (req: Request) => {
 
         // Invite new user via email
         // Use SITE_URL env variable to ensure production URL is used in emails
-        const siteUrl = Deno.env.get("SITE_URL") || "https://lexion.app";
+        const siteUrl = Deno.env.get("SITE_URL") || "https://lexion.hyretic.com";
         const finalRedirectTo = redirectTo || `${siteUrl}/auth/callback`;
 
         const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {

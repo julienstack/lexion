@@ -15,6 +15,8 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { FieldsetModule } from 'primeng/fieldset';
 import { AuthService } from '../../../shared/services/auth.service';
 import { PermissionsService } from '../../../shared/services/permissions.service';
@@ -29,7 +31,8 @@ import { NotificationService } from '../../../shared/services/notification.servi
         ButtonModule, DialogModule, InputTextModule, EditorModule,
         SelectButtonModule, TabsModule, DataViewModule, CardModule,
         TagModule, ToastModule, TooltipModule,
-        SelectModule, CheckboxModule, FieldsetModule
+        SelectModule, CheckboxModule, FieldsetModule,
+        RadioButtonModule, ProgressBarModule
     ],
     providers: [MessageService],
     templateUrl: './feed.html',
@@ -82,11 +85,18 @@ export class FeedComponent {
     editMode = signal(false);
     currentItem: Partial<FeedItem> = {};
 
+    // Poll creation state
+    pollOptions = signal<string[]>(['', '']); // Start with 2 empty options
+
     // Test Email Dialog
     testEmailDialogVisible = signal(false);
     testEmail = '';
 
-    typeOptions: any[] = [{ label: 'Artikel', value: 'article' }, { label: 'Link', value: 'link' }];
+    typeOptions: any[] = [
+        { label: 'Artikel', value: 'article' },
+        { label: 'Link', value: 'link' },
+        { label: 'Umfrage', value: 'poll' }
+    ];
 
     constructor() {
         effect(() => {
@@ -191,6 +201,7 @@ export class FeedComponent {
 
     openNew() {
         this.currentItem = { type: 'article', status: 'draft' };
+        this.pollOptions.set(['', '']);
         this.editMode.set(false);
         this.dialogVisible.set(true);
     }
@@ -220,6 +231,18 @@ export class FeedComponent {
 
         try {
             const payload = { ...this.currentItem };
+
+            // Validate Poll
+            if (payload.type === 'poll') {
+                const validOptions = this.pollOptions().filter(o => o.trim().length > 0);
+                if (validOptions.length < 2) {
+                    this.messageService.add({ severity: 'error', summary: 'Fehler', detail: 'Mindestens 2 Optionen erforderlich' });
+                    return;
+                }
+                // Pass options to service separately
+                (payload as any).options = validOptions;
+            }
+
             if (this.editMode() && this.currentItem.id) {
                 await this.feedService.updateItem(this.currentItem.id, payload);
                 this.messageService.add({ severity: 'success', summary: 'Gespeichert' });
@@ -277,5 +300,90 @@ export class FeedComponent {
         } else {
             this.messageService.add({ severity: 'info', summary: 'Info', detail: 'Benachrichtigungen wurden nicht aktiviert.' });
         }
+    }
+
+    // Poll Helpers
+    addPollOption() {
+        this.pollOptions.update(opts => [...opts, '']);
+    }
+
+    removePollOption(index: number) {
+        this.pollOptions.update(opts => opts.filter((_, i) => i !== index));
+    }
+
+    trackByIndex(index: number, obj: any): any {
+        return index;
+    }
+
+    updatePollOption(index: number, value: string) {
+        this.pollOptions.update(opts => {
+            const newOpts = [...opts];
+            newOpts[index] = value;
+            return newOpts;
+        });
+    }
+
+    hasVoted(item: FeedItem): boolean {
+        const memberId = this.auth.currentMember()?.id;
+        if (!memberId || !item.poll_options) return false;
+        return item.poll_options.some(o => o.poll_votes?.some(v => v.member_id === memberId));
+    }
+
+    async vote(item: FeedItem, optionId: string) {
+        if (this.hasVoted(item)) {
+            // Maybe unvote? For now simplified: assume single choice, no change
+            // BUT user might want to toggle.
+            // If I clicked on an option I already voted for -> Unvote?
+            // If I clicked on a different option -> Switch? (requires delete + insert)
+            // Simple version: Unvote if clicking same. Switch if clicking different.
+
+            // Check what I voted for
+            const memberId = this.auth.currentMember()?.id;
+            const existingOption = item.poll_options?.find(o => o.poll_votes?.some(v => v.member_id === memberId));
+
+            if (existingOption) {
+                if (existingOption.id === optionId) {
+                    // Unvote
+                    await this.feedService.unvote(optionId);
+                } else {
+                    // Switch: Unvote old, Vote new
+                    await this.feedService.unvote(existingOption.id);
+                    await this.feedService.vote(optionId);
+                }
+            }
+        } else {
+            await this.feedService.vote(optionId);
+        }
+        // Refresh
+        this.loadData();
+        // Optimization: Optimistically update UI? simpler to reload for now
+    }
+
+    getVotePercentage(item: FeedItem, optionId: string): number {
+        if (!item.poll_options) return 0;
+        const totalVotes = item.poll_options.reduce((acc, o) => acc + (o.poll_votes?.length || 0), 0);
+        if (totalVotes === 0) return 0;
+
+        const option = item.poll_options.find(o => o.id === optionId);
+        if (!option) return 0;
+
+        return Math.round(((option.poll_votes?.length || 0) / totalVotes) * 100);
+    }
+
+    getVoteCount(item: FeedItem, optionId: string): number {
+        const option = item.poll_options?.find(o => o.id === optionId);
+        return option?.poll_votes?.length || 0;
+    }
+
+    hasVotedFor(item: FeedItem, optionId: string): boolean {
+        const memberId = this.auth.currentMember()?.id;
+        if (!memberId) return false;
+        const option = item.poll_options?.find(o => o.id === optionId);
+        return option?.poll_votes?.some(v => v.member_id === memberId) || false;
+    }
+
+    getTotalVotes(item: FeedItem): number {
+        if (!item.poll_options) return 0;
+        return item.poll_options.reduce((acc, o) => acc + (o.poll_votes?.length || 0), 0);
     }
 }

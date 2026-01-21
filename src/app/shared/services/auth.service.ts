@@ -218,6 +218,7 @@ export class AuthService {
                 body: JSON.stringify({
                     email: email.toLowerCase().trim(),
                     organizationId,
+                    redirectTo: `${window.location.origin}/auth/callback`,
                 }),
             });
 

@@ -89,6 +89,39 @@
                                 <div class="pl-2 border-l-2 border-[var(--color-border)] text-sm text-[var(--color-text-muted)] italic"
                                     [innerHTML]="item.content"></div>
                                 }
+                                } @else if (item.type === 'poll') {
+                                <div class="mb-4" [innerHTML]="item.content"></div>
+                                <div class="space-y-2 max-w-lg">
+                                    @for (option of item.poll_options; track option.id) {
+                                    <div class="relative p-3 rounded-lg border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-surface-hover)] transition-all overflow-hidden"
+                                        (click)="vote(item, option.id)">
+                                        <!-- Progress Bar Background -->
+                                        <div class="absolute inset-0 bg-[var(--primary-color)] opacity-10 transition-all duration-500"
+                                            [style.width.%]="getVotePercentage(item, option.id)"></div>
+
+                                        <div class="flex justify-between items-center relative z-10">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-5 h-5 rounded-full border border-[var(--color-text-muted)] flex items-center justify-center transition-colors"
+                                                    [class.bg-[var(--primary-color)]]="hasVotedFor(item, option.id)"
+                                                    [class.border-[var(--primary-color)]]="hasVotedFor(item, option.id)">
+                                                    <i class="pi pi-check text-white text-xs"
+                                                        *ngIf="hasVotedFor(item, option.id)"></i>
+                                                </div>
+                                                <span class="font-medium text-[var(--color-text)]">{{ option.text
+                                                    }}</span>
+                                            </div>
+                                            <span class="text-xs font-bold text-[var(--color-text-muted)]"
+                                                *ngIf="getTotalVotes(item) > 0">
+                                                {{ getVotePercentage(item, option.id) }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    }
+                                    <div
+                                        class="flex justify-end items-center mt-2 text-xs text-[var(--color-text-muted)]">
+                                        <span>{{ getTotalVotes(item) }} Stimmen</span>
+                                    </div>
+                                </div>
                                 } @else {
                                 <div [innerHTML]="item.content"></div>
                                 }
@@ -286,6 +319,34 @@
                     (Optional)</label>
                 <p-editor [(ngModel)]="currentItem.content" [style]="{height: '150px'}"
                     placeholder="Beschreibe den Link kurz..."></p-editor>
+            </div>
+            } @else if (currentItem.type === 'poll') {
+            <div class="flex flex-col gap-2">
+                <label class="font-medium text-sm text-[var(--color-text-muted)]">Frage / Beschreibung</label>
+                <p-editor [(ngModel)]="currentItem.content" [style]="{height: '100px'}"
+                    placeholder="Worum geht es in der Abstimmung?"></p-editor>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <label class="font-medium text-sm text-[var(--color-text-muted)]">Antwortmöglichkeiten</label>
+                <div class="flex flex-col gap-2">
+                    @for (opt of pollOptions(); track $index) {
+                    <div class="flex gap-2 items-center animate-fadein">
+                        <div
+                            class="w-6 h-6 rounded-full border border-[var(--color-border)] flex items-center justify-center shrink-0 bg-[var(--color-surface-ground)] text-xs text-[var(--color-text-muted)]">
+                            {{$index + 1}}
+                        </div>
+                        <input pInputText [ngModel]="opt" (ngModelChange)="updatePollOption($index, $event)"
+                            [placeholder]="'Option ' + ($index + 1)" class="flex-1" />
+                        <p-button icon="pi pi-trash" [text]="true" severity="danger" (click)="removePollOption($index)"
+                            [disabled]="pollOptions().length <= 2" pTooltip="Entfernen"></p-button>
+                    </div>
+                    }
+                </div>
+                <div>
+                    <p-button label="Option hinzufügen" icon="pi pi-plus" [text]="true" size="small"
+                        (click)="addPollOption()"></p-button>
+                </div>
             </div>
             } @else {
             <div class="flex flex-col gap-2">

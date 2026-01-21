@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
     );
 
     try {
-        const { email, organizationId } = await req.json();
+        const { email, organizationId, redirectTo: clientRedirectTo } = await req.json();
 
         if (!email) {
             return new Response(
@@ -164,10 +164,15 @@ Deno.serve(async (req: Request) => {
         }
 
         // No auth user exists - send invitation
-        // IMPORTANT: Always use the production URL for email redirects,
-        // not the origin header (which could be localhost during local dev)
-        const siteUrl = Deno.env.get("SITE_URL") || "https://lexion.app";
-        const redirectTo = `${siteUrl}/auth/callback`;
+
+        const siteUrl = Deno.env.get("SITE_URL") || "https://lexion.hyretic.com";
+        // Prefer client-provided redirect, then origin header (if available), then configured site URL
+        const origin = req.headers.get("origin");
+
+        let redirectTo = clientRedirectTo;
+        if (!redirectTo) {
+            redirectTo = origin ? `${origin}/auth/callback` : `${siteUrl}/auth/callback`;
+        }
 
         console.log(`[send-invitation] Sending invite to: ${normalizedEmail}, redirect: ${redirectTo}`);
 

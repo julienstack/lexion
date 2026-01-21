@@ -4,7 +4,19 @@ import { AuthService } from './auth.service';
 import { OrganizationService } from './organization.service';
 
 export type FeedItemStatus = 'draft' | 'review' | 'approved' | 'sent';
-export type FeedItemType = 'article' | 'link';
+export type FeedItemType = 'article' | 'link' | 'poll';
+
+export interface PollConfig {
+    multiple_choice: boolean;
+    end_date?: string;
+}
+
+export interface PollOption {
+    id: string;
+    text: string;
+    sort_order: number;
+    poll_votes?: { member_id: string }[]; // joined
+}
 
 export interface FeedItem {
     id?: string;
@@ -14,6 +26,8 @@ export interface FeedItem {
     content?: string;
     url?: string;
     type: FeedItemType;
+    poll_config?: PollConfig;
+    poll_options?: PollOption[];
     status: FeedItemStatus;
     author_id?: string;
     sent_at?: string;
@@ -34,7 +48,7 @@ export class FeedService {
 
         let query = this.supabase.client
             .from('feed_items')
-            .select('*, author:members(name)')
+            .select('*, author:members(name), poll_options(id, text, sort_order, poll_votes(member_id))')
             .in('status', ['approved', 'sent'])
             .order('created_at', { ascending: false });
 
@@ -55,7 +69,7 @@ export class FeedService {
 
         const { data, error } = await this.supabase.client
             .from('feed_items')
-            .select('*, author:members(name)')
+            .select('*, author:members(name), poll_options(id, text, sort_order, poll_votes(member_id))')
             .eq('author_id', memberId)
             .order('created_at', { ascending: false });
 
@@ -69,7 +83,7 @@ export class FeedService {
 
         let query = this.supabase.client
             .from('feed_items')
-            .select('*, author:members(name)')
+            .select('*, author:members(name), poll_options(id, text, sort_order, poll_votes(member_id))')
             .eq('status', 'review')
             .order('created_at', { ascending: false });
 
@@ -88,7 +102,7 @@ export class FeedService {
 
         let query = this.supabase.client
             .from('feed_items')
-            .select('*, author:members(name)')
+            .select('*, author:members(name), poll_options(id, text, sort_order, poll_votes(member_id))')
             .eq('status', 'approved')
             .order('created_at', { ascending: false });
 
@@ -120,15 +134,15 @@ export class FeedService {
         return data as FeedItem[];
     }
 
-    async createItem(item: Partial<FeedItem>) {
+    async createItem(item: Partial<FeedItem> & { options?: string[] }) {
         const memberId = this.auth.currentMember()?.id;
         const orgId = this.org.currentOrgId();
         if (!memberId) throw new Error('Not member');
 
-        // Remove joined fields if any
-        const { author, ...cleanItem } = item as any;
+        // Remove joined fields and temp options
+        const { author, poll_options, options, ...cleanItem } = item as any;
 
-        const { data, error } = await this.supabase.client
+        const { data: newItem, error } = await this.supabase.client
             .from('feed_items')
             .insert({
                 ...cleanItem,
@@ -139,7 +153,23 @@ export class FeedService {
             .single();
 
         if (error) throw new Error(error.message);
-        return data;
+
+        // Create options if needed
+        if (item.type === 'poll' && options?.length) {
+            const optionsPayload = options.map((text: string, index: number) => ({
+                feed_item_id: newItem.id,
+                text,
+                sort_order: index
+            }));
+
+            const { error: optError } = await this.supabase.client
+                .from('poll_options')
+                .insert(optionsPayload);
+
+            if (optError) console.error('Error creating options', optError);
+        }
+
+        return newItem;
     }
 
     async updateItem(id: string, updates: Partial<FeedItem>) {
@@ -199,6 +229,29 @@ export class FeedService {
         });
         if (error) throw new Error(error.message);
         return data;
+    }
+
+    async vote(optionId: string) {
+        const memberId = this.auth.currentMember()?.id;
+        if (!memberId) throw new Error('Not member');
+
+        const { error } = await this.supabase.client
+            .from('poll_votes')
+            .insert({ option_id: optionId, member_id: memberId });
+
+        if (error) throw new Error(error.message);
+    }
+
+    async unvote(optionId: string) {
+        const memberId = this.auth.currentMember()?.id;
+        if (!memberId) throw new Error('Not member');
+
+        const { error } = await this.supabase.client
+            .from('poll_votes')
+            .delete()
+            .match({ option_id: optionId, member_id: memberId });
+
+        if (error) throw new Error(error.message);
     }
 }
 

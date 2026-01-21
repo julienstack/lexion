@@ -1,7 +1,7 @@
 # 🚀 Lexion Roadmap
 
-> **Letzte Aktualisierung:** 19. Januar 2026 (22:35)  
-> **Aktuelle Version:** Alpha 0.9.2
+> **Letzte Aktualisierung:** 21. Januar 2026 (16:35)  
+> **Aktuelle Version:** Alpha 0.9.4
 
 ---
 
@@ -33,13 +33,14 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 | 3 | **Org erstellen** | ✅ Fertig | Eingeloggte User können neue Orgs erstellen |
 | 4 | **Event-Helfer-Slots** | ✅ Fertig | Events mit Schichtplan |
 | 5 | **Admin-Filter** | ✅ Fertig | Vorstand filtert nach Skills/Ort |
+
 ### Phase 2: Engagement & Wachstum ⭐⭐
 
 | # | Feature | Status | Beschreibung |
 |---|---------|--------|--------------|
 | 6 | **Teilnehmerlisten** | ✅ Fertig | "Wer kommt?" sichtbar machen (Social Proof) |
 | 7 | **Öffentliche Events** | ✅ Fertig | Shareable Links für WhatsApp (ohne Login lesbar) |
-| 8 | **Einfache Umfragen** | ⏳ Geplant | Abstimmungen im Feed ("Terminfindung") |
+| 8 | **Einfache Umfragen** | ✅ Fertig | Abstimmungen im Feed ("Terminfindung") |
 
 ### Phase 3: Profi-Features ⭐
 
@@ -52,6 +53,14 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 ---
 
 ## ✅ Abgeschlossen (Patch Notes)
+
+### v0.9.4 – 21. Januar 2026 (Interactive Feed)
+
+**📊 Umfragen & Interaktion**
+- [x] **Feed-Umfragen:** Erstellen von Umfragen mit mehreren Antwortmöglichkeiten
+- [x] **Live-Voting:** Echtzeit-Abstimmung mit visueller Balkengrafik
+- [x] **Feed-Integration:** Nahtlose Einbindung in den bestehenden News-Feed
+- [x] **Vote-Management:** Ändern der eigenen Stimme jederzeit möglich
 
 ### v0.9.3 – 19. Januar 2026 (Growth Update)
 
