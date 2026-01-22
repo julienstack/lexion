@@ -87,19 +87,24 @@ Deno.serve(async (req: Request) => {
         const existingUser = existingUsers?.users?.find(u => u.email === email);
 
         if (existingUser) {
-            // User exists, send password reset link instead of invite
+            // User exists, send password reset email
             const siteUrl = Deno.env.get("SITE_URL") || "https://lexion.hyretic.com";
             const finalRedirectTo = redirectTo || `${siteUrl}/auth/callback`;
 
-            const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-                type: 'recovery',
-                email: email,
-                options: {
-                    redirectTo: finalRedirectTo
-                }
-            });
+            // Use the regular client method which actually sends the email
+            // Note: We create a new client without service role to use the regular auth methods
+            const supabaseClient = createClient(
+                Deno.env.get("SUPABASE_URL") ?? "",
+                Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+            );
+
+            const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(
+                email,
+                { redirectTo: finalRedirectTo }
+            );
 
             if (resetError) {
+                console.error("Password reset error:", resetError);
                 return new Response(
                     JSON.stringify({ error: resetError.message }),
                     { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -108,7 +113,7 @@ Deno.serve(async (req: Request) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "User exists, password reset link sent",
+                    message: "Passwort-Reset E-Mail gesendet",
                     type: "reset",
                     userId: existingUser.id
                 }),
