@@ -103,7 +103,8 @@ Deno.serve(async (req: Request) => {
             if (existingUser.email_confirmed_at) {
                 // User exists and is confirmed, send password reset email
                 const siteUrl = Deno.env.get("SITE_URL") || "https://pulsedeck.de";
-                const finalRedirectTo = redirectTo || `${siteUrl}/auth/callback`;
+                const origin = req.headers.get("origin");
+                const finalRedirectTo = redirectTo || (origin ? `${origin}/auth/callback` : `${siteUrl}/auth/callback`);
 
                 // Use the regular client method which actually sends the email
                 // Note: We create a new client without service role to use the regular auth methods
@@ -152,7 +153,10 @@ Deno.serve(async (req: Request) => {
         // Invite new user via email
         // Use SITE_URL env variable to ensure production URL is used in emails
         const siteUrl = Deno.env.get("SITE_URL") || "https://pulsedeck.de";
-        const finalRedirectTo = redirectTo || `${siteUrl}/auth/callback`;
+        const origin = req.headers.get("origin");
+        
+        // Prefer explicit redirectTo, then origin (for local dev), then default siteUrl
+        const finalRedirectTo = redirectTo || (origin ? `${origin}/auth/callback` : `${siteUrl}/auth/callback`);
 
         const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
             redirectTo: finalRedirectTo,
