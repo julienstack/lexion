@@ -115,7 +115,7 @@ Deno.serve(async (req: Request) => {
         // Check if auth user exists by querying auth.users directly
         const { data: existingAuthUsers, error: authLookupError } = await supabaseAdmin
             .from("auth.users")
-            .select("id, email")
+            .select("id, email, email_confirmed_at")
             .eq("email", normalizedEmail)
             .limit(1);
 
@@ -141,29 +141,38 @@ Deno.serve(async (req: Request) => {
 
         if (existingUserId) {
             console.log(`[send-invitation] Found existing auth user: ${existingUserId}`);
-            // Do NOT link immediately
-            /*
-            // Link unconnected members to existing user
-            for (const member of unconnectedMembers) {
-                await supabaseAdmin
-                    .from("members")
-                    .update({ user_id: existingUserId })
-                    .eq("id", member.id);
+            
+            // Check if confirmed using the data we fetched or by fetching if needed
+            let isConfirmed = false;
+            
+            if (existingAuthUsers?.length > 0) {
+                 isConfirmed = !!existingAuthUsers[0].email_confirmed_at;
+            } else {
+                 // If we found it via listUsers, we need to check the user object we foudn there
+                 // We didn't keep the full user object from listUsers above, let's fetch it if needed or rely on minimal logic
+                 // For now, let's assume if it came from direct query we know. 
+                 // If it came from listUsers hack, we might need to fetch it.
+                 const { data: userData } = await supabaseAdmin.auth.admin.getUserById(existingUserId);
+                 isConfirmed = !!userData.user?.email_confirmed_at;
             }
-            */
 
-            return new Response(
-                JSON.stringify({
-                    status: "connected",
-                    message: "Existing account linked",
-                    organizations: members.map((m: MemberInfo) => ({
-                        id: m.organization?.id,
-                        name: m.organization?.name,
-                        slug: m.organization?.slug,
-                    })),
-                }),
-                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
+            if (isConfirmed) {
+                console.log(`[send-invitation] User confirmed, connecting account`);
+                return new Response(
+                    JSON.stringify({
+                        status: "connected",
+                        message: "Existing account linked",
+                        organizations: members.map((m: MemberInfo) => ({
+                            id: m.organization?.id,
+                            name: m.organization?.name,
+                            slug: m.organization?.slug,
+                        })),
+                    }),
+                    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+            }
+            
+            console.log(`[send-invitation] User exists but unconfirmed. Proceeding to resend invite.`);
         }
 
         // No auth user exists - send invitation

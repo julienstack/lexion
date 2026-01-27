@@ -86,8 +86,8 @@ Deno.serve(async (req: Request) => {
         const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
         const existingUser = existingUsers?.users?.find(u => u.email === email);
 
-        if (existingUser) {
-            // User exists, send password reset email
+        if (existingUser && existingUser.email_confirmed_at) {
+            // User exists and is confirmed, send password reset email
             const siteUrl = Deno.env.get("SITE_URL") || "https://pulsedeck.de";
             const finalRedirectTo = redirectTo || `${siteUrl}/auth/callback`;
 
