@@ -19,7 +19,8 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 
 ## 🚧 Aktuell in Arbeit
 
-*(Wähle das nächste Feature aus Phase 2)*
+*(Fokus: Aktivierung durch Smart Matching)*
+- **Smart Matching** (Dashboard-Integration)
 
 ---
 
@@ -40,16 +41,19 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 | # | Feature | Status | Beschreibung |
 |---|---------|--------|--------------|
 | 6 | **Push-Notifications** | 🏃 In Arbeit | Zielgruppen-Push (Basis & UI steht) |
-| 7 | **Mikro-Umfragen** | ⏳ Geplant | Schnelle 2-Klick Abstimmungen im Feed |
-| 8 | **Teilnehmerlisten** | ⏳ Geplant | Social Proof: "Max und Julia sind dabei" |
-| 9 | **One-Click Teilnahme** | ⏳ Geplant | "Ich bin dabei" Button ohne Formular |
+| 7 | **Smart Matching** | 🏃 In Arbeit | "Deine Skills werden gebraucht" Dashboard-Karte |
+| 8 | **Mikrotasks** | ⏳ Geplant | "5-Minuten-Hilfe" (Beitrag teilen, Umfrage) |
+| 9 | **Onboarding Quest** | ⏳ Geplant | Gamification-Balken für neue Mitglieder (Ausbau) |
+| 10 | **Mikro-Umfragen** | ⏳ Geplant | Schnelle 2-Klick Abstimmungen im Feed |
+| 11 | **One-Click Teilnahme** | ⏳ Geplant | "Ich bin dabei" Button ohne Formular |
 
 ### Phase 3: Community ⭐
 
 | # | Feature | Status | Beschreibung |
 |---|---------|--------|--------------|
-| 10 | **Biete/Suche Brett** | ⏳ Geplant | Mitfahrgelegenheiten, Hilfsanfragen |
-| 11 | **Auto-Danke System** | ⏳ Geplant | Automatische Wertschätzung nach Events |
+| 12 | **Kudos System** | ⏳ Geplant | High-Fives & Wertschätzung statt nur Auto-Danke |
+| 13 | **Biete/Suche Brett** | ⏳ Geplant | Mitfahrgelegenheiten, Hilfsanfragen |
+| 14 | **Teilnehmerlisten** | ⏳ Geplant | Social Proof: "Max und Julia sind dabei" |
 
 ---
 
