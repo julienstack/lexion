@@ -22,20 +22,11 @@ import { AuthService } from '../../shared/services/auth.service';
                         <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Angaben gemäß § 5 TMG</h2>
                         <div class="bg-[var(--color-surface-raised)] rounded-xl p-6 border border-[var(--color-border)]">
                             <p class="text-[var(--color-text-muted)]">
-                                <strong class="text-[var(--color-text)]">[Vereinsname e.V.]</strong><br>
-                                [Straße und Hausnummer]<br>
-                                [PLZ] [Stadt]<br>
+                                <strong class="text-[var(--color-text)]">PulseDeck</strong><br>
+                                Julien Lieske<br>
+                                Grandweg 17<br>
+                                59494 Soest<br>
                                 Deutschland
-                            </p>
-                        </div>
-                    </section>
-
-                    <section>
-                        <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Vertreten durch</h2>
-                        <div class="bg-[var(--color-surface-raised)] rounded-xl p-6 border border-[var(--color-border)]">
-                            <p class="text-[var(--color-text-muted)]">
-                                [Vorname Nachname], Vorsitzende/r<br>
-                                [Vorname Nachname], Stellvertretende/r Vorsitzende/r
                             </p>
                         </div>
                     </section>
@@ -44,30 +35,27 @@ import { AuthService } from '../../shared/services/auth.service';
                         <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Kontakt</h2>
                         <div class="bg-[var(--color-surface-raised)] rounded-xl p-6 border border-[var(--color-border)]">
                             <p class="text-[var(--color-text-muted)]">
-                                Telefon: [Telefonnummer]<br>
-                                E-Mail: <a href="mailto:kontakt@beispiel.de" class="text-linke hover:text-linke-light">[E-Mail-Adresse]</a>
+                                E-Mail: <a href="mailto:julien@pulsedeck.de" class="text-linke hover:text-linke-light">julien@pulsedeck.de</a>
                             </p>
                         </div>
                     </section>
 
                     <section>
-                        <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Registereintrag</h2>
+                        <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">EU-Streitschlichtung</h2>
                         <div class="bg-[var(--color-surface-raised)] rounded-xl p-6 border border-[var(--color-border)]">
                             <p class="text-[var(--color-text-muted)]">
-                                Eintragung im Vereinsregister<br>
-                                Registergericht: Amtsgericht [Stadt]<br>
-                                Registernummer: VR [Nummer]
+                                Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: 
+                                <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer" class="text-linke hover:text-linke-light">https://ec.europa.eu/consumers/odr/</a>.<br>
+                                Unsere E-Mail-Adresse finden Sie oben im Impressum.
                             </p>
                         </div>
                     </section>
 
                     <section>
-                        <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
+                        <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
                         <div class="bg-[var(--color-surface-raised)] rounded-xl p-6 border border-[var(--color-border)]">
                             <p class="text-[var(--color-text-muted)]">
-                                [Vorname Nachname]<br>
-                                [Straße und Hausnummer]<br>
-                                [PLZ] [Stadt]
+                                Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
                             </p>
                         </div>
                     </section>
