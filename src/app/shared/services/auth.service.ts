@@ -214,6 +214,7 @@ export class AuthService {
                 headers: {
                     'Content-Type': 'application/json',
                     'apikey': environment.supabase.anonKey,
+                    'Authorization': `Bearer ${environment.supabase.anonKey}`,
                 },
                 body: JSON.stringify({
                     email: email.toLowerCase().trim(),
