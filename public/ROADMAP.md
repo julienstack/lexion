@@ -1,7 +1,7 @@
 # 🚀 PulseDeck Roadmap
 
-> **Letzte Aktualisierung:** 28. Januar 2026  
-> **Aktuelle Version:** Alpha 0.9.6
+> **Letzte Aktualisierung:** 1. Februar 2026  
+> **Aktuelle Version:** Alpha 0.9.7
 
 ---
 
@@ -52,12 +52,33 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 
 | # | Feature | Status | Beschreibung |
 |---|---------|--------|--------------|
-| 13 | **Biete/Suche Brett** | ⏳ Geplant | Marktplatz für Hilfe/Ressourcen |
-| 14 | **Kudos System** | ⏳ Geplant | High-Fives & Wertschätzung statt nur Auto-Danke |
+| 13 | **Gast-Orgs einladen** | ✅ Fertig | Lade befreundete Vereine zu Events ein (Viral Loop) |
+| 14 | **Powered by PulseDeck** | ✅ Fertig | Branding auf allen öffentlichen Seiten & E-Mails |
+| 15 | **Biete/Suche Brett** | ⏳ Geplant | Marktplatz für Hilfe/Ressourcen |
+| 16 | **Kudos System** | ⏳ Geplant | High-Fives & Wertschätzung statt nur Auto-Danke |
 
 ---
 
 ## ✅ Abgeschlossen (Patch Notes)
+
+### v0.9.7 – 1. Februar 2026 (Viral Loop)
+
+**🚀 Wachstum & Viralität**
+- [x] **Gast-Organisationen:** Lade befreundete Vereine/Clubs zu deinen Events ein
+- [x] **Einladungs-Dialog:** Suche nach PulseDeck-Orgs oder lade externe Orgs per E-Mail ein
+- [x] **Powered by PulseDeck:** Branding auf allen öffentlichen Seiten für virales Wachstum
+- [x] **Einladungs-Karte:** Dashboard-Karte zeigt eingehende Event-Einladungen
+- [x] **E-Mail-Templates:** Professionelle E-Mails mit PulseDeck-Branding
+
+**🔐 Passwortloser Login**
+- [x] **Magic Link Login:** Einladungslinks loggen User direkt ein (kein Passwort nötig)
+- [x] **Optionales Passwort:** Nutzer können im Profil ein Passwort setzen – wenn sie wollen
+- [x] **Login-Auswahl:** Passwort oder Magic Link – der Nutzer entscheidet
+- [x] **Link kopieren:** Admins können Login-Links für WhatsApp/SMS etc. kopieren
+
+**📱 Messenger-First Features**
+- [x] **WhatsApp Share:** Formatierter Event-Text mit Slot-Status zum Teilen in Messenger-Gruppen
+- [x] **Kalender-Export:** Nach Schicht-Eintragung: iCal-Download und Google Calendar Integration
 
 ### v0.9.4 – 21. Januar 2026 (Interactive Feed)
 

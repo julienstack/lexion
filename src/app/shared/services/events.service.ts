@@ -201,7 +201,9 @@ export class EventsService implements OnDestroy {
     /**
      * Get a single event by ID (public access allowed if RLS permits)
      */
-    async getEventById(id: string): Promise<CalendarEvent & { organization?: { name: string, slug: string, theme_color: string, logo_url: string } }> {
+    async getEventById(id: string): Promise<CalendarEvent & {
+        organization?: { name: string; slug: string; logo_url: string }
+    }> {
         const { data, error } = await this.supabase
             .from(this.TABLE_NAME)
             .select(`
@@ -209,7 +211,6 @@ export class EventsService implements OnDestroy {
                 organization:organizations (
                     name,
                     slug,
-                    theme_color,
                     logo_url
                 )
             `)

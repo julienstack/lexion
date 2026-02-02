@@ -185,7 +185,9 @@ export class AuthCallbackComponent implements OnInit {
 
             // Decode error description if present
             if (errorDescription) {
-                errorDescription = decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+                errorDescription = decodeURIComponent(
+                    errorDescription.replace(/\+/g, ' ')
+                );
             }
         }
 
@@ -211,12 +213,15 @@ export class AuthCallbackComponent implements OnInit {
                     return;
                 }
 
-                // Check if this is an invite/recovery (needs password)
-                if (type === 'invite' || type === 'recovery' || type === 'signup') {
+                // Check if this is a recovery (password reset) - show password form
+                // For invite/signup: Skip password, go directly to dashboard
+                if (type === 'recovery') {
+                    // User explicitly requested password reset
                     this.processing.set(false);
                     this.showPasswordForm.set(true);
                 } else {
-                    // Regular sign-in - check memberships and redirect
+                    // Invite, signup, or regular sign-in
+                    // Passwordless flow: Go directly to dashboard
                     await this.handleRedirect();
                 }
             } catch (e) {
@@ -225,7 +230,9 @@ export class AuthCallbackComponent implements OnInit {
             }
         } else {
             this.processing.set(false);
-            this.error.set('Kein gültiger Einladungslink. Bitte fordere einen neuen Link an.');
+            this.error.set(
+                'Kein gültiger Einladungslink. Bitte fordere einen neuen Link an.'
+            );
         }
     }
 

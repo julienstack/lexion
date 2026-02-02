@@ -321,4 +321,49 @@ export class MembersService implements OnDestroy {
     isConnected(member: Member): boolean {
         return !!member.user_id;
     }
+
+    /**
+     * Generate a magic link that admin can copy and share via WhatsApp, etc.
+     * Returns the link string for copying to clipboard
+     */
+    async generateMagicLink(
+        memberId: string,
+        email: string
+    ): Promise<{ link: string; message: string; expiresIn: string }> {
+        const currentSession = this.supabase.session();
+        if (!currentSession) {
+            throw new Error('Nicht angemeldet');
+        }
+
+        const response = await fetch(
+            `${this.FUNCTIONS_URL}/generate-magic-link`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentSession.access_token}`,
+                    'apikey': environment.supabase.anonKey,
+                },
+                body: JSON.stringify({
+                    email,
+                    memberId,
+                    // Send redirectTo for localhost, otherwise let Edge Function
+                    // use configured SITE_URL
+                    ...(window.location.hostname === 'localhost'
+                        ? { redirectTo: `${window.location.origin}/auth/callback` }
+                        : {}),
+                }),
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || 'Link konnte nicht generiert werden'
+            );
+        }
+
+        return result;
+    }
 }

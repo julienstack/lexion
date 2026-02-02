@@ -87,56 +87,88 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
 
             @if (org()) {
             
-            <!-- Sticky Header -->
-            <header class="sticky top-0 z-40 bg-[var(--color-surface-card)]/80 backdrop-blur-xl border-b border-[var(--color-border)] px-4 py-3 mb-6 supports-[backdrop-filter]:bg-[var(--color-surface-card)]/60">
+            <!-- Sticky Header (Navigation) -->
+            <header class="sticky top-0 z-40 bg-[var(--color-surface-card)]/80 backdrop-blur-xl border-b border-[var(--color-border)] px-4 py-3 mb-0 supports-[backdrop-filter]:bg-[var(--color-surface-card)]/60">
                 <div class="max-w-7xl mx-auto flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        @if (org()!.logo_url) {
-                        <img [src]="org()!.logo_url" alt="Logo" class="w-8 h-8 object-contain" />
-                        }
-                        <span class="font-bold text-lg text-[var(--color-text)] tracking-tight">{{ org()!.name }}</span>
+                        <span class="font-bold text-lg text-[var(--color-text)] tracking-tight">PulseDeck</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <a routerLink="/" class="text-sm font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-2 mr-2">
-                             <i class="pi pi-arrow-left text-xs"></i> PulseDeck
+                             <i class="pi pi-home text-xs"></i> Startseite
                         </a>
                         <button pButton label="Login" icon="pi pi-sign-in" (click)="navigateToLogin()" size="small" [style]="{background: primaryColor, border: 'none', borderRadius: '12px'}" class="px-4 font-bold md:hidden"></button>
                     </div>
                 </div>
             </header>
 
+            <!-- Organization Header -->
+            <div class="w-full" [style.background]="primaryColor">
+                <div class="max-w-7xl mx-auto px-4 py-6">
+                    <div class="flex flex-col md:flex-row items-center gap-4 md:gap-6">
+                        <!-- Logo -->
+                        @if (org()!.logo_url) {
+                            <div class="w-16 h-16 rounded-xl bg-white shadow-lg flex items-center justify-center p-2 shrink-0">
+                                <img [src]="org()!.logo_url" class="w-full h-full object-contain" />
+                            </div>
+                        } @else {
+                            <div class="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                                <i class="pi pi-building text-2xl text-white"></i>
+                            </div>
+                        }
+
+                        <!-- Text -->
+                        <div class="flex-1 text-center md:text-left min-w-0">
+                            <h1 class="text-2xl md:text-3xl font-bold text-white">{{ org()!.name }}</h1>
+                            @if (org()!.description) {
+                                <p class="text-sm text-white/80 mt-1 line-clamp-1">{{ org()!.description }}</p>
+                            }
+                        </div>
+
+                        <!-- Login Button -->
+                        <button pButton (click)="navigateToLogin()" label="Einloggen" icon="pi pi-sign-in" 
+                            class="shrink-0 font-bold !bg-white !border-none" 
+                            [style]="{color: primaryColor, borderRadius: '10px'}">
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="w-full bg-[var(--color-surface-card)] border-b border-[var(--color-border)]">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <div class="flex items-center justify-center md:justify-start gap-8 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-users" [style.color]="primaryColor"></i>
+                            <span class="font-bold">{{ memberCount() }}</span>
+                            <span class="text-[var(--color-text-muted)]">Mitglieder</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-calendar text-teal-500"></i>
+                            <span class="font-bold">{{ upcomingEvents().length }}</span>
+                            <span class="text-[var(--color-text-muted)]">Termine</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-briefcase text-violet"></i>
+                            <span class="font-bold">{{ workingGroups().length }}</span>
+                            <span class="text-[var(--color-text-muted)]">Gruppen</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-book text-amber-500"></i>
+                            <span class="font-bold">{{ wikiArticles().length }}</span>
+                            <span class="text-[var(--color-text-muted)]">Artikel</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Dashboard Grid -->
-            <main class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadein">
+            <main class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fadein">
                 
                 <!-- LEFT COLUMN: Profile & Contacts & Events -->
                 <div class="lg:col-span-3 space-y-6">
-                    <!-- Org Card -->
-                    <div class="p-6 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] shadow-sm text-center relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-50" [style.backgroundColor]="primaryColor"></div>
-                        
-                        <div class="flex justify-center mb-4 mt-2">
-                             @if (org()!.logo_url) {
-                                <img [src]="org()!.logo_url" class="h-24 w-auto object-contain drop-shadow-xl" />
-                             } @else {
-                                <div class="w-20 h-20 rounded-2xl bg-[var(--color-surface-ground)] flex items-center justify-center">
-                                    <i class="pi pi-building text-3xl text-[var(--color-text-muted)]" [style.color]="primaryColor"></i>
-                                </div>
-                             }
-                        </div>
-                        
-                        <h1 class="text-xl font-bold text-[var(--color-text)] mb-2">{{ org()!.name }}</h1>
-                        
-                        @if (org()!.description) {
-                            <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-6">{{ org()!.description }}</p>
-                        }
-
-                        <div class="pt-4 border-t border-[var(--color-border)] flex justify-between items-center text-sm">
-                            <span class="text-[var(--color-text-muted)]">Mitglieder</span>
-                            <span class="font-bold bg-[var(--color-surface-ground)] px-2 py-1 rounded-md">{{ memberCount() }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Contacts Widget -->
+                    
+                    <!-- Removed Org Card since it's now in Hero -->
                     @if (contacts().length > 0) {
                     <div class="p-5 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] shadow-sm">
                         <h3 class="font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider text-[var(--color-text-muted)]">
@@ -304,6 +336,35 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                 </div>
 
             </main>
+
+            <!-- Powered by PulseDeck Footer -->
+            <footer class="mt-12 pb-8">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="flex flex-col items-center gap-4">
+                        <a routerLink="/" 
+                            class="group flex items-center gap-2 px-6 py-3 
+                            rounded-2xl bg-[var(--color-surface-card)] 
+                            border border-[var(--color-border)] 
+                            hover:border-linke/50 
+                            transition-all shadow-sm hover:shadow-md">
+                            <i class="pi pi-sparkles text-amber-500 
+                                group-hover:animate-pulse"></i>
+                            <span class="text-sm text-[var(--color-text-muted)]">
+                                Powered by
+                            </span>
+                            <span class="font-bold text-[var(--color-text)] 
+                                group-hover:text-linke transition-colors">
+                                PulseDeck
+                            </span>
+                        </a>
+                        <p class="text-xs text-[var(--color-text-muted)] 
+                            text-center max-w-sm opacity-70">
+                            Die moderne Plattform für Vereinsmanagement. 
+                            Mitglieder mobilisieren, Events planen, Wissen teilen.
+                        </p>
+                    </div>
+                </div>
+            </footer>
 
             <!-- Public Article Dialog -->
             <p-dialog 

@@ -12,6 +12,9 @@ import { OrganizationService } from '../../../shared/services/organization.servi
 import { SmartMatchingService } from '../../../shared/services/smart-matching.service';
 import { CalendarEvent, getEventType } from '../../../shared/models/calendar-event.model';
 import { WorkingGroup } from '../../../shared/models/working-group.model';
+import { 
+  GuestInvitationsCardComponent 
+} from '../../../shared/components/guest-invitations-card.component';
 
 
 @Component({
@@ -22,6 +25,7 @@ import { WorkingGroup } from '../../../shared/models/working-group.model';
     RouterLink,
     ProgressBarModule,
     TooltipModule,
+    GuestInvitationsCardComponent,
   ],
   templateUrl: './dashboard-home.html',
   styleUrl: './dashboard-home.css',

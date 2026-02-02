@@ -166,14 +166,18 @@
                 }
 
                 @if (auth.isAdmin()) {
-                <div class="flex gap-2 pt-2 border-t border-[var(--color-border)]">
+                <div class="flex flex-wrap gap-2 pt-2 border-t border-[var(--color-border)]">
                     @if (member.email) {
                     <p-button [icon]="member.user_id ? 'pi pi-key' : 'pi pi-envelope'"
                         [label]="member.user_id ? 'Reset' : 'Einladen'" [severity]="member.user_id ? 'warn' : 'success'"
                         size="small" (click)="inviteMember(member); $event.stopPropagation()"
                         [loading]="invitingMemberId === member.id"></p-button>
+                    <p-button icon="pi pi-copy" severity="secondary" [outlined]="true"
+                        size="small" (click)="copyMagicLink(member); $event.stopPropagation()"
+                        [loading]="copyingMemberId === member.id"
+                        pTooltip="Link kopieren"></p-button>
                     }
-                    <p-button icon="pi pi-pencil" label="Bearbeiten" severity="secondary" size="small"
+                    <p-button icon="pi pi-pencil" severity="secondary" size="small"
                         (click)="editMember(member); $event.stopPropagation()"></p-button>
                     <p-button icon="pi pi-trash" severity="danger" size="small"
                         (click)="confirmDelete(member); $event.stopPropagation()"></p-button>
@@ -219,7 +223,7 @@
                     <th pSortableColumn="join_date" style="width: 90px">Beitritt <p-sortIcon
                             field="join_date"></p-sortIcon></th>
                     @if (auth.isAdmin()) {
-                    <th style="width: 90px" class="text-right">Aktionen</th>
+                    <th style="width: 130px" class="text-right">Aktionen</th>
                     }
                 </tr>
             </ng-template>
@@ -271,6 +275,9 @@
                                 [rounded]="true" [severity]="member.user_id ? 'warn' : 'success'"
                                 [pTooltip]="member.user_id ? 'Passwort zurücksetzen' : 'Einladung senden'"
                                 (click)="inviteMember(member)" [loading]="invitingMemberId === member.id"></p-button>
+                            <p-button icon="pi pi-copy" [text]="true" [rounded]="true" severity="secondary"
+                                pTooltip="Login-Link kopieren (WhatsApp etc.)"
+                                (click)="copyMagicLink(member)" [loading]="copyingMemberId === member.id"></p-button>
                             }
                             <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
                                 (click)="editMember(member)"></p-button>

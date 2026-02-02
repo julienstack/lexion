@@ -4,6 +4,9 @@
 
 @layer tailwind-base {
     @tailwind base;
+    html {
+        scroll-behavior: smooth;
+    }
 }
 
 @layer tailwind-utilities {

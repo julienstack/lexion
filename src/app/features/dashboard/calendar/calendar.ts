@@ -16,6 +16,9 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { 
+  InviteGuestOrgDialogComponent 
+} from '../../../shared/components/invite-guest-org-dialog.component';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { EventsService } from '../../../shared/services/events.service';
 import { CalendarEvent, getEventType } from '../../../shared/models/calendar-event.model';
@@ -54,6 +57,7 @@ import { OrganizationService } from '../../../shared/services/organization.servi
     TooltipModule,
     InputNumberModule,
     MultiSelectModule,
+    InviteGuestOrgDialogComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './calendar.html',
@@ -480,9 +484,90 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const url = `${window.location.origin}/event/${event.id}`;
     try {
       await navigator.clipboard.writeText(url);
-      this.messageService.add({ severity: 'success', summary: 'Kopiert', detail: 'Event-Link kopiert!' });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Kopiert',
+        detail: 'Event-Link kopiert!'
+      });
     } catch (e) {
-      this.messageService.add({ severity: 'error', summary: 'Fehler', detail: 'Konnte Link nicht kopieren.' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: 'Konnte Link nicht kopieren.'
+      });
+    }
+  }
+
+  /**
+   * Generate a formatted WhatsApp-friendly text and copy to clipboard
+   */
+  async copyWhatsAppText(event: CalendarEvent) {
+    if (!event.id) return;
+
+    // Load slots for this event
+    await this.slotService.loadSlots(event.id, this.auth.currentMember()?.id);
+    const slots = this.currentSlots();
+
+    // Build WhatsApp message
+    let text = `📅 *${event.title}*\n`;
+
+    if (event.date) {
+      const eventDate = new Date(event.date);
+      const dateStr = eventDate.toLocaleDateString('de-DE', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      });
+      text += `🗓️ ${dateStr}`;
+      if (event.start_time) {
+        text += ` um ${event.start_time}`;
+      }
+      text += '\n';
+    }
+
+    if (event.location) {
+      text += `📍 ${event.location}\n`;
+    }
+
+    text += '\n';
+
+    // Add slot status if slots exist
+    if (slots.length > 0) {
+      text += '_Wir brauchen noch Hilfe!_\n\n';
+
+      slots.forEach(slot => {
+        const signedUp = slot.signup_count || 0;
+        const max = slot.max_helpers || 0;
+        const free = max - signedUp;
+
+        if (free <= 0) {
+          text += `✅ ${slot.title}: *Voll*\n`;
+        } else {
+          text += `🆘 ${slot.title}: *${free} frei*\n`;
+        }
+      });
+
+      text += '\n';
+    }
+
+    // Add link
+    const url = `${window.location.origin}/event/${event.id}`;
+    text += `👉 Hier eintragen: ${url}`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Für WhatsApp kopiert!',
+        detail: 'Text in Zwischenablage - jetzt in WhatsApp einfügen.',
+        life: 5000
+      });
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: 'Konnte Text nicht kopieren.'
+      });
     }
   }
 
@@ -497,6 +582,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
   newSlotMaxHelpers = signal(3);
   newSlotSkills = signal<string[]>([]);
   availableSkills = this.skillService.skills;
+
+  // Guest Organization Invites (Viral Loop)
+  guestInviteDialogVisible = signal(false);
+  guestInviteEventId = signal<string | null>(null);
 
   async openManageSlots(event: CalendarEvent): Promise<void> {
     this.currentEvent = JSON.parse(JSON.stringify(event)); // Deep copy
@@ -568,6 +657,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
         return;
       }
       await this.slotService.signUp(slot.id, memberId, slot.organization_id);
+      // Show success dialog with calendar export
+      this.showSignupSuccess(slot);
     }
 
     if (this.currentEvent.id) {
@@ -582,4 +673,137 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const skill = this.availableSkills().find((s) => s.id === skillId);
     return skill?.name || skillId;
   }
+
+  // =========================================================================
+  // GUEST ORGANIZATION INVITES (Viral Loop Feature)
+  // =========================================================================
+
+  /**
+   * Open the guest organization invite dialog for an event
+   */
+  openGuestInvite(event: CalendarEvent): void {
+    if (!event.id) return;
+    this.guestInviteEventId.set(event.id);
+    this.guestInviteDialogVisible.set(true);
+  }
+
+  /**
+   * Called when a guest invitation was sent successfully
+   */
+  onGuestInvited(): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Einladung gesendet',
+      detail: 'Die Gast-Organisation wurde eingeladen!',
+    });
+  }
+
+  // =========================================================================
+  // CALENDAR EXPORT (After Slot Signup)
+  // =========================================================================
+
+  signupSuccessDialogVisible = signal(false);
+  lastSignedUpSlot = signal<EventSlot | null>(null);
+
+  /**
+   * Show success dialog with calendar export options after signup
+   */
+  showSignupSuccess(slot: EventSlot): void {
+    this.lastSignedUpSlot.set(slot);
+    this.signupSuccessDialogVisible.set(true);
+  }
+
+  /**
+   * Download iCal file for a slot
+   */
+  downloadSlotIcal(slot: EventSlot): void {
+    const event = this.currentEvent;
+    if (!event || !event.date) return;
+
+    const startDate = new Date(event.date);
+    const [startH, startM] = (slot.start_time || event.start_time || '10:00')
+      .split(':').map(Number);
+    startDate.setHours(startH, startM, 0, 0);
+
+    let endDate = new Date(startDate);
+    if (slot.end_time) {
+      const [endH, endM] = slot.end_time.split(':').map(Number);
+      endDate.setHours(endH, endM, 0, 0);
+    } else {
+      endDate.setHours(endDate.getHours() + 2); // Default 2h
+    }
+
+    const formatDate = (d: Date) =>
+      d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    const title = `${slot.title} - ${event.title}`;
+    const location = event.location || '';
+    const description = slot.description || `Schicht bei ${event.title}`;
+
+    const ical = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//PulseDeck//DE',
+      'BEGIN:VEVENT',
+      `DTSTART:${formatDate(startDate)}`,
+      `DTEND:${formatDate(endDate)}`,
+      `SUMMARY:${title}`,
+      `LOCATION:${location}`,
+      `DESCRIPTION:${description}`,
+      `UID:${slot.id}@pulsedeck.de`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([ical], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${slot.title.replace(/\s+/g, '_')}.ics`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'iCal heruntergeladen',
+      detail: 'Öffne die Datei, um sie zum Kalender hinzuzufügen.'
+    });
+  }
+
+  /**
+   * Open Google Calendar with pre-filled event
+   */
+  openGoogleCalendarForSlot(slot: EventSlot): void {
+    const event = this.currentEvent;
+    if (!event || !event.date) return;
+
+    const startDate = new Date(event.date);
+    const [startH, startM] = (slot.start_time || event.start_time || '10:00')
+      .split(':').map(Number);
+    startDate.setHours(startH, startM, 0, 0);
+
+    let endDate = new Date(startDate);
+    if (slot.end_time) {
+      const [endH, endM] = slot.end_time.split(':').map(Number);
+      endDate.setHours(endH, endM, 0, 0);
+    } else {
+      endDate.setHours(endDate.getHours() + 2);
+    }
+
+    const formatGCal = (d: Date) =>
+      d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    const title = encodeURIComponent(`${slot.title} - ${event.title}`);
+    const location = encodeURIComponent(event.location || '');
+    const details = encodeURIComponent(
+      slot.description || `Schicht bei ${event.title}`
+    );
+    const dates = `${formatGCal(startDate)}/${formatGCal(endDate)}`;
+
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+      `&text=${title}&dates=${dates}&location=${location}&details=${details}`;
+
+    window.open(url, '_blank');
+  }
 }
+

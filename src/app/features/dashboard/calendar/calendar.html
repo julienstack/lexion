@@ -118,6 +118,13 @@
                                 <i class="pi pi-share-alt text-xs"></i>
                             </button>
 
+                            <!-- WhatsApp Share Button -->
+                            <button (click)="copyWhatsAppText(event); $event.stopPropagation()"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-green-500 hover:bg-green-500/10 transition-colors"
+                                pTooltip="Für WhatsApp kopieren" tooltipPosition="top">
+                                <i class="pi pi-whatsapp text-xs"></i>
+                            </button>
+
                             <!-- Participants Button -->
                             <button (click)="openParticipantsDialog(event); $event.stopPropagation()"
                                 class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-overlay)] transition-colors"
@@ -131,6 +138,15 @@
                                 pTooltip="Helferschichten" tooltipPosition="top">
                                 <i class="pi pi-list-check text-xs"></i>
                             </button>
+
+                            <!-- Invite Guest Org Button (Viral Loop) -->
+                            @if (canCreateEvent()) {
+                            <button (click)="openGuestInvite(event); $event.stopPropagation()"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                                pTooltip="Gast-Org einladen" tooltipPosition="top">
+                                <i class="pi pi-building text-xs"></i>
+                            </button>
+                            }
                             }
 
                             @if (canCreateEvent()) {
@@ -411,4 +427,65 @@
             }
         </div>
     </div>
+</p-dialog>
+
+<!-- Guest Organization Invite Dialog (Viral Loop) -->
+@if (guestInviteEventId()) {
+<app-invite-guest-org-dialog
+    [(visible)]="guestInviteDialogVisible"
+    [eventId]="guestInviteEventId()!"
+    (invited)="onGuestInvited()">
+</app-invite-guest-org-dialog>
+}
+
+<!-- Signup Success Dialog with Calendar Export -->
+<p-dialog 
+    header="Du bist dabei! 🎉" 
+    [(visible)]="signupSuccessDialogVisible"
+    [modal]="true" 
+    [style]="{width: '380px'}"
+    [closable]="true"
+    [draggable]="false">
+    
+    <div class="text-center">
+        <i class="pi pi-check-circle text-5xl text-teal mb-4"></i>
+        
+        @if (lastSignedUpSlot()) {
+        <p class="text-[var(--color-text)] mb-4">
+            Du hast dich für <strong>{{ lastSignedUpSlot()!.title }}</strong> eingetragen.
+        </p>
+        
+        <p class="text-sm text-[var(--color-text-muted)] mb-6">
+            Vergiss es nicht! Füge den Termin zu deinem Kalender hinzu:
+        </p>
+        
+        <div class="flex flex-col gap-3">
+            <p-button 
+                icon="pi pi-calendar" 
+                label="iCal herunterladen"
+                severity="secondary"
+                [outlined]="true"
+                styleClass="w-full"
+                (click)="downloadSlotIcal(lastSignedUpSlot()!)">
+            </p-button>
+            
+            <p-button 
+                icon="pi pi-google"
+                label="In Google Calendar"
+                severity="secondary"
+                [outlined]="true"
+                styleClass="w-full"
+                (click)="openGoogleCalendarForSlot(lastSignedUpSlot()!)">
+            </p-button>
+        </div>
+        }
+    </div>
+    
+    <ng-template pTemplate="footer">
+        <p-button 
+            label="Fertig" 
+            (click)="signupSuccessDialogVisible.set(false)"
+            styleClass="w-full">
+        </p-button>
+    </ng-template>
 </p-dialog>

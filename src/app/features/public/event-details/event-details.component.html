@@ -75,12 +75,22 @@
 
             <!-- Actions -->
             <div class="pt-6 border-t border-[var(--color-border)] flex flex-col gap-3">
+                @if (isLoggedIn()) {
+                <!-- Logged-in user: Go to dashboard -->
+                <a routerLink="/dashboard/calendar" pButton
+                    label="Zum Dashboard" icon="pi pi-calendar" class="w-full"></a>
+                <div class="text-center text-xs text-[var(--color-text-muted)]">
+                    Du bist bereits angemeldet
+                </div>
+                } @else {
+                <!-- Guest: Login/Register options -->
                 <a routerLink="/auth/login" [queryParams]="{ returnUrl: '/dashboard' }" pButton
                     label="Anmelden & Teilnehmen" icon="pi pi-user" class="w-full"></a>
                 <div class="text-center text-xs text-[var(--color-text-muted)]">
                     Du hast noch keinen Account? <a routerLink="/auth/register"
                         class="text-linke hover:underline">Registrieren</a>
                 </div>
+                }
             </div>
         </div>
     </div>

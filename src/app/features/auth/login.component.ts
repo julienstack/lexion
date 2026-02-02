@@ -65,7 +65,7 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
               }
 
               <p-button type="submit" label="Weiter" [loading]="loading()" icon="pi pi-arrow-right" iconPos="right"
-                styleClass="w-full !py-3" severity="danger" [raised]="true"></p-button>
+                styleClass="w-full !py-3 !mt-4" severity="danger" [raised]="true"></p-button>
             </form>
           }
 
@@ -96,7 +96,7 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                   <p-password [(ngModel)]="password" name="password" [feedback]="false" [toggleMask]="true" 
                     styleClass="w-full" 
                     inputStyleClass="w-full !bg-[var(--color-surface)] !border-[var(--color-border)] focus:!border-linke !text-[var(--color-text)] !py-3 !text-sm !rounded-xl transition-all" 
-                    placeholder="••••••••" required [disabled]="loading()" [autofocus]="true"></p-password>
+                    placeholder="••••••••" [disabled]="loading()" [autofocus]="true"></p-password>
                 </div>
 
                 @if (error()) {
@@ -109,6 +109,26 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                 <p-button type="submit" label="Anmelden" [loading]="loading()" 
                   styleClass="w-full !py-3" severity="danger" [raised]="true"></p-button>
               </form>
+
+              <!-- Magic Link Option -->
+              <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                  <div class="w-full border-t border-[var(--color-border)]"></div>
+                </div>
+                <div class="relative flex justify-center text-xs">
+                  <span class="bg-[var(--color-surface-raised)] px-3 text-[var(--color-text-muted)]">oder</span>
+                </div>
+              </div>
+
+              <button type="button" (click)="sendMagicLink()" 
+                class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-ground)] hover:bg-[var(--color-surface-overlay)] text-[var(--color-text)] text-sm transition-colors"
+                [disabled]="loading()">
+                <i class="pi pi-envelope"></i>
+                <span>Login-Link per E-Mail</span>
+              </button>
+              <p class="text-[10px] text-center text-[var(--color-text-muted)]">
+                Kein Passwort? Wir senden dir einen Login-Link.
+              </p>
             </div>
           }
 
@@ -250,6 +270,36 @@ export class LoginComponent {
     this.step.set('email');
     this.error.set('');
     this.password = '';
+  }
+
+  /**
+   * Send a magic link for passwordless login
+   */
+  async sendMagicLink() {
+    if (!this.email) return;
+
+    this.loading.set(true);
+    this.error.set('');
+
+    try {
+      const { error } = await this.supabase.client.auth.signInWithOtp({
+        email: this.email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      this.loading.set(false);
+
+      if (error) {
+        this.error.set(error.message);
+      } else {
+        this.step.set('invitation-sent');
+      }
+    } catch (e: any) {
+      this.loading.set(false);
+      this.error.set(e.message || 'Fehler beim Senden des Links.');
+    }
   }
 
   goBack() {

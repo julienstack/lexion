@@ -155,6 +155,7 @@ export class MembersComponent implements OnInit {
   editMode = signal(false);
   saving = signal(false);
   invitingMemberId: string | null = null;
+  copyingMemberId: string | null = null;
 
   currentMember: Partial<Member> = this.getEmptyMember();
 
@@ -460,6 +461,38 @@ export class MembersComponent implements OnInit {
       });
     }
     this.invitingMemberId = null;
+  }
+
+  /**
+   * Generate a magic link and copy to clipboard for sharing via WhatsApp etc.
+   */
+  async copyMagicLink(member: Member) {
+    if (!member.id || !member.email) return;
+
+    this.copyingMemberId = member.id;
+    try {
+      const result = await this.membersService.generateMagicLink(
+        member.id,
+        member.email
+      );
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(result.link);
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Link kopiert!',
+        detail: `${result.message} - Gültig für ${result.expiresIn}`,
+        life: 5000,
+      });
+    } catch (e) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Fehler',
+        detail: (e as Error).message,
+      });
+    }
+    this.copyingMemberId = null;
   }
 
   // Import Methods
