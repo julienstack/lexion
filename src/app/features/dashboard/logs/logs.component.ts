@@ -5,12 +5,14 @@ import { SupabaseService } from '../../../shared/services/supabase';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
+import { TabsModule } from 'primeng/tabs';
+import { MetricsComponent } from '../settings/metrics.component';
 import { DatePipe, JsonPipe } from '@angular/common';
 
 @Component({
     selector: 'app-logs',
     standalone: true,
-    imports: [CommonModule, TableModule, TagModule, ButtonModule, DatePipe, JsonPipe],
+    imports: [CommonModule, TableModule, TagModule, ButtonModule, DatePipe, JsonPipe, TabsModule, MetricsComponent],
     templateUrl: './logs.component.html'
 })
 export class LogsComponent {
@@ -19,6 +21,7 @@ export class LogsComponent {
 
     logs = signal<any[]>([]);
     loading = signal(true);
+    activeTab = signal('analytics');
 
     // Hardcoded Super Admin ID (Julien)
     private readonly SUPER_ADMIN_ID = '2d8af6a7-507c-4834-aff9-3b00d1ad9c7c';

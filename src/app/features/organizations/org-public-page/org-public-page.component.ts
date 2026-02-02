@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -22,8 +22,8 @@ interface PublicEvent {
     id: string;
     title: string;
     date: string;
-    time_start?: string;
-    time_end?: string;
+    start_time?: string;
+    end_time?: string;
     location?: string;
     description?: string;
 }
@@ -75,298 +75,292 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
         DialogModule,
     ],
     template: `
-        <div class="min-h-screen bg-[var(--color-bg)] font-sans pb-10">
+        <div class="min-h-screen bg-[var(--color-bg)] font-sans flex flex-col">
             <!-- Loading State -->
             @if (loading()) {
             <div class="fixed inset-0 flex items-center justify-center bg-[var(--color-bg)] z-50">
-                <div class="flex flex-col items-center gap-4">
-                    <p-progressSpinner ariaLabel="loading" styleClass="w-12 h-12" strokeWidth="4" />
-                </div>
+                <p-progressSpinner ariaLabel="loading" styleClass="w-12 h-12" strokeWidth="4" />
             </div>
             }
 
             @if (org()) {
             
-            <!-- Sticky Header (Navigation) -->
-            <header class="sticky top-0 z-40 bg-[var(--color-surface-card)]/80 backdrop-blur-xl border-b border-[var(--color-border)] px-4 py-3 mb-0 supports-[backdrop-filter]:bg-[var(--color-surface-card)]/60">
-                <div class="max-w-7xl mx-auto flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-lg text-[var(--color-text)] tracking-tight">PulseDeck</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <a routerLink="/" class="text-sm font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-2 mr-2">
-                             <i class="pi pi-home text-xs"></i> Startseite
-                        </a>
-                        <button pButton label="Login" icon="pi pi-sign-in" (click)="navigateToLogin()" size="small" [style]="{background: primaryColor, border: 'none', borderRadius: '12px'}" class="px-4 font-bold md:hidden"></button>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Organization Header -->
-            <div class="w-full" [style.background]="primaryColor">
-                <div class="max-w-7xl mx-auto px-4 py-6">
-                    <div class="flex flex-col md:flex-row items-center gap-4 md:gap-6">
-                        <!-- Logo -->
-                        @if (org()!.logo_url) {
-                            <div class="w-16 h-16 rounded-xl bg-white shadow-lg flex items-center justify-center p-2 shrink-0">
-                                <img [src]="org()!.logo_url" class="w-full h-full object-contain" />
-                            </div>
-                        } @else {
-                            <div class="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                                <i class="pi pi-building text-2xl text-white"></i>
-                            </div>
-                        }
-
-                        <!-- Text -->
-                        <div class="flex-1 text-center md:text-left min-w-0">
-                            <h1 class="text-2xl md:text-3xl font-bold text-white">{{ org()!.name }}</h1>
-                            @if (org()!.description) {
-                                <p class="text-sm text-white/80 mt-1 line-clamp-1">{{ org()!.description }}</p>
-                            }
-                        </div>
-
-                        <!-- Login Button -->
-                        <button pButton (click)="navigateToLogin()" label="Einloggen" icon="pi pi-sign-in" 
-                            class="shrink-0 font-bold !bg-white !border-none" 
-                            [style]="{color: primaryColor, borderRadius: '10px'}">
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Bar -->
-            <div class="w-full bg-[var(--color-surface-card)] border-b border-[var(--color-border)]">
-                <div class="max-w-7xl mx-auto px-4 py-4">
-                    <div class="flex items-center justify-center md:justify-start gap-8 text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="pi pi-users" [style.color]="primaryColor"></i>
-                            <span class="font-bold">{{ memberCount() }}</span>
-                            <span class="text-[var(--color-text-muted)]">Mitglieder</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="pi pi-calendar text-teal-500"></i>
-                            <span class="font-bold">{{ upcomingEvents().length }}</span>
-                            <span class="text-[var(--color-text-muted)]">Termine</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="pi pi-briefcase text-violet"></i>
-                            <span class="font-bold">{{ workingGroups().length }}</span>
-                            <span class="text-[var(--color-text-muted)]">Gruppen</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="pi pi-book text-amber-500"></i>
-                            <span class="font-bold">{{ wikiArticles().length }}</span>
-                            <span class="text-[var(--color-text-muted)]">Artikel</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dashboard Grid -->
-            <main class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fadein">
+            <!-- 1. Modern Hero Section -->
+            <div class="relative bg-[var(--color-surface-card)] border-b border-[var(--color-border)]">
                 
-                <!-- LEFT COLUMN: Profile & Contacts & Events -->
-                <div class="lg:col-span-3 space-y-6">
+                <div class="max-w-7xl mx-auto px-4 md:px-8 py-10 relative z-10">
+                    <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
+                        <!-- Logo Wrapper (Simplified) -->
+                        <div class="shrink-0">
+                            <div class="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-[var(--color-surface-ground)] flex items-center justify-center p-2 border border-[var(--color-border)] shadow-sm">
+                                @if (org()!.logo_url) {
+                                    <img [src]="org()!.logo_url" class="w-full h-full object-contain" />
+                                } @else {
+                                    <i class="pi pi-building text-4xl opacity-20" [style.color]="primaryColor"></i>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Org Info -->
+                        <div class="flex-1 text-center md:text-left pt-1">
+                             <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-[var(--color-surface-ground)] border border-[var(--color-border)] text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
+                                <i class="pi pi-verified text-[var(--color-primary)] text-xs"></i> Offizielle Seite
+                            </div>
+                            <h1 class="text-3xl md:text-4xl font-bold text-[var(--color-text)] mb-3 leading-tight">
+                                {{ org()!.name }}
+                            </h1>
+                            @if (org()!.description) {
+                                <p class="text-base text-[var(--color-text-muted)] max-w-2xl leading-relaxed">
+                                    {{ org()!.description }}
+                                </p>
+                            }
+                            
+                            <!-- Stats/Meta (Quick Overview) -->
+                            <div class="flex flex-wrap justify-center md:justify-start gap-6 mt-5 text-sm font-medium text-[var(--color-text-muted)]">
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-users text-[var(--color-text)]"></i> {{ memberCount() }} Mitglieder
+                                </div>
+                                @if(contacts().length > 0) {
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-id-card text-[var(--color-text)]"></i> {{ contacts().length }} Ansprechpartner
+                                </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Header Actions (Desktop) -->
+                        <div class="hidden md:flex flex-col gap-3 shrink-0">
+                            <button (click)="navigateToLogin()" 
+                                class="px-5 py-2.5 rounded-lg font-bold text-white shadow hover:brightness-110 transition-all flex items-center gap-2"
+                                [style.background]="primaryColor">
+                                <i class="pi pi-sign-in"></i>
+                                Mitglieder-Login
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Main Dashboard Content -->
+            <main class="max-w-7xl mx-auto px-4 md:px-8 py-12">
+                <div class="grid lg:grid-cols-12 gap-10">
                     
-                    <!-- Removed Org Card since it's now in Hero -->
-                    @if (contacts().length > 0) {
-                    <div class="p-5 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] shadow-sm">
-                        <h3 class="font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider text-[var(--color-text-muted)]">
-                            <i class="pi pi-users"></i> Ansprechpartner
-                        </h3>
-                        <div class="space-y-4">
-                            @for (c of contacts(); track c.id) {
-                                <div class="flex items-center gap-3 group cursor-default">
-                                    <img [src]="c.image_url || 'https://www.gravatar.com/avatar?d=mp'" class="w-10 h-10 rounded-full bg-[var(--color-surface-ground)] object-cover border border-[var(--color-border)]" />
-                                    <div class="flex-1 min-w-0">
-                                        <div class="font-bold text-sm truncate text-[var(--color-text)]">{{ c.name }}</div>
-                                        <div class="text-xs text-[var(--color-text-muted)] truncate">{{ c.role }}</div>
-                                    </div>
-                                    @if(c.email) {
-                                        <a [href]="'mailto:' + c.email" class="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--color-surface-ground)] hover:bg-[var(--color-primary)] hover:text-white transition-colors text-[var(--color-text-muted)]">
-                                            <i class="pi pi-envelope text-xs"></i>
-                                        </a>
+                    <!-- LEFT COLUMN (Main Feed: Events & News) - 8 Cols -->
+                    <div class="lg:col-span-8 space-y-12">
+                        
+                        <!-- Events Section (Priority #1) -->
+                        <section>
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-[var(--color-text)] flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-lg bg-[var(--color-surface-ground)] flex items-center justify-center text-[var(--color-primary)] text-lg">
+                                        <i class="pi pi-calendar"></i>
+                                    </span>
+                                    Nächste Termine
+                                </h2>
+                            </div>
+
+                            @if (upcomingEvents().length > 0) {
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    @for (e of upcomingEvents(); track e.id) {
+                                        <div class="group bg-[var(--color-surface-card)] rounded-2xl p-5 border border-[var(--color-border)] hover:border-teal-500/50 transition-all shadow-sm hover:shadow-md cursor-default">
+                                            <div class="flex gap-4">
+                                                <!-- Date Box -->
+                                                <div class="shrink-0 w-14 h-14 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800 flex flex-col items-center justify-center text-teal-600 dark:text-teal-400">
+                                                    <span class="text-xs font-bold uppercase">{{ formatMonth(e.date) }}</span>
+                                                    <span class="text-xl font-black leading-none">{{ formatDayShort(e.date) }}</span>
+                                                </div>
+                                                
+                                                <!-- Content -->
+                                                <div class="min-w-0 flex-1">
+                                                    <h3 class="font-bold text-[var(--color-text)] truncate group-hover:text-[var(--color-primary)] transition-colors">{{ e.title }}</h3>
+                                                    <div class="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mt-1">
+                                                        <i class="pi pi-clock text-xs opacity-70"></i> {{ e.start_time }} Uhr
+                                                    </div>
+                                                    @if(e.location) {
+                                                    <div class="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mt-0.5">
+                                                        <i class="pi pi-map-marker text-xs opacity-70"></i> {{ e.location }}
+                                                    </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            } @else {
+                                <div class="text-center py-10 bg-[var(--color-surface-ground)] rounded-2xl border border-dashed border-[var(--color-border)] opacity-60">
+                                    <p class="text-[var(--color-text-muted)]">Keine öffentlichen Termine geplant.</p>
+                                </div>
+                            }
+                        </section>
+
+                        <!-- News Section (Priority #2) -->
+                        <section>
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-[var(--color-text)] flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-lg bg-[var(--color-surface-ground)] flex items-center justify-center text-[var(--color-primary)] text-lg">
+                                        <i class="pi pi-megaphone"></i>
+                                    </span>
+                                    Neuigkeiten
+                                </h2>
+                            </div>
+
+                            @if (feedItems().length > 0) {
+                                <div class="space-y-6">
+                                    @for (item of feedItems(); track item.id) {
+                                        <article class="bg-[var(--color-surface-card)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow">
+                                            <div class="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
+                                                <i class="pi pi-clock"></i> {{ formatDate(item.created_at) }}
+                                            </div>
+                                            <h3 class="text-xl font-bold text-[var(--color-text)] mb-3">{{ item.title }}</h3>
+                                            <div class="prose prose-sm dark:prose-invert max-w-none text-[var(--color-text-muted)]" [innerHTML]="item.content"></div>
+                                        </article>
+                                    }
+                                </div>
+                            } @else {
+                                <div class="text-center py-8 opacity-50">
+                                    <p class="text-sm text-[var(--color-text-muted)]">Keine Neuigkeiten verfügbar.</p>
+                                </div>
+                            }
+                        </section>
+
+                        <!-- Wiki Teaser -->
+                         <section>
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-[var(--color-text)] flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-lg bg-[var(--color-surface-ground)] flex items-center justify-center text-[var(--color-primary)] text-lg">
+                                        <i class="pi pi-book"></i>
+                                    </span>
+                                    Öffentliches Wissen
+                                </h2>
+                            </div>
+                            
+                            @if (wikiArticles().length > 0) {
+                                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    @for (doc of wikiArticles(); track doc.id) {
+                                        <div (click)="openArticle(doc)" class="group cursor-pointer bg-[var(--color-surface-card)] p-4 rounded-xl border border-[var(--color-border)] hover:border-amber-500 transition-colors">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <i class="pi pi-file text-[var(--color-primary)]"></i>
+                                                <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase">{{ doc.category || 'Info' }}</span>
+                                            </div>
+                                            <h4 class="font-bold text-sm text-[var(--color-text)] group-hover:text-[var(--color-primary)] truncate">{{ doc.title }}</h4>
+                                        </div>
                                     }
                                 </div>
                             }
-                        </div>
-                    </div>
-                    }
+                         </section>
 
-                    <!-- Upcoming Events (in Sidebar) -->
-                    <div class="p-5 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-bold flex items-center gap-2 text-sm uppercase tracking-wider text-[var(--color-text-muted)]">
-                                <i class="pi pi-calendar text-teal-500"></i> Termine
-                            </h3>
-                            <button (click)="navigateToLogin()" class="text-xs font-bold text-teal-500 hover:underline">Alle</button>
-                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN (Sidebar: Contacts, Groups, CTA) - 4 Cols -->
+                    <div class="lg:col-span-4 space-y-8">
                         
-                        @if (upcomingEvents().length > 0) {
-                        <div class="space-y-3">
-                            @for (e of upcomingEvents(); track e.id) {
-                                <div class="flex gap-3 group">
-                                    <div class="flex flex-col items-center content-center justify-center w-12 h-12 rounded-xl bg-[var(--color-surface-ground)] border border-[var(--color-border)] text-center leading-none shrink-0">
-                                        <span class="text-[10px] font-bold text-teal-500 uppercase">{{ formatMonth(e.date) }}</span>
-                                        <span class="text-lg font-black text-[var(--color-text)]">{{ formatDayShort(e.date) }}</span>
-                                    </div>
-                                    <div class="min-w-0 pt-0.5">
-                                        <div class="font-bold text-sm text-[var(--color-text)] truncate group-hover:text-teal-500 transition-colors">{{ e.title }}</div>
-                                        <div class="text-xs text-[var(--color-text-muted)] mt-0.5">{{ e.time_start }} Uhr</div>
-                                    </div>
-                                </div>
-                            }
+                        <!-- Mobile CTA (Visible only on small screens) -->
+                        <div class="md:hidden">
+                            <button (click)="navigateToLogin()" 
+                                class="w-full px-6 py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 text-lg"
+                                [style.background]="primaryColor">
+                                Mitmachen / Login
+                            </button>
                         </div>
-                        } @else {
-                        <div class="text-center py-4 border border-dashed border-[var(--color-border)] rounded-xl opacity-60">
-                            <p class="text-xs text-[var(--color-text-muted)]">Keine öffentlichen Termine.</p>
-                        </div>
-                        }
-                    </div>
 
-                </div>
-
-                <!-- CENTER COLUMN: Wiki & News -->
-                <div class="lg:col-span-6 space-y-6">
-                    
-                    <!-- Wiki/Docs (Dominant Position) -->
-                    <div>
-                         <h3 class="font-bold text-lg mb-4 px-1 flex items-center gap-2">
-                            <i class="pi pi-book text-amber-500"></i> Wissen & Infos
-                        </h3>
-
-                        @if (wikiArticles().length > 0) {
-                        <div class="grid md:grid-cols-2 gap-4">
-                            @for (doc of wikiArticles(); track doc.id) {
-                            <div (click)="openArticle(doc)" class="flex flex-col p-5 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] hover:border-amber-500 transition-all cursor-pointer group shadow-sm h-full relative overflow-hidden">
-                                <!-- Background decoration -->
-                                <div class="absolute right-0 top-0 w-24 h-24 bg-amber-500/5 rounded-bl-[100px] -mr-4 -mt-4 transition-transform group-hover:scale-150"></div>
-
-                                <div class="flex items-start justify-between mb-3 relative z-10">
-                                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all">
-                                        <i class="pi pi-file-o text-xl"></i>
-                                    </div>
-                                    @if(doc.category) { <span class="px-2 py-1 rounded bg-[var(--color-surface-ground)] text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">{{ doc.category }}</span> }
-                                </div>
-                                <h3 class="font-bold text-[var(--color-text)] text-lg mb-2 leading-snug group-hover:text-amber-500 transition-colors relative z-10">{{ doc.title }}</h3>
-                                <div class="mt-auto pt-4 flex items-center text-xs font-bold text-[var(--color-text-muted)] group-hover:text-amber-500 transition-colors relative z-10">
-                                    Lesen <i class="pi pi-arrow-right ml-1 transition-transform group-hover:translate-x-1"></i>
-                                </div>
+                        <!-- Contacts Card -->
+                        @if (contacts().length > 0) {
+                        <div class="bg-[var(--color-surface-card)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+                            <div class="p-4 border-b border-[var(--color-border)] bg-[var(--color-surface-ground)]">
+                                <h3 class="font-bold text-[var(--color-text)] flex items-center gap-2">
+                                    <i class="pi pi-id-card text-[var(--color-primary)]"></i> Ansprechpartner
+                                </h3>
                             </div>
-                            }
-                        </div>
-                        } @else {
-                             <div class="p-8 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] border-dashed text-center text-[var(--color-text-muted)]">
-                                <i class="pi pi-lock text-4xl mb-2 opacity-50"></i>
-                                <p>Interne Dokumente sind nur für eingeloggte Mitglieder sichtbar.</p>
-                                <button (click)="navigateToLogin()" class="mt-3 text-xs font-bold text-amber-500 hover:underline">Zum Login &rarr;</button>
-                             </div>
-                        }
-                    </div>
-
-                    <!-- News Feed (Secondary) -->
-                    <div>
-                        <h3 class="font-bold text-lg mb-4 px-1 flex items-center gap-2">
-                            <i class="pi pi-megaphone text-[var(--color-primary)]"></i> Neuigkeiten
-                        </h3>
-                        
-                        @if (feedItems().length > 0) {
-                            <div class="space-y-4">
-                                @for (item of feedItems(); track item.id) {
-                                    <article class="p-5 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] shadow-sm hover:border-[var(--color-primary-300)] transition-all cursor-pointer group" (click)="navigateToLogin()">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <span class="text-xs font-bold text-[var(--color-text-muted)]">
-                                                {{ formatDate(item.created_at) }}
-                                            </span>
+                            <div class="divide-y divide-[var(--color-border)]">
+                                @for (c of contacts(); track c.id) {
+                                    <div class="p-4 flex items-center gap-4 hover:bg-[var(--color-surface-ground)] transition-colors">
+                                        <img [src]="c.image_url || 'https://www.gravatar.com/avatar?d=mp'" 
+                                             class="w-12 h-12 rounded-full object-cover border border-[var(--color-border)] bg-gray-100" />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-bold text-sm text-[var(--color-text)] truncate">{{ c.name }}</div>
+                                            <div class="text-xs text-[var(--color-text-muted)] truncate mb-1">{{ c.role }}</div>
+                                            @if(c.email) {
+                                                <a [href]="'mailto:' + c.email" class="inline-flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline">
+                                                    <i class="pi pi-envelope"></i> Kontaktieren
+                                                </a>
+                                            }
                                         </div>
-                                        <h2 class="text-lg font-bold mb-2 text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors">{{ item.title }}</h2>
-                                        <div class="text-sm text-[var(--color-text-muted)] leading-relaxed line-clamp-2" [innerHTML]="item.content"></div>
-                                    </article>
+                                    </div>
                                 }
                             </div>
-                        } @else {
-                            <div class="p-8 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] border-dashed text-center text-[var(--color-text-muted)]">
-                                <i class="pi pi-inbox text-4xl mb-2 opacity-50"></i>
-                                <p>Keine aktuellen Neuigkeiten.</p>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <!-- RIGHT COLUMN: Actions & Groups -->
-                <div class="lg:col-span-3 space-y-6">
-                    
-                    <!-- Call to Action -->
-                    <div class="p-6 rounded-2xl bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface-card)] border border-[var(--color-border)] shadow-lg text-center relative overflow-hidden group">
-                         <div class="absolute inset-0 opacity-10 bg-[image:linear-gradient(45deg,var(--color-primary)_25%,transparent_25%,transparent_50%,var(--color-primary)_50%,var(--color-primary)_75%,transparent_75%,transparent)] bg-[length:20px_20px]"></div>
-                        
-                        <h3 class="font-bold text-xl mb-2 text-[var(--color-text)] relative z-10">Willkommen!</h3>
-                        <p class="text-sm text-[var(--color-text-muted)] mb-6 relative z-10">Melde dich an, um auf interne Inhalte zuzugreifen.</p>
-                        <button (click)="navigateToLogin()" class="w-full py-3 text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg active:scale-95 relative z-10 flex items-center justify-center gap-2" [style.background]="primaryColor">
-                            <i class="pi pi-sign-in"></i> Login
-                        </button>
-                    </div>
-
-                    <!-- Working Groups -->
-                    @if (workingGroups().length > 0) {
-                    <div class="p-5 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border)] shadow-sm">
-                        <h3 class="font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider text-violet text-[var(--color-text-muted)]">
-                            <i class="pi pi-briefcase text-violet"></i> Arbeitsgruppen
-                        </h3>
-                        <div class="space-y-3">
-                            @for (wg of workingGroups(); track wg.id) {
-                                <div class="p-3 rounded-xl bg-[var(--color-surface-ground)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border)] transition-colors cursor-pointer group" (click)="navigateToLogin()">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <div class="font-bold text-sm text-[var(--color-text)]">{{ wg.name }}</div>
-                                        <i class="pi pi-arrow-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0"></i>
-                                    </div>
-                                    @if(wg.description) { <div class="text-xs text-[var(--color-text-muted)] line-clamp-2">{{ wg.description }}</div> }
-                                </div>
-                            }
                         </div>
-                    </div>
-                    }
+                        }
 
-                    <!-- Mini Footer -->
-                    <div class="text-xs text-[var(--color-text-muted)] text-center space-x-2 opacity-60 mt-6">
-                        <a routerLink="/impressum" class="hover:underline">Impressum</a> •
-                        <a routerLink="/datenschutz" class="hover:underline">Datenschutz</a>
-                    </div>
+                        <!-- Groups Card -->
+                        @if (workingGroups().length > 0) {
+                        <div class="bg-[var(--color-surface-card)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+                            <div class="p-4 border-b border-[var(--color-border)] bg-[var(--color-surface-ground)]">
+                                <h3 class="font-bold text-[var(--color-text)] flex items-center gap-2">
+                                    <i class="pi pi-briefcase text-[var(--color-primary)]"></i> Arbeitsgruppen
+                                </h3>
+                            </div>
+                            <div class="p-2 space-y-1">
+                                @for (wg of workingGroups(); track wg.id) {
+                                    <div (click)="navigateToLogin()" class="p-3 rounded-lg hover:bg-[var(--color-surface-ground)] cursor-pointer transition-colors group">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-bold text-[var(--color-text)]">{{ wg.name }}</span>
+                                            <i class="pi pi-lock text-[10px] text-[var(--color-text-muted)] opacity-50"></i>
+                                        </div>
+                                        @if(wg.description) {
+                                            <p class="text-xs text-[var(--color-text-muted)] line-clamp-1 mt-0.5">{{ wg.description }}</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        }
 
+                        <!-- Location / Info Placeholder -->
+                        <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white text-center shadow-lg relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-4 opacity-10">
+                                <i class="pi pi-map text-6xl"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2 relative z-10">Wo du uns findest</h3>
+                             <p class="text-sm text-gray-300 mb-4 relative z-10">
+                                Wir treffen uns regelmäßig in unserem Vereinsheim oder online. Melde dich im internen Bereich an für Details.
+                            </p>
+                        </div>
+                        
+                        <!-- Legal Footer Links -->
+
+
+                    </div>
                 </div>
-
             </main>
 
-            <!-- Powered by PulseDeck Footer -->
-            <footer class="mt-12 pb-8">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="flex flex-col items-center gap-4">
-                        <a routerLink="/" 
-                            class="group flex items-center gap-2 px-6 py-3 
-                            rounded-2xl bg-[var(--color-surface-card)] 
-                            border border-[var(--color-border)] 
-                            hover:border-linke/50 
-                            transition-all shadow-sm hover:shadow-md">
-                            <i class="pi pi-sparkles text-amber-500 
-                                group-hover:animate-pulse"></i>
-                            <span class="text-sm text-[var(--color-text-muted)]">
-                                Powered by
-                            </span>
-                            <span class="font-bold text-[var(--color-text)] 
-                                group-hover:text-linke transition-colors">
-                                PulseDeck
-                            </span>
-                        </a>
-                        <p class="text-xs text-[var(--color-text-muted)] 
-                            text-center max-w-sm opacity-70">
-                            Die moderne Plattform für Vereinsmanagement. 
-                            Mitglieder mobilisieren, Events planen, Wissen teilen.
-                        </p>
+            <!-- Footer with Theme Toggle -->
+            <footer class="mt-auto border-t border-[var(--color-border)] py-6 bg-[var(--color-surface-card)] relative z-10 transition-colors">
+                <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+                    
+                    <!-- Powered By -->
+                    <a routerLink="/" class="group flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+                        <span class="text-xs font-medium text-[var(--color-text-muted)]">Powered by</span>
+                        <span class="font-bold text-sm text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors">PulseDeck</span>
+                    </a>
+
+                    <!-- Legal & Theme -->
+                    <div class="flex flex-wrap justify-center items-center gap-6 text-xs text-[var(--color-text-muted)]">
+                        <a routerLink="/impressum" class="hover:underline">Impressum</a>
+                        <a routerLink="/datenschutz" class="hover:underline">Datenschutz</a>
+                        
+                        <!-- Theme Toggle -->
+                        <button (click)="toggleTheme()" class="flex items-center gap-2 hover:text-[var(--color-text)] transition-colors ml-4 pl-4 border-l border-[var(--color-border)] cursor-pointer">
+                            @if(isDarkMode()) {
+                                <i class="pi pi-sun text-yellow-500"></i> <span>Light Mode</span>
+                            } @else {
+                                <i class="pi pi-moon text-[var(--color-primary)]"></i> <span>Dark Mode</span>
+                            }
+                        </button>
                     </div>
                 </div>
             </footer>
 
-            <!-- Public Article Dialog -->
+            <!-- Dialog for Wiki -->
             <p-dialog 
                 [header]="selectedArticle()?.title || ''" 
                 [(visible)]="articleDialogVisible" 
@@ -374,15 +368,11 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                 [style]="{width: '90vw', maxWidth: '800px', maxHeight: '90vh'}" 
                 [dismissableMask]="true"
                 [draggable]="false"
-                [resizable]="false">
+                [resizable]="false"
+                styleClass="glass-dialog">
                 
                 @if (selectedArticle()) {
-                    <div class="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-                        <div class="mb-4 flex items-center gap-2">
-                             <span class="px-2 py-1 rounded bg-[var(--color-surface-ground)] text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                                {{ selectedArticle()!.category || 'Allgemein' }}
-                             </span>
-                        </div>
+                    <div class="prose prose-sm md:prose-base dark:prose-invert max-w-none p-2">
                         <div [innerHTML]="selectedArticle()!.content"></div>
                     </div>
                 }
@@ -409,6 +399,10 @@ export class OrgPublicPageComponent implements OnInit {
     workingGroups = signal<WorkingGroup[]>([]);
     contacts = signal<ContactPerson[]>([]);
 
+    // Theme
+    isDarkMode = signal(true);
+    private document = inject(DOCUMENT);
+
     // Article Dialog
     selectedArticle = signal<PublicWikiArticle | null>(null);
     articleDialogVisible = false;
@@ -420,6 +414,12 @@ export class OrgPublicPageComponent implements OnInit {
     }
 
     async ngOnInit(): Promise<void> {
+        // Initialize Theme (Default Dark)
+        const savedTheme = localStorage.getItem('pulsedeck-theme');
+        const prefersDark = savedTheme === 'dark' || (!savedTheme && true); // Default to true (Dark) if not set
+        this.isDarkMode.set(prefersDark);
+        this.updateTheme();
+
         const slug = this.route.snapshot.paramMap.get('slug');
         if (!slug) {
             this.loading.set(false);
@@ -501,9 +501,8 @@ export class OrgPublicPageComponent implements OnInit {
 
         const { data } = await this.supabase.client
             .from('events')
-            .select('id, title, date, time_start, time_end, location, description')
+            .select('id, title, date, start_time, end_time, location, description')
             .eq('organization_id', orgId)
-            .eq('visibility', 'public')
             .gte('date', today)
             .order('date', { ascending: true })
             .limit(6);
@@ -516,7 +515,6 @@ export class OrgPublicPageComponent implements OnInit {
             .from('wiki_docs')
             .select('id, title, content, category')
             .eq('organization_id', orgId)
-            .eq('visibility', 'public')
             .order('title', { ascending: true })
             .limit(6);
 
@@ -528,7 +526,6 @@ export class OrgPublicPageComponent implements OnInit {
             .from('feed_items')
             .select('id, title, content, created_at')
             .eq('organization_id', orgId)
-            .eq('visibility', 'public')
             .in('status', ['approved', 'sent'])
             .order('created_at', { ascending: false })
             .limit(3);
@@ -590,5 +587,21 @@ export class OrgPublicPageComponent implements OnInit {
     openArticle(doc: PublicWikiArticle) {
         this.selectedArticle.set(doc);
         this.articleDialogVisible = true;
+    }
+
+    toggleTheme() {
+        this.isDarkMode.update(d => !d);
+        localStorage.setItem('pulsedeck-theme', this.isDarkMode() ? 'dark' : 'light');
+        this.updateTheme();
+    }
+
+    private updateTheme() {
+        if (this.isDarkMode()) {
+            this.document.documentElement.classList.add('dark');
+            this.document.documentElement.classList.remove('light');
+        } else {
+            this.document.documentElement.classList.add('light');
+            this.document.documentElement.classList.remove('dark');
+        }
     }
 }

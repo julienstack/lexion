@@ -23,6 +23,7 @@ export interface UserMembership {
 export interface LoginCheckResult {
     status: 'connected' | 'invitation_sent' | 'not_found' | 'error';
     message?: string;
+    memberName?: string;
     organizations?: Array<{
         id: string;
         name: string;
@@ -264,9 +265,9 @@ export class AuthService {
 
             if (!response.ok) {
                 console.error('Edge Function Error:', result);
-                return { 
-                    status: 'error', 
-                    error: result.error || result.message || `Anfrage fehlgeschlagen (${response.status})` 
+                return {
+                    status: 'error',
+                    error: result.error || result.message || `Anfrage fehlgeschlagen (${response.status})`
                 };
             }
 

@@ -16,8 +16,8 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { 
-  InviteGuestOrgDialogComponent 
+import {
+  InviteGuestOrgDialogComponent
 } from '../../../shared/components/invite-guest-org-dialog.component';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { EventsService } from '../../../shared/services/events.service';
@@ -35,6 +35,7 @@ import { EventSlotService, EventSlot, CreateSlotData } from '../../../shared/ser
 import { SupabaseService } from '../../../shared/services/supabase';
 import { SkillService, Skill } from '../../../shared/services/skill.service';
 import { OrganizationService } from '../../../shared/services/organization.service';
+import { AnalyticsService } from '../../../shared/services/analytics.service';
 
 @Component({
   selector: 'app-calendar',
@@ -76,6 +77,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   readonly workingGroupsService = inject(WorkingGroupsService);
   readonly skillService = inject(SkillService);
   readonly orgService = inject(OrganizationService);
+  readonly analytics = inject(AnalyticsService);
   workingGroups = this.workingGroupsService.workingGroups;
 
   // Permission-based visibility
@@ -484,6 +486,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const url = `${window.location.origin}/event/${event.id}`;
     try {
       await navigator.clipboard.writeText(url);
+      await this.analytics.track('event_link_copy', { event_id: event.id, title: event.title }, event.organization_id);
       this.messageService.add({
         severity: 'success',
         summary: 'Kopiert',
@@ -556,6 +559,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
     try {
       await navigator.clipboard.writeText(text);
+      await this.analytics.track('whatsapp_copy', { event_id: event.id, title: event.title }, event.organization_id);
       this.messageService.add({
         severity: 'success',
         summary: 'Für WhatsApp kopiert!',

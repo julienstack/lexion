@@ -21,6 +21,10 @@ import { AuthService } from '../../shared/services/auth.service';
                     <section>
                         <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Angaben gemäß § 5 TMG</h2>
                         <div class="bg-[var(--color-surface-raised)] rounded-xl p-6 border border-[var(--color-border)]">
+                            <div class="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-[var(--color-text)]">
+                                <i class="pi pi-info-circle mr-2 text-blue-500"></i>
+                                <strong>Hinweis:</strong> Dieses Projekt befindet sich in der Alpha-Phase und wird aktuell als privates, nicht-kommerzielles Open-Source-Projekt betrieben.
+                            </div>
                             <p class="text-[var(--color-text-muted)]">
                                 <strong class="text-[var(--color-text)]">PulseDeck</strong><br>
                                 Julien Lieske<br>

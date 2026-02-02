@@ -130,34 +130,31 @@
                     @if (!showPasswordFields()) {
                     <div class="flex items-center justify-between">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-full bg-[var(--color-surface-raised)] flex items-center justify-center border border-[var(--color-border)] shrink-0">
+                            <div
+                                class="w-10 h-10 rounded-full bg-[var(--color-surface-raised)] flex items-center justify-center border border-[var(--color-border)] shrink-0">
                                 <i class="pi pi-lock text-[var(--color-text-muted)]"></i>
                             </div>
                             <div>
                                 <div class="font-medium text-[var(--color-text)]">
                                     @if (hasPassword()) {
-                                        Passwort ist gesetzt
+                                    Passwort ist gesetzt
                                     } @else {
-                                        Kein Passwort gesetzt
+                                    Kein Passwort gesetzt
                                     }
                                 </div>
                                 <div class="text-xs md:text-sm text-[var(--color-text-muted)] mt-1">
                                     @if (hasPassword()) {
-                                        Du kannst dich mit deiner E-Mail und Passwort anmelden.
+                                    Du kannst dich mit deiner E-Mail und Passwort anmelden.
                                     } @else {
-                                        Du erhältst bei jeder Anmeldung einen Magic Link per E-Mail.
-                                        <span class="block mt-1 text-teal">Ein Passwort ist optional, aber praktisch für schnellen Zugang.</span>
+                                    Du erhältst bei jeder Anmeldung einen Magic Link per E-Mail.
+                                    <span class="block mt-1 text-teal">Ein Passwort ist optional, aber praktisch für
+                                        schnellen Zugang.</span>
                                     }
                                 </div>
                             </div>
                         </div>
-                        <p-button 
-                            [label]="hasPassword() ? 'Ändern' : 'Passwort setzen'" 
-                            icon="pi pi-key"
-                            size="small" 
-                            [outlined]="true"
-                            severity="secondary"
-                            (click)="showPasswordFields.set(true)">
+                        <p-button [label]="hasPassword() ? 'Ändern' : 'Passwort setzen'" icon="pi pi-key" size="small"
+                            [outlined]="true" severity="secondary" (click)="showPasswordFields.set(true)">
                         </p-button>
                     </div>
                     } @else {
@@ -171,33 +168,23 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="newPassword" class="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                <label for="newPassword"
+                                    class="block text-sm font-medium text-[var(--color-text)] mb-1">
                                     Neues Passwort
                                 </label>
-                                <p-password 
-                                    id="newPassword"
-                                    [(ngModel)]="newPassword" 
-                                    name="newPassword"
-                                    [toggleMask]="true"
-                                    [feedback]="true"
-                                    styleClass="w-full"
-                                    inputStyleClass="w-full"
+                                <p-password id="newPassword" [(ngModel)]="newPassword" name="newPassword"
+                                    [toggleMask]="true" [feedback]="true" styleClass="w-full" inputStyleClass="w-full"
                                     placeholder="Mind. 8 Zeichen">
                                 </p-password>
                             </div>
                             <div>
-                                <label for="confirmNewPassword" class="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                <label for="confirmNewPassword"
+                                    class="block text-sm font-medium text-[var(--color-text)] mb-1">
                                     Passwort bestätigen
                                 </label>
-                                <p-password 
-                                    id="confirmNewPassword"
-                                    [(ngModel)]="confirmNewPassword" 
-                                    name="confirmNewPassword"
-                                    [toggleMask]="true"
-                                    [feedback]="false"
-                                    styleClass="w-full"
-                                    inputStyleClass="w-full"
-                                    placeholder="Wiederholen">
+                                <p-password id="confirmNewPassword" [(ngModel)]="confirmNewPassword"
+                                    name="confirmNewPassword" [toggleMask]="true" [feedback]="false" styleClass="w-full"
+                                    inputStyleClass="w-full" placeholder="Wiederholen">
                                 </p-password>
                             </div>
                         </div>
@@ -211,18 +198,11 @@
                         }
 
                         <div class="flex justify-end gap-2 pt-2">
-                            <p-button 
-                                label="Abbrechen" 
-                                [text]="true" 
-                                severity="secondary"
+                            <p-button label="Abbrechen" [text]="true" severity="secondary"
                                 (click)="cancelPasswordChange()">
                             </p-button>
-                            <p-button 
-                                label="Passwort speichern" 
-                                icon="pi pi-check"
-                                [loading]="savingPassword()"
-                                [disabled]="!newPassword || !confirmNewPassword"
-                                (click)="savePassword()">
+                            <p-button label="Passwort speichern" icon="pi pi-check" [loading]="savingPassword()"
+                                [disabled]="!newPassword || !confirmNewPassword" (click)="savePassword()">
                             </p-button>
                         </div>
                     </div>
@@ -370,7 +350,7 @@
             <div class="flex flex-wrap gap-2">
                 @for (skillId of selectedSkillIds(); track skillId) {
                 <p-chip [label]="getSkillName(skillId)" [removable]="true" (onRemove)="toggleSkill(skillId)"
-                    styleClass="bg-linke/20 text-linke"></p-chip>
+                    styleClass="!bg-linke !text-white"></p-chip>
                 }
             </div>
         </div>

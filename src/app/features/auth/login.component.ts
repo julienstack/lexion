@@ -81,7 +81,7 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                     </div>
                     <div class="flex flex-col min-w-0">
                        <span class="text-xs font-bold truncate">{{ email }}</span>
-                       <span class="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Mitglied</span>
+                       <span class="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">{{ memberName() || 'Mitglied' }}</span>
                     </div>
                  </div>
                  <button (click)="resetToEmail()" class="text-xs text-linke hover:underline font-bold flex-shrink-0 ml-2">Ändern</button>
@@ -107,7 +107,7 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                 }
 
                 <p-button type="submit" label="Anmelden" [loading]="loading()" 
-                  styleClass="w-full !py-3" severity="danger" [raised]="true"></p-button>
+                  styleClass="w-full !py-3 !mt-6" severity="danger" [raised]="true"></p-button>
               </form>
 
               <!-- Magic Link Option -->
@@ -190,6 +190,7 @@ export class LoginComponent {
   password = '';
   loading = signal(false);
   error = signal('');
+  memberName = signal<string | null>(null);
 
   async checkEmail() {
     if (!this.email) return;
@@ -204,6 +205,7 @@ export class LoginComponent {
 
       if (result.status === 'connected') {
         this.step.set('password');
+        this.memberName.set(result.memberName || null);
       } else if (result.status === 'invitation_sent') {
         this.step.set('invitation-sent');
       } else if (result.status === 'not_found') {
@@ -270,6 +272,7 @@ export class LoginComponent {
     this.step.set('email');
     this.error.set('');
     this.password = '';
+    this.memberName.set(null);
   }
 
   /**

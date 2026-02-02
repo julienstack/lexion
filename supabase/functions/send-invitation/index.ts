@@ -102,6 +102,7 @@ Deno.serve(async (req: Request) => {
             return new Response(
                 JSON.stringify({
                     status: "connected",
+                    memberName: members[0]?.name || null,
                     organizations: connectedMembers.map((m: MemberInfo) => ({
                         id: m.organization?.id,
                         name: m.organization?.name,
@@ -141,28 +142,28 @@ Deno.serve(async (req: Request) => {
 
         if (existingUserId) {
             console.log(`[send-invitation] Found existing auth user: ${existingUserId}`);
-            
+
             // Check if confirmed using the data we fetched or by fetching if needed
             let isConfirmed = false;
-            
+
             if (existingAuthUsers?.length > 0) {
-                 isConfirmed = !!existingAuthUsers[0].email_confirmed_at;
+                isConfirmed = !!existingAuthUsers[0].email_confirmed_at;
             } else {
-                 // If we found it via listUsers, we need to check the user object we foudn there
-                 // We didn't keep the full user object from listUsers above, let's fetch it if needed or rely on minimal logic
-                 // For now, let's assume if it came from direct query we know. 
-                 // If it came from listUsers hack, we might need to fetch it.
-                 const { data: userData } = await supabaseAdmin.auth.admin.getUserById(existingUserId);
-                 isConfirmed = !!userData.user?.email_confirmed_at;
+                // If we found it via listUsers, we need to check the user object we foudn there
+                // We didn't keep the full user object from listUsers above, let's fetch it if needed or rely on minimal logic
+                // For now, let's assume if it came from direct query we know. 
+                // If it came from listUsers hack, we might need to fetch it.
+                const { data: userData } = await supabaseAdmin.auth.admin.getUserById(existingUserId);
+                isConfirmed = !!userData.user?.email_confirmed_at;
             }
 
             if (isConfirmed) {
                 console.log(`[send-invitation] User confirmed, connecting account`);
-                
+
                 // CRITICAL: Link the user to all unconnected member profiles
                 if (unconnectedMembers.length > 0) {
-                     const idsToLink = unconnectedMembers.map((m: MemberInfo) => m.id);
-                     await supabaseAdmin
+                    const idsToLink = unconnectedMembers.map((m: MemberInfo) => m.id);
+                    await supabaseAdmin
                         .from("members")
                         .update({ user_id: existingUserId })
                         .in("id", idsToLink);
@@ -172,6 +173,7 @@ Deno.serve(async (req: Request) => {
                     JSON.stringify({
                         status: "connected",
                         message: "Existing account linked",
+                        memberName: members[0]?.name || null,
                         organizations: members.map((m: MemberInfo) => ({
                             id: m.organization?.id,
                             name: m.organization?.name,
@@ -181,17 +183,17 @@ Deno.serve(async (req: Request) => {
                     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
                 );
             }
-            
+
             console.log(`[send-invitation] User exists but unconfirmed. Deleting and re-inviting to ensure fresh token.`);
-            
+
             // Unlink members first
             await supabaseAdmin.from("members").update({ user_id: null }).eq("user_id", existingUserId);
-            
+
             // Delete the unconfirmed user
             const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(existingUserId);
             if (deleteError) {
-                 console.error("[send-invitation] Error deleting unconfirmed user:", deleteError);
-                 // Fallback: Proceed to normal invite, though it might fail if delete failed
+                console.error("[send-invitation] Error deleting unconfirmed user:", deleteError);
+                // Fallback: Proceed to normal invite, though it might fail if delete failed
             }
         }
 
@@ -258,6 +260,7 @@ Deno.serve(async (req: Request) => {
         return new Response(
             JSON.stringify({
                 status: "invitation_sent",
+                memberName: members[0]?.name || null,
                 organizations: members.map((m: MemberInfo) => ({
                     id: m.organization?.id,
                     name: m.organization?.name,

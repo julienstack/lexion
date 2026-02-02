@@ -1,4 +1,5 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal, OnInit } from '@angular/core';
+import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -9,7 +10,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './landing-page.html',
   styleUrl: './landing-page.css',
 })
-export class LandingPage {
+export class LandingPage implements OnInit {
   currentYear = new Date().getFullYear();
   isMenuOpen = signal(false);
 
@@ -19,6 +20,15 @@ export class LandingPage {
 
   private auth = inject(AuthService);
   private router = inject(Router);
+  private analytics = inject(AnalyticsService);
+
+  ngOnInit() {
+    this.analytics.track('page_view', { page: 'landing' });
+  }
+
+  trackCTA(name: string) {
+    this.analytics.track('cta_click', { button: name });
+  }
 
   constructor() {
     // Redirect logged-in users to their organizations
