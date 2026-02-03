@@ -105,7 +105,7 @@ import { AuthService } from '../../shared/services/auth.service';
                                 Albert-Einstein-Str. 47<br>
                                 02977 Hoyerswerda<br><br>
                                 <span class="text-sm italic">Behörden können meine ladungsfähige Anschrift unter oben genannter Adresse erfragen.</span><br><br>
-                                E-Mail: julien@pulsedeck.de
+                                E-Mail: kontakt@pulsedeck.de
                             </p>
                             <p class="text-[var(--color-text-muted)] text-sm mt-4 italic">
                                 Verantwortliche Stelle ist die natürliche oder juristische Person, die allein oder gemeinsam mit anderen über 

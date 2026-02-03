@@ -41,7 +41,7 @@ import { AuthService } from '../../shared/services/auth.service';
                         <h2 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Kontakt</h2>
                         <div class="bg-[var(--color-surface-raised)] rounded-xl p-6 border border-[var(--color-border)]">
                             <p class="text-[var(--color-text-muted)]">
-                                E-Mail: <a href="mailto:julien@pulsedeck.de" class="text-linke hover:text-linke-light">julien@pulsedeck.de</a>
+                                E-Mail: <a href="mailto:kontakt@pulsedeck.de" class="text-linke hover:text-linke-light">kontakt@pulsedeck.de</a>
                             </p>
                         </div>
                     </section>
