@@ -27,10 +27,12 @@ import { AuthService } from '../../shared/services/auth.service';
                             </div>
                             <p class="text-[var(--color-text-muted)]">
                                 <strong class="text-[var(--color-text)]">PulseDeck</strong><br>
-                                Julien Lieske<br>
-                                Grandweg 17<br>
-                                59494 Soest<br>
-                                Deutschland
+                                hyretic<br>
+                                c/o Autorenglück #62015<br>
+                                Albert-Einstein-Str. 47<br>
+                                02977 Hoyerswerda<br>
+                                Deutschland<br><br>
+                                <span class="text-sm italic">Behörden können meine ladungsfähige Anschrift unter oben genannter Adresse erfragen.</span>
                             </p>
                         </div>
                     </section>

@@ -100,9 +100,11 @@ import { AuthService } from '../../shared/services/auth.service';
                             <p class="text-[var(--color-text-muted)]">
                                 Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:<br><br>
                                 <strong class="text-[var(--color-text)]">PulseDeck</strong><br>
-                                Julien Lieske<br>
-                                Grandweg 17<br>
-                                59494 Soest<br><br>
+                                hyretic<br>
+                                c/o Autorenglück #62015<br>
+                                Albert-Einstein-Str. 47<br>
+                                02977 Hoyerswerda<br><br>
+                                <span class="text-sm italic">Behörden können meine ladungsfähige Anschrift unter oben genannter Adresse erfragen.</span><br><br>
                                 E-Mail: julien@pulsedeck.de
                             </p>
                             <p class="text-[var(--color-text-muted)] text-sm mt-4 italic">
