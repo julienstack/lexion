@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "generate-sitemap": "node scripts/generate-sitemap.js"
   },
   "prettier": {
     "printWidth": 100,

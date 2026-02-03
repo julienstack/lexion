@@ -1,10 +1,4 @@
-# Crawlers werden während der Entwicklungsphase blockiert
 User-agent: *
-Disallow: /
+Allow: /
 
-# Keine Seiten indexieren
-User-agent: Googlebot
-Disallow: /
-
-User-agent: Bingbot
-Disallow: /
+Sitemap: https://dniozpfdldgtvpaehuux.supabase.co/functions/v1/sitemap
