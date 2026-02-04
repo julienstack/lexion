@@ -65,7 +65,7 @@
                                 </div>
                             </div>
 
-                            <div class="prose prose-sm max-w-none text-[var(--color-text)] leading-relaxed">
+                            <div>
                                 @if (item.type === 'link') {
                                 <a [href]="item.url" target="_blank" class="block group mt-1 mb-4 no-underline">
                                     <div
@@ -86,11 +86,14 @@
                                     </div>
                                 </a>
                                 @if (item.content) {
-                                <div class="pl-2 border-l-2 border-[var(--color-border)] text-sm text-[var(--color-text-muted)] italic"
-                                    [innerHTML]="item.content"></div>
+                                <div class="pl-2 border-l-2 border-[var(--color-border)]">
+                                    <app-rich-text-renderer [content]="item.content || ''"></app-rich-text-renderer>
+                                </div>
                                 }
                                 } @else if (item.type === 'poll') {
-                                <div class="mb-4" [innerHTML]="item.content"></div>
+                                <div class="mb-4">
+                                    <app-rich-text-renderer [content]="item.content || ''"></app-rich-text-renderer>
+                                </div>
                                 <div class="space-y-2 max-w-lg">
                                     @for (option of item.poll_options; track option.id) {
                                     <div class="relative p-3 rounded-lg border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-surface-hover)] transition-all overflow-hidden"
@@ -123,7 +126,7 @@
                                     </div>
                                 </div>
                                 } @else {
-                                <div [innerHTML]="item.content"></div>
+                                <app-rich-text-renderer [content]="item.content || ''"></app-rich-text-renderer>
                                 }
                             </div>
                         </div>
@@ -307,6 +310,25 @@
             <div class="flex flex-col gap-2">
                 <label class="font-medium text-sm text-[var(--color-text-muted)]">Titel</label>
                 <input pInputText [(ngModel)]="currentItem.title" placeholder="Titel des Beitrags" class="w-full" />
+            </div>
+
+            <!-- Visibility & Status Control -->
+            <div class="flex flex-wrap gap-6">
+                <div class="flex items-center gap-2">
+                    <p-checkbox [(ngModel)]="currentItem.is_public" [binary]="true" inputId="isPublic"></p-checkbox>
+                    <label for="isPublic" class="cursor-pointer text-sm select-none">Öffentlich sichtbar (Landing
+                        Page)</label>
+                </div>
+
+                @if (canApprove() && !editMode()) {
+                <div class="flex items-center gap-2">
+                    <p-checkbox [ngModel]="publishImmediately()" (ngModelChange)="publishImmediately.set($event)"
+                        [binary]="true" inputId="pubImm"></p-checkbox>
+                    <label for="pubImm"
+                        class="cursor-pointer text-sm font-bold text-[var(--color-primary)] select-none">Direkt
+                        veröffentlichen</label>
+                </div>
+                }
             </div>
 
             @if (currentItem.type === 'link') {

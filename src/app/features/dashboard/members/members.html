@@ -157,11 +157,32 @@
                         <div class="text-[var(--color-text)]">{{member.birthday || '-'}}</div>
                     </div>
                 </div>
+
+                @if (getMemberSkills(member.id).length > 0) {
+                <div class="mb-3">
+                    <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold mb-1">Fähigkeiten
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                        @for (skill of getMemberSkills(member.id); track skill.id) {
+                        <p-tag [value]="skill.name" severity="secondary" styleClass="!text-[10px] !px-1.5 !py-0.5" />
+                        }
+                    </div>
+                </div>
+                }
+
                 @if (member.street || member.city) {
                 <div class="mb-3">
                     <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold">Adresse</div>
                     <div class="text-[var(--color-text)]">{{member.street || ''}}</div>
                     <div class="text-[var(--color-text-muted)]">{{member.zip_code}} {{member.city}}</div>
+                </div>
+                }
+
+                @if (member.custom_info) {
+                <div class="mb-3 pt-2 border-t border-[var(--color-border)]">
+                    <div class="text-[10px] uppercase text-[var(--color-text-muted)] font-semibold mb-1">Zusatzinfos
+                    </div>
+                    <div class="text-[var(--color-text)] whitespace-pre-wrap">{{member.custom_info}}</div>
                 </div>
                 }
 
@@ -172,10 +193,9 @@
                         [label]="member.user_id ? 'Reset' : 'Einladen'" [severity]="member.user_id ? 'warn' : 'success'"
                         size="small" (click)="inviteMember(member); $event.stopPropagation()"
                         [loading]="invitingMemberId === member.id"></p-button>
-                    <p-button icon="pi pi-copy" severity="secondary" [outlined]="true"
-                        size="small" (click)="copyMagicLink(member); $event.stopPropagation()"
-                        [loading]="copyingMemberId === member.id"
-                        pTooltip="Link kopieren"></p-button>
+                    <p-button icon="pi pi-copy" severity="secondary" [outlined]="true" size="small"
+                        (click)="copyMagicLink(member); $event.stopPropagation()"
+                        [loading]="copyingMemberId === member.id" pTooltip="Link kopieren"></p-button>
                     }
                     <p-button icon="pi pi-pencil" severity="secondary" size="small"
                         (click)="editMember(member); $event.stopPropagation()"></p-button>
@@ -216,11 +236,15 @@
                     </th>
                     }
                     <th style="width: 2.5rem"></th>
-                    <th pSortableColumn="name" class="!min-w-[180px]">Name <p-sortIcon field="name"></p-sortIcon></th>
-                    <th pSortableColumn="role" style="width: 100px">Funktion <p-sortIcon field="role"></p-sortIcon></th>
-                    <th pSortableColumn="status" style="width: 80px">Status <p-sortIcon field="status"></p-sortIcon>
+                    <th pSortableColumn="name" class="!min-w-[140px] w-[15%] text-left">Name <p-sortIcon
+                            field="name"></p-sortIcon></th>
+                    <th pSortableColumn="role" class="!min-w-[120px] w-[10%] text-left">Funktion <p-sortIcon
+                            field="role"></p-sortIcon></th>
+                    <th class="text-left">Fähigkeiten</th>
+                    <th pSortableColumn="status" style="width: 80px" class="text-right">Status <p-sortIcon
+                            field="status"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="join_date" style="width: 90px">Beitritt <p-sortIcon
+                    <th pSortableColumn="join_date" style="width: 90px" class="text-right">Beitritt <p-sortIcon
                             field="join_date"></p-sortIcon></th>
                     @if (auth.isAdmin()) {
                     <th style="width: 130px" class="text-right">Aktionen</th>
@@ -261,12 +285,20 @@
                             </div>
                         </div>
                     </td>
-                    <td class="text-[var(--color-text)] text-sm">{{ member.role }}</td>
-                    <td>
+                    <td class="text-[var(--color-text)] text-sm text-left">{{ member.role }}</td>
+                    <td class="text-left">
+                        <div class="flex flex-wrap gap-1">
+                            @for (skill of getMemberSkills(member.id); track skill.id) {
+                            <p-tag [value]="skill.name" severity="secondary"
+                                styleClass="!text-[10px] !px-1.5 !py-0.5" />
+                            }
+                        </div>
+                    </td>
+                    <td class="text-right">
                         <p-tag [value]="getStatusLabel(member.status)" [severity]="getStatusSeverity(member.status)"
                             [rounded]="true"></p-tag>
                     </td>
-                    <td class="text-[var(--color-text-muted)] text-sm">{{ member.join_date }}</td>
+                    <td class="text-[var(--color-text-muted)] text-sm text-right">{{ member.join_date }}</td>
                     @if (auth.isAdmin()) {
                     <td>
                         <div class="flex justify-end gap-0.5">
@@ -276,8 +308,8 @@
                                 [pTooltip]="member.user_id ? 'Passwort zurücksetzen' : 'Einladung senden'"
                                 (click)="inviteMember(member)" [loading]="invitingMemberId === member.id"></p-button>
                             <p-button icon="pi pi-copy" [text]="true" [rounded]="true" severity="secondary"
-                                pTooltip="Login-Link kopieren (WhatsApp etc.)"
-                                (click)="copyMagicLink(member)" [loading]="copyingMemberId === member.id"></p-button>
+                                pTooltip="Login-Link kopieren (WhatsApp etc.)" (click)="copyMagicLink(member)"
+                                [loading]="copyingMemberId === member.id"></p-button>
                             }
                             <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
                                 (click)="editMember(member)"></p-button>
@@ -289,9 +321,9 @@
                 </tr>
                 @if (isRowExpanded(member)) {
                 <tr>
-                    <td [attr.colspan]="auth.isAdmin() ? 7 : 5" class="!p-0 !border-0">
-                        <div
-                            class="p-4 bg-[var(--color-surface-raised)]/30 rounded-lg mx-2 my-2 border border-[var(--color-border)]">
+                    <td [attr.colspan]="auth.isAdmin() ? 7 : 5"
+                        class="!p-0 !border-0 bg-[var(--color-surface-raised)]/30">
+                        <div class="p-4 border-y border-[var(--color-border)]">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
                                     <div class="text-xs text-[var(--color-text-muted)] uppercase font-semibold mb-1">
@@ -306,11 +338,17 @@
                                     <div class="text-[var(--color-text)]">{{member.phone || '-'}}</div>
                                 </div>
                                 <div>
-                                    <div class="text-xs text-[var(--color-text-muted)] uppercase font-semibold mb-1">
-                                        Geburtstag</div>
                                     <div class="text-[var(--color-text)]">{{member.birthday || '-'}}</div>
                                 </div>
                             </div>
+                            @if (member.custom_info) {
+                            <div class="mt-4 pt-3 border-t border-[var(--color-border)]">
+                                <div class="text-xs text-[var(--color-text-muted)] uppercase font-semibold mb-1">
+                                    Zusatzinfos</div>
+                                <div class="text-[var(--color-text)] text-sm whitespace-pre-wrap">{{member.custom_info}}
+                                </div>
+                            </div>
+                            }
                         </div>
                     </td>
                 </tr>
@@ -439,6 +477,17 @@
                 <p class="text-xs text-[var(--color-text-muted)] mt-1">
                     Wird automatisch beim Einladen gesetzt.
                 </p>
+            </div>
+
+            <!-- Custom Info Field -->
+            <div class="border-t border-[var(--color-border)] pt-3">
+                <label class="block text-sm font-medium text-[var(--color-text)] mb-1">
+                    Zusatzinfos
+                    <span class="text-[var(--color-text-muted)] font-normal">(Intern)</span>
+                </label>
+                <textarea pInputTextarea [(ngModel)]="currentMember.custom_info" rows="3"
+                    class="w-full !min-h-[80px] p-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md text-sm"
+                    placeholder="Freitext für interne Notizen..."></textarea>
             </div>
         </div>
         }

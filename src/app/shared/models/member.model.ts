@@ -39,6 +39,7 @@ export interface Member {
     phone?: string;
     birthday?: string;
     calendar_token?: string;
+    custom_info?: string;
     created_at?: string;
     updated_at?: string;
 }

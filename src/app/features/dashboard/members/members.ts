@@ -263,7 +263,8 @@ export class MembersComponent implements OnInit {
       zip_code: '',
       city: '',
       phone: '',
-      birthday: ''
+      birthday: '',
+      custom_info: ''
     };
   }
 
@@ -437,6 +438,13 @@ export class MembersComponent implements OnInit {
     }
     const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
     return '#' + '00000'.substring(0, 6 - c.length) + c;
+  }
+
+  getMemberSkills(memberId: string | undefined): Skill[] {
+    if (!memberId) return [];
+    const skillIds = this.memberSkillsMap()[memberId] || [];
+    const allSkills = this.skillService.skills();
+    return allSkills.filter(s => skillIds.includes(s.id));
   }
 
   async inviteMember(member: Member) {

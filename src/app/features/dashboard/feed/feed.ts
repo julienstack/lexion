@@ -23,6 +23,8 @@ import { PermissionsService } from '../../../shared/services/permissions.service
 import { FeedService, FeedItem, NewsletterConfig } from '../../../shared/services/feed.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 
+import { RichTextRendererComponent } from '../../../shared/components/rich-text-renderer/rich-text-renderer.component';
+
 @Component({
     selector: 'app-feed',
     standalone: true,
@@ -32,7 +34,7 @@ import { NotificationService } from '../../../shared/services/notification.servi
         SelectButtonModule, TabsModule, DataViewModule, CardModule,
         TagModule, ToastModule, TooltipModule,
         SelectModule, CheckboxModule, FieldsetModule,
-        RadioButtonModule, ProgressBarModule
+        RadioButtonModule, ProgressBarModule, RichTextRendererComponent
     ],
     providers: [MessageService],
     templateUrl: './feed.html',
@@ -199,10 +201,14 @@ export class FeedComponent {
         }
     }
 
+    // Publish immediately state
+    publishImmediately = signal(false);
+
     openNew() {
-        this.currentItem = { type: 'article', status: 'draft' };
+        this.currentItem = { type: 'article', status: 'draft', is_public: true };
         this.pollOptions.set(['', '']);
         this.editMode.set(false);
+        this.publishImmediately.set(false);
         this.dialogVisible.set(true);
     }
 
@@ -231,6 +237,11 @@ export class FeedComponent {
 
         try {
             const payload = { ...this.currentItem };
+
+            // Handle direct publishing for admins
+            if (this.publishImmediately() && this.canApprove()) {
+                payload.status = 'approved';
+            }
 
             // Validate Poll
             if (payload.type === 'poll') {

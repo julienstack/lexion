@@ -16,7 +16,7 @@ import { DialogModule } from 'primeng/dialog';
 import { SupabaseService } from '../../../shared/services/supabase';
 import { Organization } from '../../../shared/services/organization.service';
 import { AuthService, LoginCheckResult } from '../../../shared/services/auth.service';
-import { environment } from '../../../../environments/environment';
+
 
 interface PublicEvent {
     id: string;
@@ -59,6 +59,8 @@ interface ContactPerson {
 
 type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
 
+import { RichTextRendererComponent } from '../../../shared/components/rich-text-renderer/rich-text-renderer.component';
+
 @Component({
     selector: 'app-org-public-page',
     standalone: true,
@@ -73,7 +75,9 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
         PasswordModule,
         MessageModule,
         DialogModule,
+        RichTextRendererComponent
     ],
+    styleUrl: './org-public-page.component.css',
     template: `
         <div class="min-h-screen bg-[var(--color-bg)] font-sans flex flex-col">
             <!-- Loading State -->
@@ -162,10 +166,10 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                             @if (upcomingEvents().length > 0) {
                                 <div class="grid md:grid-cols-2 gap-4">
                                     @for (e of upcomingEvents(); track e.id) {
-                                        <div class="group bg-[var(--color-surface-card)] rounded-2xl p-5 border border-[var(--color-border)] hover:border-teal-500/50 transition-all shadow-sm hover:shadow-md cursor-default">
+                                        <div (click)="openEvent(e)" class="group bg-[var(--color-surface-card)] rounded-2xl p-5 border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-all shadow-sm hover:shadow-md cursor-pointer">
                                             <div class="flex gap-4">
                                                 <!-- Date Box -->
-                                                <div class="shrink-0 w-14 h-14 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800 flex flex-col items-center justify-center text-teal-600 dark:text-teal-400">
+                                                <div class="shrink-0 w-14 h-14 rounded-xl bg-[var(--color-surface-ground)] border border-[var(--color-border)] flex flex-col items-center justify-center text-[var(--color-primary)]">
                                                     <span class="text-xs font-bold uppercase">{{ formatMonth(e.date) }}</span>
                                                     <span class="text-xl font-black leading-none">{{ formatDayShort(e.date) }}</span>
                                                 </div>
@@ -212,7 +216,7 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                                                 <i class="pi pi-clock"></i> {{ formatDate(item.created_at) }}
                                             </div>
                                             <h3 class="text-xl font-bold text-[var(--color-text)] mb-3">{{ item.title }}</h3>
-                                            <div class="prose prose-sm dark:prose-invert max-w-none text-[var(--color-text-muted)]" [innerHTML]="item.content"></div>
+                                            <app-rich-text-renderer [content]="item.content"></app-rich-text-renderer>
                                         </article>
                                     }
                                 </div>
@@ -223,31 +227,7 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                             }
                         </section>
 
-                        <!-- Wiki Teaser -->
-                         <section>
-                            <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-2xl font-bold text-[var(--color-text)] flex items-center gap-3">
-                                    <span class="w-8 h-8 rounded-lg bg-[var(--color-surface-ground)] flex items-center justify-center text-[var(--color-primary)] text-lg">
-                                        <i class="pi pi-book"></i>
-                                    </span>
-                                    Öffentliches Wissen
-                                </h2>
-                            </div>
-                            
-                            @if (wikiArticles().length > 0) {
-                                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                    @for (doc of wikiArticles(); track doc.id) {
-                                        <div (click)="openArticle(doc)" class="group cursor-pointer bg-[var(--color-surface-card)] p-4 rounded-xl border border-[var(--color-border)] hover:border-amber-500 transition-colors">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-file text-[var(--color-primary)]"></i>
-                                                <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase">{{ doc.category || 'Info' }}</span>
-                                            </div>
-                                            <h4 class="font-bold text-sm text-[var(--color-text)] group-hover:text-[var(--color-primary)] truncate">{{ doc.title }}</h4>
-                                        </div>
-                                    }
-                                </div>
-                            }
-                         </section>
+
 
                     </div>
 
@@ -262,6 +242,31 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                                 Mitmachen / Login
                             </button>
                         </div>
+
+                        <!-- Wiki Teaser (Moved to Sidebar) -->
+                        @if (wikiArticles().length > 0) {
+                        <div class="bg-[var(--color-surface-card)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+                            <div class="p-4 border-b border-[var(--color-border)] bg-[var(--color-surface-ground)]">
+                                <h3 class="font-bold text-[var(--color-text)] flex items-center gap-2">
+                                    <i class="pi pi-book text-[var(--color-primary)]"></i> Öffentliches Wissen
+                                </h3>
+                            </div>
+                            <div class="divide-y divide-[var(--color-border)]">
+                                @for (doc of wikiArticles(); track doc.id) {
+                                    <div (click)="openArticle(doc)" class="p-4 flex items-center gap-3 hover:bg-[var(--color-surface-ground)] cursor-pointer transition-colors group">
+                                        <div class="w-8 h-8 rounded bg-[var(--color-surface-ground)] flex items-center justify-center shrink-0 border border-[var(--color-border)] text-[var(--color-primary)]">
+                                            <i class="pi pi-file-o"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-bold text-sm text-[var(--color-text)] group-hover:text-[var(--color-primary)] truncate">{{ doc.title }}</div>
+                                            <div class="text-xs text-[var(--color-text-muted)] uppercase mt-0.5">{{ doc.category || 'Info' }}</div>
+                                        </div>
+                                        <i class="pi pi-chevron-right text-[var(--color-text-muted)] text-xs opacity-50 group-hover:opacity-100"></i>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        }
 
                         <!-- Contacts Card -->
                         @if (contacts().length > 0) {
@@ -372,8 +377,54 @@ type LoginStep = 'email' | 'password' | 'invitation-sent' | 'not-found';
                 styleClass="glass-dialog">
                 
                 @if (selectedArticle()) {
-                    <div class="prose prose-sm md:prose-base dark:prose-invert max-w-none p-2">
-                        <div [innerHTML]="selectedArticle()!.content"></div>
+                    <div class="p-4">
+                        <app-rich-text-renderer [content]="selectedArticle()!.content || ''"></app-rich-text-renderer>
+                    </div>
+                }
+            </p-dialog>
+            
+            <!-- Dialog for Events -->
+            <p-dialog 
+                [header]="selectedEvent()?.title || ''" 
+                [(visible)]="eventDialogVisible" 
+                [modal]="true" 
+                [style]="{width: '90vw', maxWidth: '600px', maxHeight: '90vh'}" 
+                [dismissableMask]="true"
+                [draggable]="false"
+                [resizable]="false"
+                styleClass="glass-dialog">
+                
+                @if (selectedEvent()) {
+                    <div class="p-4 space-y-6">
+                        <div class="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)] bg-[var(--color-surface-ground)] p-4 rounded-xl border border-[var(--color-border)]">
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-calendar text-[var(--color-primary)]"></i>
+                                <span>{{ formatDate(selectedEvent()!.date) }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-clock text-[var(--color-primary)]"></i>
+                                <span>{{ selectedEvent()!.start_time }} Uhr @if(selectedEvent()!.end_time){ bis {{ selectedEvent()!.end_time }} Uhr }</span>
+                            </div>
+                            @if(selectedEvent()!.location) {
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-map-marker text-[var(--color-primary)]"></i>
+                                <span>{{ selectedEvent()!.location }}</span>
+                            </div>
+                            }
+                        </div>
+
+                        @if (selectedEvent()!.description) {
+                            <div class="space-y-2">
+                                <h4 class="font-bold text-[var(--color-text)]">Beschreibung</h4>
+                                <app-rich-text-renderer [content]="selectedEvent()!.description || ''"></app-rich-text-renderer>
+                            </div>
+                        } @else {
+                            <p class="text-[var(--color-text-muted)] italic">Keine weitere Beschreibung vorhanden.</p>
+                        }
+
+                        <div class="pt-4 border-t border-[var(--color-border)]">
+                            <p-button (click)="navigateToLogin()" label="Anmelden / Mitmachen" icon="pi pi-sign-in" [raised]="true" styleClass="w-full" />
+                        </div>
                     </div>
                 }
             </p-dialog>
@@ -402,6 +453,10 @@ export class OrgPublicPageComponent implements OnInit {
     // Theme
     isDarkMode = signal(true);
     private document = inject(DOCUMENT);
+
+    // Event Dialog
+    selectedEvent = signal<PublicEvent | null>(null);
+    eventDialogVisible = false;
 
     // Article Dialog
     selectedArticle = signal<PublicWikiArticle | null>(null);
@@ -526,9 +581,10 @@ export class OrgPublicPageComponent implements OnInit {
             .from('feed_items')
             .select('id, title, content, created_at')
             .eq('organization_id', orgId)
+            .eq('is_public', true)
             .in('status', ['approved', 'sent'])
             .order('created_at', { ascending: false })
-            .limit(3);
+            .limit(50);
 
         this.feedItems.set((data as PublicFeedItem[]) || []);
     }
@@ -582,6 +638,11 @@ export class OrgPublicPageComponent implements OnInit {
         const tmp = document.createElement("DIV");
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || "";
+    }
+
+    openEvent(event: PublicEvent) {
+        this.selectedEvent.set(event);
+        this.eventDialogVisible = true;
     }
 
     openArticle(doc: PublicWikiArticle) {

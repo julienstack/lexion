@@ -1,7 +1,7 @@
 # 🚀 PulseDeck Roadmap
 
-> **Letzte Aktualisierung:** 2. Februar 2026  
-> **Aktuelle Version:** Alpha 0.0.98
+> **Letzte Aktualisierung:** 4. Februar 2026  
+> **Aktuelle Version:** Alpha 0.0.99
 
 ---
 
@@ -60,6 +60,20 @@ Diese Roadmap zeigt dir, welche Features geplant sind, woran gerade gearbeitet w
 ---
 
 ## ✅ Abgeschlossen (Patch Notes)
+
+### v0.0.99 – 4. Februar 2026 (Unified Public Page)
+
+**🎨 Public Page & Branding**
+- [x] **Öffentliche Startseite:** "Öffentliches Wissen" (Wiki) jetzt übersichtlich in der Sidebar
+- [x] **Feed & News:** Einheitliches Design für interne und öffentliche Ansicht
+- [x] **Inhalte:** Limits für Feed-Items auf 50 erhöht (statt 12)
+- [x] **Layout:** Verbesserte Struktur mit Sidebar für Ansprechpartner & Termine
+
+**📝 Rich Text & Markdown**
+- [x] **Typografie:** Einheitliches Rendering für alle Textinhalte (Wiki, Feed, Public)
+- [x] **Lesbarkeit:** Korrektes Wrapping von langen Wörtern und Links (kein Overflow mehr)
+- [x] **Dark Mode:** Code-Blöcke und Tabellen jetzt perfekt im Dark Mode integriert
+- [x] **Security:** Verbesserte HTML-Verarbeitung für sichere Darstellung von formatiertem Text
 
 ### v0.0.98 – 2. Februar 2026 (UX Polish)
 

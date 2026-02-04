@@ -29,6 +29,7 @@ export interface FeedItem {
     poll_config?: PollConfig;
     poll_options?: PollOption[];
     status: FeedItemStatus;
+    is_public?: boolean;
     author_id?: string;
     sent_at?: string;
 

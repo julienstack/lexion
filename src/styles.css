@@ -4,6 +4,7 @@
 
 @layer tailwind-base {
     @tailwind base;
+
     html {
         scroll-behavior: smooth;
     }
@@ -692,6 +693,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -699,8 +701,13 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideInLeft {
@@ -708,6 +715,7 @@ body {
         opacity: 0;
         transform: translateX(-30px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -719,6 +727,7 @@ body {
         opacity: 0;
         transform: translateX(30px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -730,6 +739,7 @@ body {
         opacity: 0;
         transform: scale(0.9);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -737,13 +747,27 @@ body {
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.2); }
-    50% { box-shadow: 0 0 40px rgba(255, 0, 0, 0.4); }
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(255, 0, 0, 0.4);
+    }
 }
 
 /* Animation Utility Classes */
@@ -801,13 +825,26 @@ body {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s ease;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
 }
 
 .btn-primary-enhanced:hover::before {
     left: 100%;
 }
+
+/* Editor Content Image Overflow Fix */
+.prose img,
+.wiki-content img,
+.p-editor-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 0.5rem;
+    display: block;
+    margin: 1rem 0;
+}
+
+
 
 /* Card Hover Effects */
 .card-hover {
@@ -840,9 +877,17 @@ body {
 }
 
 @keyframes gradient-shift {
-    0% { background-position: 0% center; }
-    50% { background-position: 100% center; }
-    100% { background-position: 0% center; }
+    0% {
+        background-position: 0% center;
+    }
+
+    50% {
+        background-position: 100% center;
+    }
+
+    100% {
+        background-position: 0% center;
+    }
 }
 
 /* Improved Focus States for Accessibility */
@@ -870,19 +915,22 @@ section {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(
-        to right,
-        transparent 0%,
-        rgba(255, 255, 255, 0.1) 50%,
-        transparent 100%
-    );
+    background: linear-gradient(to right,
+            transparent 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            transparent 100%);
     transform: rotate(30deg);
     animation: shine 3s ease-in-out infinite;
 }
 
 @keyframes shine {
-    0% { transform: translateX(-100%) rotate(30deg); }
-    100% { transform: translateX(100%) rotate(30deg); }
+    0% {
+        transform: translateX(-100%) rotate(30deg);
+    }
+
+    100% {
+        transform: translateX(100%) rotate(30deg);
+    }
 }
 
 /* Testimonial Card Styles */
@@ -897,8 +945,13 @@ section {
 
 /* Loading Skeleton Animation */
 @keyframes skeleton-loading {
-    0% { background-position: -200px 0; }
-    100% { background-position: calc(200px + 100%) 0; }
+    0% {
+        background-position: -200px 0;
+    }
+
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
 }
 
 .skeleton {
@@ -913,15 +966,17 @@ section {
         min-height: 44px;
         min-width: 44px;
     }
-    
+
     /* Larger tap areas on mobile */
-    a, button {
+    a,
+    button {
         padding: 0.5rem;
     }
 }
 
 /* Reduced Motion for Accessibility */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -929,7 +984,7 @@ section {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-    
+
     .animate-float,
     .animate-pulse-glow,
     .badge-shine::after {

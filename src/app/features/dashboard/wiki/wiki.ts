@@ -12,6 +12,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { EditorModule } from 'primeng/editor';
 import { WikiService } from '../../../shared/services/wiki.service';
 import { OrganizationService } from '../../../shared/services/organization.service';
 import { WikiDoc } from '../../../shared/models/wiki-doc.model';
@@ -19,7 +20,9 @@ import { AuthService } from '../../../shared/services/auth.service';
 import { PermissionsService } from '../../../shared/services/permissions.service';
 import { OnboardingService } from '../../../shared/services/onboarding.service';
 import { WorkingGroupsService } from '../../../shared/services/working-groups.service';
-import { marked } from 'marked';
+
+
+import { RichTextRendererComponent } from '../../../shared/components/rich-text-renderer/rich-text-renderer.component';
 
 @Component({
   selector: 'app-wiki',
@@ -36,7 +39,9 @@ import { marked } from 'marked';
     ProgressSpinnerModule,
     ConfirmDialogModule,
     ToastModule,
-    TooltipModule
+    TooltipModule,
+    EditorModule,
+    RichTextRendererComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './wiki.html',
@@ -427,11 +432,4 @@ export class WikiComponent implements OnInit {
     }
   }
 
-  /**
-   * Render markdown content to HTML
-   */
-  renderMarkdown(content: string | null | undefined): string {
-    if (!content) return '';
-    return marked.parse(content, { async: false }) as string;
-  }
 }
